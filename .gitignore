@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+
+# IDEs (global)
+.idea/
+.vscode/
+*.swp
+
+# Logs globales
+*.log
+
+# Env files globales
+.env
+
+### logs ###
+/logs/
+*.log
