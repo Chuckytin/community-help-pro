@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.3.4">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.4">
   <diagram name="Página-1" id="_FDWdUiHc73MfGVhLHBu">
-    <mxGraphModel dx="1535" dy="1376" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="413" pageHeight="583" math="0" shadow="0">
+    <mxGraphModel dx="1748" dy="1367" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="413" pageHeight="583" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -16,10 +16,10 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="qdv8ikcBjVvdh-kOutnY-1" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="User" vertex="1">
-          <mxGeometry height="160" width="190" x="120" y="40" as="geometry" />
+          <mxGeometry height="180" width="190" x="120" y="40" as="geometry" />
         </mxCell>
-        <mxCell id="qdv8ikcBjVvdh-kOutnY-3" parent="qdv8ikcBjVvdh-kOutnY-1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- String name&lt;/div&gt;&lt;div&gt;- String email&lt;/div&gt;&lt;div&gt;- String passwordHash&lt;/div&gt;&lt;div&gt;- Role role&lt;/div&gt;&lt;div&gt;- Float rating&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="134" width="190" y="26" as="geometry" />
+        <mxCell id="qdv8ikcBjVvdh-kOutnY-3" parent="qdv8ikcBjVvdh-kOutnY-1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- String name&lt;/div&gt;&lt;div&gt;- String email&lt;/div&gt;&lt;div&gt;- String passwordHash&lt;/div&gt;&lt;div&gt;- Role role&lt;/div&gt;&lt;div&gt;- Float rating&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;&lt;div&gt;- Point location&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="154" width="190" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-41" edge="1" parent="1" source="qdv8ikcBjVvdh-kOutnY-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pQPHV4VAHDQWVi1Jruin-1">
           <mxGeometry relative="1" as="geometry">
@@ -54,7 +54,7 @@
         <mxCell id="qdv8ikcBjVvdh-kOutnY-7" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Donation" vertex="1">
           <mxGeometry height="240" width="190" x="120" y="320" as="geometry" />
         </mxCell>
-        <mxCell id="qdv8ikcBjVvdh-kOutnY-8" parent="qdv8ikcBjVvdh-kOutnY-7" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- UUID id&lt;/div&gt;&lt;div&gt;- UUID donorId&lt;/div&gt;&lt;div&gt;- UUID volunteerId&lt;/div&gt;&lt;div&gt;- DonationType donationType;&lt;/div&gt;&lt;div&gt;- FoodType foodType&lt;/div&gt;&lt;div&gt;- String description&lt;/div&gt;&lt;div&gt;- Integer quantity&lt;/div&gt;&lt;div&gt;- String unit&lt;/div&gt;&lt;div&gt;- Point location&lt;/div&gt;&lt;div&gt;- LocalDateTime expiryDate&lt;/div&gt;&lt;div&gt;- DonationStatus status&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime pickedUpAt&lt;/div&gt;" vertex="1">
+        <mxCell id="qdv8ikcBjVvdh-kOutnY-8" parent="qdv8ikcBjVvdh-kOutnY-7" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- UUID id&lt;/div&gt;&lt;div&gt;- UUID donorId&lt;/div&gt;&lt;div&gt;- UUID volunteerId&lt;/div&gt;&lt;div&gt;- DonationType donationType;&lt;/div&gt;&lt;div&gt;- FoodType foodType&lt;/div&gt;&lt;div&gt;- String description&lt;/div&gt;&lt;div&gt;- Integer quantity&lt;/div&gt;&lt;div&gt;- String unit&lt;/div&gt;&lt;div&gt;- Point location&lt;/div&gt;&lt;div&gt;- LocalDateTime expiryDate&lt;/div&gt;&lt;div&gt;- DonationStatus status&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;&lt;div&gt;- LocalDateTime pickedUpAt&lt;/div&gt;" vertex="1">
           <mxGeometry height="214" width="190" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-74" edge="1" parent="1" source="qdv8ikcBjVvdh-kOutnY-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="pQPHV4VAHDQWVi1Jruin-12">
@@ -63,7 +63,7 @@
         <mxCell id="qdv8ikcBjVvdh-kOutnY-9" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Volunteer" vertex="1">
           <mxGeometry height="190" width="190" x="440" y="355" as="geometry" />
         </mxCell>
-        <mxCell id="qdv8ikcBjVvdh-kOutnY-10" parent="qdv8ikcBjVvdh-kOutnY-9" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- UUID id&lt;/div&gt;&lt;div&gt;- UUID userId&lt;/div&gt;&lt;div&gt;- Boolean available&lt;/div&gt;&lt;div&gt;- Double radiusKm&lt;/div&gt;&lt;div&gt;- List&amp;lt;VolunteerSkill&amp;gt; skills&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;" vertex="1">
+        <mxCell id="qdv8ikcBjVvdh-kOutnY-10" parent="qdv8ikcBjVvdh-kOutnY-9" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- UUID id&lt;/div&gt;&lt;div&gt;- UUID userId&lt;/div&gt;&lt;div&gt;- Boolean available&lt;/div&gt;&lt;div&gt;- Double radiusKm&lt;/div&gt;&lt;div&gt;- Set&amp;lt;VolunteerSkill&amp;gt; skills&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;" vertex="1">
           <mxGeometry height="164" width="190" y="26" as="geometry" />
         </mxCell>
         <mxCell id="qdv8ikcBjVvdh-kOutnY-11" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;div&gt;Role&lt;/div&gt;" vertex="1">
@@ -138,7 +138,12 @@
           <mxGeometry height="30" width="60" x="50" y="75" as="geometry" />
         </mxCell>
         <mxCell id="qdv8ikcBjVvdh-kOutnY-40" edge="1" parent="1" source="qdv8ikcBjVvdh-kOutnY-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="qdv8ikcBjVvdh-kOutnY-6" value="">
-          <mxGeometry relative="1" as="geometry" />
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="133" />
+              <mxPoint x="340" y="133" />
+            </Array>
+          </mxGeometry>
         </mxCell>
         <mxCell id="qdv8ikcBjVvdh-kOutnY-41" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="1" vertex="1">
           <mxGeometry height="30" width="60" x="300" y="105" as="geometry" />
@@ -150,7 +155,7 @@
           <mxGeometry height="30" width="60" x="220" y="250" as="geometry" />
         </mxCell>
         <mxCell id="qdv8ikcBjVvdh-kOutnY-46" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="1" vertex="1">
-          <mxGeometry height="30" width="60" x="200" y="200" as="geometry" />
+          <mxGeometry height="30" width="60" x="200" y="217" as="geometry" />
         </mxCell>
         <mxCell id="qdv8ikcBjVvdh-kOutnY-47" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="*" vertex="1">
           <mxGeometry height="30" width="60" x="200" y="290" as="geometry" />
@@ -206,7 +211,7 @@
         <mxCell id="pQPHV4VAHDQWVi1Jruin-1" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Conversation" vertex="1">
           <mxGeometry height="110" width="180" x="-320" y="165" as="geometry" />
         </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-2" parent="pQPHV4VAHDQWVi1Jruin-1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- ConversationType type&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- UUID relatedEntityId&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;" vertex="1">
+        <mxCell id="pQPHV4VAHDQWVi1Jruin-2" parent="pQPHV4VAHDQWVi1Jruin-1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- ConversationType type&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- UUID relatedEntityId&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;" vertex="1">
           <mxGeometry height="84" width="180" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-3" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Message" vertex="1">
@@ -216,10 +221,10 @@
           <mxGeometry height="94" width="170" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-5" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Review" vertex="1">
-          <mxGeometry height="150" width="180" x="280" y="-250" as="geometry" />
+          <mxGeometry height="170" width="180" x="280" y="-270" as="geometry" />
         </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-6" parent="pQPHV4VAHDQWVi1Jruin-5" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- UUID reviewerId&lt;/div&gt;&lt;div&gt;- UUID reviewedUserId&lt;/div&gt;&lt;div&gt;- ReviewContext context&lt;/div&gt;&lt;div&gt;- UUID contextEntityId&lt;/div&gt;&lt;div&gt;- Integer rating&lt;/div&gt;&lt;div&gt;- String comment&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;" vertex="1">
-          <mxGeometry height="124" width="180" y="26" as="geometry" />
+        <mxCell id="pQPHV4VAHDQWVi1Jruin-6" parent="pQPHV4VAHDQWVi1Jruin-5" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- UUID reviewerId&lt;/div&gt;&lt;div&gt;- UUID reviewedUserId&lt;/div&gt;&lt;div&gt;- ReviewContext context&lt;/div&gt;&lt;div&gt;- UUID contextEntityId&lt;/div&gt;&lt;div&gt;- Integer rating&lt;/div&gt;&lt;div&gt;- String comment&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;" vertex="1">
+          <mxGeometry height="144" width="180" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-7" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;div&gt;ReviewContext&lt;/div&gt;" vertex="1">
           <mxGeometry height="80" width="150" x="550" y="-210" as="geometry" />
@@ -237,10 +242,10 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-12" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Proposal" vertex="1">
-          <mxGeometry height="160" width="190" x="440" y="625" as="geometry" />
+          <mxGeometry height="170" width="190" x="440" y="625" as="geometry" />
         </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-13" parent="pQPHV4VAHDQWVi1Jruin-12" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- UUID id&lt;/div&gt;&lt;div&gt;- ProposalType type&lt;/div&gt;&lt;div&gt;- UUID targetEntityId&lt;/div&gt;&lt;div&gt;- UUID volunteerId&lt;/div&gt;&lt;div&gt;- ProposalStatus status&lt;/div&gt;&lt;div&gt;- Double score&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime respondedAt&lt;/div&gt;" vertex="1">
-          <mxGeometry height="134" width="190" y="26" as="geometry" />
+        <mxCell id="pQPHV4VAHDQWVi1Jruin-13" parent="pQPHV4VAHDQWVi1Jruin-12" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- UUID id&lt;/div&gt;&lt;div&gt;- ProposalType type&lt;/div&gt;&lt;div&gt;- UUID targetEntityId&lt;/div&gt;&lt;div&gt;- UUID volunteerId&lt;/div&gt;&lt;div&gt;- ProposalStatus status&lt;/div&gt;&lt;div&gt;- Double score&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;&lt;div&gt;- LocalDateTime respondedAt&lt;/div&gt;" vertex="1">
+          <mxGeometry height="144" width="190" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-14" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;div&gt;ProposalType&lt;/div&gt;" vertex="1">
           <mxGeometry height="70" width="150" x="180" y="610" as="geometry" />
