@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql
-      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
+      - ./docker-config/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
 
   # Adminer (sin cambios)
   adminer:

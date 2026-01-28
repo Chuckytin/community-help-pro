@@ -1,4 +1,6 @@
 HELP.md
+
+# Maven / Spring
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -35,6 +37,6 @@ build/
 ### Environment variables ###
 .env
 
-### logs ###
+### Logs ###
 /logs/
 *.log

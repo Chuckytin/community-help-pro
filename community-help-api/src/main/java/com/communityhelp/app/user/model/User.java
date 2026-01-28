@@ -1,12 +1,9 @@
 package com.communityhelp.app.user.model;
 
 import com.communityhelp.app.common.persistence.AuditableLocatable;
-import com.communityhelp.app.message.model.Message;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 

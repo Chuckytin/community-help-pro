@@ -1,12 +1,13 @@
-package com.communityhelp.app.user.dto;
+package com.communityhelp.app.auth.dto;
 
+import com.communityhelp.app.user.dto.UserResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Respuesta tras autenticarse un usuario.
+ * Respuesta que recibirá el frontend tras autenticarse un usuario.
  * Contiene el token JWT y opcionalmente los datos del usuario autenticado.
  */
 @Data

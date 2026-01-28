@@ -1,0 +1,49 @@
+# ------------------------------------------------------------
+# Este archivo define qué archivos y carpetas NO deben incluirse
+# cuando Docker construya imágenes (docker build).
+#
+# IMPORTANTE:
+# - Actualmente este proyecto usa solo imágenes preconstruidas
+#   (docker-compose con `image:`), por lo que este archivo NO
+#   tiene efecto todavía.
+# - Se deja preparado para el futuro, cuando se añada la app
+#   propia (y se use `build:` en docker-compose).
+#
+# Nota:
+# - Esto NO reemplaza a .gitignore.
+# - .dockerignore solo afecta al proceso de build de Docker.
+# ------------------------------------------------------------
+
+# Git
+.git
+.gitignore
+
+# Variables de entorno y secretos
+.env
+.env.*
+secrets*
+
+# Maven
+.mvn
+target
+
+# Dependencias y artefactos de build
+node_modules
+dist
+build
+
+# Documentación y archivos informativos
+HELP.md
+
+# Caches y archivos temporales
+*.log
+.DS_Store
+__pycache__
+
+# Configuración de IDEs / editores
+.vscode
+.idea
+
+# Tests y documentación (opcional en imágenes de producción)
+tests
+docs
