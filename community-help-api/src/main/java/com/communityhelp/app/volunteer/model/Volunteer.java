@@ -39,6 +39,7 @@ public class Volunteer extends Auditable {
     @MapsId
     private User user;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean available = true;
 
@@ -50,6 +51,7 @@ public class Volunteer extends Auditable {
      * Mapea una colección de valores enumerados usando JPA,
      * cada habilidad se almacena en la tabla volunteer_skills vinculada a la columna volunteer_id.
      */
+    @Builder.Default
     @ElementCollection
     @CollectionTable(name = "volunteer_skills", joinColumns = @JoinColumn(name = "volunteer_id"))
     @Enumerated(EnumType.STRING)

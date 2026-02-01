@@ -13,6 +13,13 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
     /**
      * Obtiene el voluntario asociado a un usuario.
      */
-    Optional<Volunteer> findByUserId(UUID userId);
+    Optional<Volunteer> findByUser_Id(UUID userId);
+
+    /**
+     * Comprueba si existe el usuario por el id.
+     */
+    boolean existsByUser_Id(UUID userId);
+
+    void deleteByUser_Id(UUID userId);
 
 }

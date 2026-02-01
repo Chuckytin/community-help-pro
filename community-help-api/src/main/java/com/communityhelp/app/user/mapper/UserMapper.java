@@ -2,7 +2,6 @@ package com.communityhelp.app.user.mapper;
 
 import com.communityhelp.app.user.dto.UserCreateRequestDto;
 import com.communityhelp.app.user.dto.UserResponseDto;
-import com.communityhelp.app.user.dto.UserUpdateRequestDto;
 import com.communityhelp.app.user.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
