@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserLoginRequestDto {
+public class LoginRequestDto {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email is not valid")

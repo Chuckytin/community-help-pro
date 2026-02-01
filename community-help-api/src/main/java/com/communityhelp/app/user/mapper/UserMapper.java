@@ -5,6 +5,7 @@ import com.communityhelp.app.user.dto.UserResponseDto;
 import com.communityhelp.app.user.dto.UserUpdateRequestDto;
 import com.communityhelp.app.user.model.User;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 /**
@@ -17,6 +18,8 @@ public interface UserMapper {
     /**
      * Convierte User a un DTO de respuesta
      */
+    @Mapping(target = "latitude", expression = "java(user.getLatitude())")
+    @Mapping(target = "longitude", expression = "java(user.getLongitude())")
     UserResponseDto toDto(User user);
 
     /**

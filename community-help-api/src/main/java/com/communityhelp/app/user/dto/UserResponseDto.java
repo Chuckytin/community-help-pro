@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 /**
- * Lo que se enviará al frontend
+ * DTO que se enviará al frontend
  */
 @Data
 @Builder
@@ -22,5 +22,8 @@ public class UserResponseDto {
     private String email;
     private Role role;
     private Float rating; // puede ser null
+
+    private Double latitude;
+    private Double longitude;
 
 }

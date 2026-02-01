@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Lo que recibe el usuario del frontend al registrarse
+ * Lo que recibe el usuario del frontend para registrarse
  */
 @Data
 @Builder
@@ -30,5 +30,8 @@ public class UserCreateRequestDto {
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must have at least {min} characters")
     private String password; // passwordHash en el Service
+
+    private Double latitude;
+    private Double longitude;
 
 }

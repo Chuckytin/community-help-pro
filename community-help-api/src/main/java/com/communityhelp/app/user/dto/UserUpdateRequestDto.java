@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Por si el usuario quiere actualizar su email o password
+ * Por si el usuario quiere actualizar sus datos de perfil
  */
 @Data
 @Builder
@@ -27,5 +27,8 @@ public class UserUpdateRequestDto {
 
     @Size(min = 6, message = "Password must have at least {min} characters")
     private String password;
+
+    private Double latitude;
+    private Double longitude;
 
 }

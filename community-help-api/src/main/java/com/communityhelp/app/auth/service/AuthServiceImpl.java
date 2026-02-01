@@ -1,10 +1,10 @@
 package com.communityhelp.app.auth.service;
 
 import com.communityhelp.app.auth.dto.AuthResponse;
-import com.communityhelp.app.user.dto.UserLoginRequestDto;
-import com.communityhelp.app.user.mapper.UserMapper;
-import com.communityhelp.app.user.model.User;
-import com.communityhelp.app.user.repository.UserRepository;
+import com.communityhelp.app.user.dto.LoginRequestDto;
+import com.communityhelp.app.user.dto.UserCreateRequestDto;
+import com.communityhelp.app.user.dto.UserResponseDto;
+import com.communityhelp.app.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,16 +15,15 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationService authenticationService;
-    private final UserMapper userMapper;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     /**
      * Autentica al usuario con email y contraseña.
      * - Si las credenciales son válidas, genera un token JWT.
-     * - Devuelve un {@link AuthResponse} que incluye el token y los datos del usuario.
+     * - Devuelve un {@link AuthResponse} que incluye el token, el tiempo de expiración y los datos del usuario.
      */
     @Override
-    public AuthResponse login(UserLoginRequestDto dto) {
+    public AuthResponse login(LoginRequestDto dto) {
         UserDetails userDetails;
 
         try {
@@ -35,15 +34,38 @@ public class AuthServiceImpl implements AuthService {
 
         String token = authenticationService.generateToken(userDetails);
 
-        User user = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("User not found"));
+        UserResponseDto userResponseDto = userService.getUserByEmail(dto.getEmail());
 
         // Construcción del AuthResponse
         return AuthResponse.builder()
                 .token(token)
                 .expiredIn(authenticationService.getJwtExpiryMs())
-                .user(userMapper.toDto(user))
+                .user(userResponseDto)
                 .build();
+    }
+
+    /**
+     * Registra al usuario con email y contraseña.
+     * - Crea el usuario.
+     * - Lo autentica automáticamente.
+     * - Devuelve token + datos del usuario.
+     */
+    @Override
+    public AuthResponse register(UserCreateRequestDto dto) {
+        UserResponseDto createdUser = userService.createUser(dto);
+
+        UserDetails userDetails =
+                authenticationService.authenticate(dto.getEmail(), dto.getPassword());
+
+        String token = authenticationService.generateToken(userDetails);
+
+        // Construcción del AuthResponse
+        return AuthResponse.builder()
+                .token(token)
+                .expiredIn(authenticationService.getJwtExpiryMs())
+                .user(createdUser)
+                .build();
+
     }
 
 }

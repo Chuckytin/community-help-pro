@@ -28,9 +28,9 @@ public class AppUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
         // Para manejar múltiples roles:
-        // return user.getRoles().stream()
-        //         .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-        //         .collect(Collectors.toList());
+/*         return user.getRoles().stream()
+                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                 .collect(Collectors.toList());*/
     }
 
     @Override
