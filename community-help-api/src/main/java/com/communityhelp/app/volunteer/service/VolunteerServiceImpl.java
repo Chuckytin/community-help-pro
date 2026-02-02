@@ -8,6 +8,7 @@ import com.communityhelp.app.volunteer.dto.VolunteerUpdateRequestDto;
 import com.communityhelp.app.volunteer.mapper.VolunteerMapper;
 import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,8 @@ public class VolunteerServiceImpl implements VolunteerService {
             throw new IllegalStateException("User is already a volunteer");
         }
 
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userId));
 
         Volunteer volunteer = Volunteer.builder()
                 .user(user)
@@ -47,7 +49,7 @@ public class VolunteerServiceImpl implements VolunteerService {
     @Transactional
     public VolunteerResponseDto update(UUID userId, VolunteerUpdateRequestDto dto) {
         Volunteer volunteer = volunteerRepository.findByUser_Id(userId)
-                .orElseThrow();
+                .orElseThrow(() -> new EntityNotFoundException("Volunteer not found for user with ID: " + userId));
 
         if (dto.getAvailable() != null) volunteer.setAvailable(dto.getAvailable());
         if (dto.getRadiusKm() != null) volunteer.setRadiusKm(dto.getRadiusKm());
@@ -67,7 +69,7 @@ public class VolunteerServiceImpl implements VolunteerService {
     @Override
     public VolunteerResponseDto getMyProfile(UUID userId) {
         Volunteer volunteer = volunteerRepository.findByUser_Id(userId)
-                .orElseThrow();
+                .orElseThrow(() -> new EntityNotFoundException("Volunteer not found for user with ID: " + userId));
 
         return volunteerMapper.toDto(volunteer);
     }
