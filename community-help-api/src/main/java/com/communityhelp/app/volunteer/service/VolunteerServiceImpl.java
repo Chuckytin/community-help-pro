@@ -17,6 +17,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class VolunteerServiceImpl implements VolunteerService {
 
     private final VolunteerRepository volunteerRepository;
@@ -24,7 +25,6 @@ public class VolunteerServiceImpl implements VolunteerService {
     private final VolunteerMapper volunteerMapper;
 
     @Override
-    @Transactional
     public VolunteerResponseDto create(UUID userId, VolunteerCreateRequestDto dto) {
         if (volunteerRepository.existsByUser_Id(userId)) {
             throw new IllegalStateException("User is already a volunteer");
@@ -46,7 +46,6 @@ public class VolunteerServiceImpl implements VolunteerService {
     }
 
     @Override
-    @Transactional
     public VolunteerResponseDto update(UUID userId, VolunteerUpdateRequestDto dto) {
         Volunteer volunteer = volunteerRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Volunteer not found for user with ID: " + userId));
@@ -61,12 +60,12 @@ public class VolunteerServiceImpl implements VolunteerService {
     }
 
     @Override
-    @Transactional
     public void delete(UUID userId) {
         volunteerRepository.deleteByUser_Id(userId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public VolunteerResponseDto getMyProfile(UUID userId) {
         Volunteer volunteer = volunteerRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Volunteer not found for user with ID: " + userId));

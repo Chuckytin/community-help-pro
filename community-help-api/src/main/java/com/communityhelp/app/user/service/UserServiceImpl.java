@@ -15,6 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
@@ -22,7 +23,6 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional
     public UserResponseDto createUser(UserCreateRequestDto dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalStateException("Email already in use!");
@@ -43,6 +43,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponseDto getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
@@ -50,6 +51,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserResponseDto getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
@@ -57,7 +59,6 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    @Transactional
     public UserResponseDto updateUser(UUID id, UserUpdateRequestDto dto) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User does not exist with ID: " + id));
@@ -82,7 +83,6 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    @Transactional
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new EntityNotFoundException("User not found with ID: " + id);

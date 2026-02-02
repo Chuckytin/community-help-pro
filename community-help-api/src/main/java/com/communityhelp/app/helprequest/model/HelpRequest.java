@@ -1,6 +1,8 @@
 package com.communityhelp.app.helprequest.model;
 
 import com.communityhelp.app.common.persistence.AuditableLocatable;
+import com.communityhelp.app.user.model.User;
+import com.communityhelp.app.volunteer.model.Volunteer;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,32 +24,35 @@ public class HelpRequest extends AuditableLocatable {
     private UUID id;
 
     /**
-     * ID del usuario que hace la solicitud
+     * Usuario que solicita la ayuda
+     * LAZY - evita cargar el User completo al menos que se acceda explícitamente a él.
      */
-    @Column(name = "requester_id", nullable = false)
-    private UUID requesterId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "requester_id", nullable = false)
+    private User requester;
 
     /**
-     * ID del voluntario asignado (si corresponde)
+     * Voluntario que acepta la solicitud
+     * LAZY - evita cargar el Volunteer completo al menos que se acceda explícitamente a él.
      */
-    @Column(name = "volunteer_id")
-    private UUID volunteerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "volunteer_id")
+    private Volunteer volunteer;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
+    @Column(nullable = false)
     private HelpRequestType type;
 
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "deadline")
     private LocalDateTime deadline;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(nullable = false)
     private HelpRequestStatus status;
 
     @Column(name = "accepted_at")
@@ -55,6 +60,26 @@ public class HelpRequest extends AuditableLocatable {
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    /**
+     * Helper del User solicitante que devuelve su id.
+     * Transient para que no forme parte del estado persistente de la entidad
+     * (vive solo en memoria, no en la BBDD)
+     */
+    @Transient
+    public UUID getRequesterId() {
+        return requester != null ? requester.getId() : null;
+    }
+
+    /**
+     * Helper del User voluntario que devuelve su id.
+     * Transient para que no forme parte del estado persistente de la entidad
+     * (vive solo en memoria, no en la BBDD)
+     */
+    @Transient
+    public UUID getVolunteerId() {
+        return volunteer != null ? volunteer.getId() : null;
+    }
 
     @Override
     public boolean equals(Object o) {

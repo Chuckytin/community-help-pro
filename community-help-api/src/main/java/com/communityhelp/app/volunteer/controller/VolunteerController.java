@@ -6,6 +6,7 @@ import com.communityhelp.app.volunteer.dto.VolunteerResponseDto;
 import com.communityhelp.app.volunteer.dto.VolunteerUpdateRequestDto;
 import com.communityhelp.app.volunteer.service.VolunteerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,8 @@ public class VolunteerController {
             @AuthenticationPrincipal AppUserDetails user,
             @RequestBody VolunteerCreateRequestDto dto) {
 
-        return ResponseEntity.ok(volunteerService.create(user.getId(), dto));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(volunteerService.create(user.getId(), dto));
     }
 
     @GetMapping("/me")

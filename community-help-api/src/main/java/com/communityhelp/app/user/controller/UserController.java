@@ -31,7 +31,6 @@ public class UserController {
 
     /**
      * @AuthenticationPrincipal - Spring Security inyecta el usuario ya autenticado
-     *
      */
     @PatchMapping(path = "/me")
     public ResponseEntity<UserResponseDto> updateUser(
@@ -56,7 +55,7 @@ public class UserController {
      */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(path = "/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteUserAsAdmin(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }

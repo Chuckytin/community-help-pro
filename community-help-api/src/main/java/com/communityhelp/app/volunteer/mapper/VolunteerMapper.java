@@ -13,6 +13,10 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface VolunteerMapper {
 
+    /**
+     * Convierte HelpRequest a DTO de respuesta
+     * usa getLongitude()/getLatitude() de AuditableLocatable en la clase User
+     */
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "name", source = "user.name")
     @Mapping(target = "email", source = "user.email")
