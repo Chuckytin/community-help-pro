@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * - UserDetailsService personalizado.
  * - Filtro JWT y su integración en la cadena de filtros.
  * - Reglas de acceso a los endpoints.
+ * @EnableMethodSecurity - activa la seguridad a nivel de métodos con anotaciones como @PreAuthorize
  */
 @Configuration
 @EnableMethodSecurity
@@ -44,14 +45,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // TODO
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/me").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/volunteers/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/volunteers/**").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/volunteers/me").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

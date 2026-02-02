@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+/**
+ * Configuración encargada de inicializar los datos básicos de la aplicación.
+ */
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
@@ -26,7 +29,8 @@ public class AdminDataInitializer {
     private String adminPassword;
 
     /**
-     * Se ejecuta al arrancar la app y asegura que siempre haya un admin inicial.
+     * Crea automáticamente un usuario administrador al iniciar la aplicación
+     * si no existe previamente.
      */
     @Bean
     CommandLineRunner createAdmin() {

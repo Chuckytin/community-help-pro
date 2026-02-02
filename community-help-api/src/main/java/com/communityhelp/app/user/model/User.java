@@ -1,6 +1,7 @@
 package com.communityhelp.app.user.model;
 
 import com.communityhelp.app.common.persistence.AuditableLocatable;
+import com.communityhelp.app.volunteer.model.Volunteer;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,6 +35,20 @@ public class User extends AuditableLocatable {
     private Role role;
 
     private Float rating;
+
+    /**
+     * Información del voluntario asociada al usuario.
+     * LAZY - se carga solo cuando se accede a él.
+     * All - las operaciones de persistencia se propagan al Volunteer.
+     * orphanRemoval - si se desvincula o se elimina el User, el Volunteer se elimina de la BBDD.
+     */
+    @OneToOne(
+            mappedBy = "user",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private Volunteer volunteer;
 
     @Override
     public boolean equals(Object o) {

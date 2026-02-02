@@ -26,15 +26,9 @@ public class Volunteer extends Auditable {
     /**
      * User asociado al voluntario.
      * LAZY - el User asociado solo será cargado cuando se acceda explicitamente a él.
-     * MERGE - si el volunteer se actualiza se sincroniza con el user.
-     * así se evitan consultas innecesarias a la base de datos.
      * MapsId - el ID del volunteer compartirá el mismo valor que el del user.
      */
-    @OneToOne(
-            fetch = FetchType.LAZY,
-            optional = false,
-            cascade = CascadeType.MERGE
-    )
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     @MapsId
     private User user;
