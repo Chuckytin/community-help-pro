@@ -37,5 +37,5 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 - Está montado en docker-compose.yml
 ```
 volumes:
-  - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
+  - ./docker-config/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
 ```
