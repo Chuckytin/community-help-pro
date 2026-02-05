@@ -27,15 +27,15 @@ Se utiliza la imagen oficial `postgis/postgis:18-3.6` que ya incluye PostGIS par
 docker compose up -d db
 ```
 
-2. El script docker/postgres-init.sql activa la extensión PostGIS automáticamente al crear la base de datos:
+2. El script docker-config/postgres-init.sql activa la extensión PostGIS automáticamente al crear la base de datos:
 
 ```
--- docker/postgres-init.sql
+-- docker-config/postgres-init.sql
 CREATE EXTENSION IF NOT EXISTS postgis;
 ```
 
 - Está montado en docker-compose.yml
 ```
 volumes:
-  - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
+  - ./docker-config/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
 ```
