@@ -60,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             }
         } catch (Exception e) {
             // No autentica al usuario pero no se interrumpe la request
-            log.warn("Received invalid auth token");
+            log.warn("[security][JwtAuthenticationFilter] Received invalid auth token");
         }
 
         filterChain.doFilter(request, response);

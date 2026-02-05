@@ -44,9 +44,9 @@ public class AdminDataInitializer {
                         .role(Role.ADMIN)
                         .build();
                 userRepository.save(admin);
-                log.warn("Admin created");
+                log.warn("[config][AdminDataInitializer] Admin created");
             } else {
-                log.info("Admin already exists");
+                log.info("[config][AdminDataInitializer] Admin already exists");
             }
         };
     }

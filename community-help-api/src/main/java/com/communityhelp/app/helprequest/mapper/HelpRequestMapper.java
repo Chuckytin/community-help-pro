@@ -1,10 +1,7 @@
 package com.communityhelp.app.helprequest.mapper;
 
-import com.communityhelp.app.helprequest.dto.HelpRequestCreateRequestDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.model.HelpRequest;
-import com.communityhelp.app.user.model.User;
-import com.communityhelp.app.volunteer.model.Volunteer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -22,8 +19,8 @@ public interface HelpRequestMapper {
      */
     @Mapping(target = "requesterId", source = "requester.id")
     @Mapping(target = "volunteerId", source = "volunteer.id")
-    @Mapping(target = "latitude", source = "latitude")
-    @Mapping(target = "longitude", source = "longitude")
+    //@Mapping(target = "latitude", source = "latitude")
+    //@Mapping(target = "longitude", source = "longitude")
     HelpRequestResponseDto toDto(HelpRequest helpRequest);
 
 }

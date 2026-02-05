@@ -9,6 +9,7 @@ import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
+import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +32,6 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
     @Override
     public HelpRequestResponseDto createHelpRequest(UUID requesterId, HelpRequestCreateRequestDto dto) {
-
-        if (!userRepository.existsById(requesterId)) {
-            throw new EntityNotFoundException("User not found with ID: " + requesterId);
-        }
 
         User requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + requesterId));
@@ -110,6 +107,8 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         helpRequestRepository.deleteById(id);
     }
 
+    // ACCIONES DE NEGOCIO
+
     @Override
     public HelpRequestResponseDto acceptHelpRequest(UUID helpRequestId, UUID volunteerUserId) {
 
@@ -121,7 +120,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             throw new IllegalStateException("Only OPEN requests can be accepted");
         }
 
-        var volunteer = volunteerRepository.findByUser_Id(volunteerUserId)
+        Volunteer volunteer = volunteerRepository.findByUser_Id(volunteerUserId)
                 .orElseThrow(() -> new IllegalStateException("User is not a volunteer"));
 
         helpRequest.setVolunteer(volunteer);
