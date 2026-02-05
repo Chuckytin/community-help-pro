@@ -5,6 +5,7 @@ import com.communityhelp.app.volunteer.dto.VolunteerCreateRequestDto;
 import com.communityhelp.app.volunteer.dto.VolunteerResponseDto;
 import com.communityhelp.app.volunteer.dto.VolunteerUpdateRequestDto;
 import com.communityhelp.app.volunteer.service.VolunteerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class VolunteerController {
     @PostMapping("/me")
     public ResponseEntity<VolunteerResponseDto> createVolunteer (
             @AuthenticationPrincipal AppUserDetails user,
-            @RequestBody VolunteerCreateRequestDto dto) {
+            @Valid @RequestBody VolunteerCreateRequestDto dto) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(volunteerService.create(user.getId(), dto));
@@ -37,7 +38,7 @@ public class VolunteerController {
     @PatchMapping("/me")
     public ResponseEntity<VolunteerResponseDto> updateVolunteer (
             @AuthenticationPrincipal AppUserDetails user,
-            @RequestBody VolunteerUpdateRequestDto dto) {
+            @Valid @RequestBody VolunteerUpdateRequestDto dto) {
 
         return ResponseEntity.ok(volunteerService.update(user.getId(), dto));
     }

@@ -6,6 +6,7 @@ import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
 import com.communityhelp.app.helprequest.service.HelpRequestService;
 import com.communityhelp.app.security.AppUserDetails;
 import com.communityhelp.app.user.dto.UserResponseDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class HelpRequestController {
     @PostMapping
     public ResponseEntity<HelpRequestResponseDto> createHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,
-            @RequestBody HelpRequestCreateRequestDto dto) {
+            @Valid @RequestBody HelpRequestCreateRequestDto dto) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(helpRequestService.createHelpRequest(currentUser.getId(), dto));
@@ -51,7 +52,7 @@ public class HelpRequestController {
     public ResponseEntity<HelpRequestResponseDto> updateHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,
             @PathVariable UUID id,
-            @RequestBody HelpRequestUpdateRequestDto dto) {
+            @Valid @RequestBody HelpRequestUpdateRequestDto dto) {
 
         HelpRequestResponseDto helpRequestResponseDto =
                 helpRequestService.updateHelpRequest(id, currentUser.getId(), dto);

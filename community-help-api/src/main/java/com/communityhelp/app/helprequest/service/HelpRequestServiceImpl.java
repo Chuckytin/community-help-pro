@@ -83,6 +83,10 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             throw new IllegalStateException("Only OPEN requests can be updated");
         }
 
+        if (dto.getType() != null) {
+            helpRequest.setType(dto.getType());
+        }
+
         if (dto.getTitle() != null) helpRequest.setTitle(dto.getTitle());
         if (dto.getDescription() != null) helpRequest.setDescription(dto.getDescription());
         if (dto.getDeadline() != null) helpRequest.setDeadline(dto.getDeadline());
@@ -160,6 +164,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         }
 
         helpRequest.setStatus(HelpRequestStatus.CANCELLED);
+        helpRequest.setVolunteer(null);
 
         return helpRequestMapper.toDto(helpRequest);
     }
