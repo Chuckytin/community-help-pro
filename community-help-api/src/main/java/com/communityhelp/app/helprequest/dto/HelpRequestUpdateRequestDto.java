@@ -1,10 +1,7 @@
 package com.communityhelp.app.helprequest.dto;
 
 import com.communityhelp.app.helprequest.model.HelpRequestType;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -18,6 +15,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class HelpRequestUpdateRequestDto {
+
+    private HelpRequestType type;
 
     @Size(max = 120)
     private String title;
