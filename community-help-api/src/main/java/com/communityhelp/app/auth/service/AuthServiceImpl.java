@@ -5,6 +5,7 @@ import com.communityhelp.app.user.dto.LoginRequestDto;
 import com.communityhelp.app.user.dto.UserCreateRequestDto;
 import com.communityhelp.app.user.dto.UserResponseDto;
 import com.communityhelp.app.user.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -54,20 +55,38 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse register(UserCreateRequestDto dto) {
-        UserResponseDto createdUser = userService.createUser(dto);
 
-        UserDetails userDetails =
-                authenticationService.authenticate(dto.getEmail(), dto.getPassword());
+        UserResponseDto createdUser;
 
+        // Busca el usuario existente, incluyendo inactivo
+        UserResponseDto existingUser = null;
+        try {
+            existingUser = userService.getUserByEmailIncludeInactive(dto.getEmail());
+        } catch (EntityNotFoundException ignored) {
+            // Si no existe, continua para crear cuenta
+        }
+
+        // Si existe y está inactivo, reactiva la cuenta
+        if (existingUser != null) {
+            if (!existingUser.isActive()) {
+                createdUser = userService.reactivateUser(existingUser.getId(), dto.getPassword());
+            } else {
+                throw new IllegalArgumentException("Email already in use");
+            }
+        } else {
+            // Si no existe, crea la cuenta
+            createdUser = userService.createUser(dto);
+        }
+
+        // Autenticación + token
+        UserDetails userDetails = authenticationService.authenticate(dto.getEmail(), dto.getPassword());
         String token = authenticationService.generateToken(userDetails);
 
-        // Construcción del AuthResponse
         return AuthResponse.builder()
                 .token(token)
                 .expiredIn(authenticationService.getJwtExpiryMs())
                 .user(createdUser)
                 .build();
-
     }
 
 }

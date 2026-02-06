@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -27,6 +28,13 @@ public class UserController {
     public ResponseEntity<UserResponseDto> getUser(@AuthenticationPrincipal AppUserDetails currentUser) {
         UserResponseDto userResponseDto = userService.getUserById(currentUser.getId());
         return ResponseEntity.ok(userResponseDto);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        List<UserResponseDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
     /**

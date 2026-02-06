@@ -5,7 +5,6 @@ import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
 import com.communityhelp.app.helprequest.service.HelpRequestService;
 import com.communityhelp.app.security.AppUserDetails;
-import com.communityhelp.app.user.dto.UserResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

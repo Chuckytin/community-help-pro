@@ -5,7 +5,10 @@ import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.volunteer.model.Volunteer;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.SQLDelete;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -13,6 +16,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET active = false, deleted_at = now() WHERE id = ?")
+@FilterDef(name = "activeFilter", defaultCondition = "active = true")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -41,15 +46,11 @@ public class User extends AuditableLocatable {
 
     /**
      * Información del voluntario asociada al usuario.
-     * LAZY - se carga solo cuando se accede a él.
      * All - las operaciones de persistencia se propagan al Volunteer.
-     * orphanRemoval - si se desvincula o se elimina el User, el Volunteer se elimina de la BBDD.
      */
     @OneToOne(
             mappedBy = "user",
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
+            cascade = CascadeType.ALL
     )
     private Volunteer volunteer;
 
@@ -57,16 +58,18 @@ public class User extends AuditableLocatable {
      * Solicitudes de ayuda asociadas al usuario.
      * LAZY - se carga solo cuando se accede a él.
      * All - las operaciones de persistencia se propagan al Volunteer.
-     * orphanRemoval - si se desvincula o se elimina el User, el Volunteer se elimina de la BBDD.
      */
     @OneToMany(
             mappedBy = "requester",
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
+            fetch = FetchType.LAZY
     )
     private Set<HelpRequest> helpRequests = new HashSet<>();
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean active = true;
+
+    private LocalDateTime deletedAt;
 
     @Override
     public boolean equals(Object o) {

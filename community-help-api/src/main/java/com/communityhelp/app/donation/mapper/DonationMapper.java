@@ -1,7 +1,7 @@
-package com.communityhelp.app.helprequest.mapper;
+package com.communityhelp.app.donation.mapper;
 
-import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
-import com.communityhelp.app.helprequest.model.HelpRequest;
+import com.communityhelp.app.donation.dto.DonationResponseDto;
+import com.communityhelp.app.donation.model.Donation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -11,16 +11,16 @@ import org.mapstruct.ReportingPolicy;
  * IGNORE - Se ignoran los campos que no se puedan mapear automáticamente.
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface HelpRequestMapper {
+public interface DonationMapper {
 
     /**
-     * Convierte HelpRequest a DTO de respuesta
+     * Convierte Donation a DTO de respuesta
      * usa getLongitude()/getLatitude() de AuditableLocatable
      */
-    @Mapping(target = "requesterId", source = "requester.id")
+    @Mapping(target = "donorId", source = "donor.id")
     @Mapping(target = "volunteerId", source = "volunteer.id")
     @Mapping(target = "latitude", source = "latitude")
     @Mapping(target = "longitude", source = "longitude")
-    HelpRequestResponseDto toDto(HelpRequest helpRequest);
+    DonationResponseDto toDto(Donation donation);
 
 }

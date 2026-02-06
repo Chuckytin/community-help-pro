@@ -1,5 +1,7 @@
 package com.communityhelp.app.volunteer.service;
 
+import com.communityhelp.app.donation.repository.DonationRepository;
+import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
 import com.communityhelp.app.volunteer.dto.VolunteerCreateRequestDto;
@@ -21,6 +23,8 @@ import java.util.UUID;
 public class VolunteerServiceImpl implements VolunteerService {
 
     private final VolunteerRepository volunteerRepository;
+    private final HelpRequestRepository helpRequestRepository;
+    private final DonationRepository donationRepository;
     private final UserRepository userRepository;
     private final VolunteerMapper volunteerMapper;
 
@@ -61,7 +65,12 @@ public class VolunteerServiceImpl implements VolunteerService {
 
     @Override
     public void delete(UUID userId) {
-        volunteerRepository.deleteByUser_Id(userId);
+        String reason = "Cancelled because user deleted account";
+
+        helpRequestRepository.releaseHelpRequestsAsVolunteer(userId, reason);
+        donationRepository.releaseDonationsAsVolunteer(userId, reason);
+
+        volunteerRepository.deleteById(userId);
     }
 
     @Override

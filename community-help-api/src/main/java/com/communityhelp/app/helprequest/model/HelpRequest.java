@@ -55,6 +55,9 @@ public class HelpRequest extends AuditableLocatable {
     @Column(nullable = false)
     private HelpRequestStatus status;
 
+    @Column(name = "cancel_reason")
+    private String cancelReason;
+
     @Column(name = "accepted_at")
     private LocalDateTime acceptedAt;
 

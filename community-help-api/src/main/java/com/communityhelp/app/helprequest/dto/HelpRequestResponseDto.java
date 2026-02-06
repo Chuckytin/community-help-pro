@@ -27,6 +27,7 @@ public class HelpRequestResponseDto {
     private Double longitude;
     private LocalDateTime deadline;
     private HelpRequestStatus status;
+    private String cancelReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime acceptedAt;

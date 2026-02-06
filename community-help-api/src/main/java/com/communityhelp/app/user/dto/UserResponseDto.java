@@ -23,6 +23,8 @@ public class UserResponseDto {
     private Role role;
     private Float rating; // puede ser null
 
+    private boolean active;
+
     private Double latitude;
     private Double longitude;
 

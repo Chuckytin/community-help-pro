@@ -1,6 +1,8 @@
 package com.communityhelp.app.donation.model;
 
 import com.communityhelp.app.common.persistence.AuditableLocatable;
+import com.communityhelp.app.user.model.User;
+import com.communityhelp.app.volunteer.model.Volunteer;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,11 +23,21 @@ public class Donation extends AuditableLocatable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "donor_id", nullable = false)
-    private UUID donorId;
+    /**
+     * Usuario que crea la Donation
+     * LAZY - evita cargar el User completo al menos que se acceda explícitamente a él.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "donor_id", nullable = false)
+    private User donor;
 
-    @Column(name = "volunteer_id")
-    private UUID volunteerId;
+    /**
+     * Voluntario que distribuye la solicitud
+     * LAZY - evita cargar el Volunteer completo al menos que se acceda explícitamente a él.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "volunteer_id")
+    private Volunteer volunteer;
 
     @Column(name = "donation_type", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -36,8 +48,14 @@ public class Donation extends AuditableLocatable {
     private FoodType foodType;
 
     @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DonationStatus status;
+
+    @Column(name = "cancel_reason")
+    private String cancelReason;
 
     @Lob
     @Column(columnDefinition = "TEXT")
@@ -54,6 +72,26 @@ public class Donation extends AuditableLocatable {
 
     @Column(name = "picked_up_at")
     private LocalDateTime pickedUpAt;
+
+    /**
+     * Helper del User donante que devuelve su id.
+     * Transient para que no forme parte del estado persistente de la entidad
+     * (vive solo en memoria, no en la BBDD)
+     */
+    @Transient
+    public UUID getDonorId() {
+        return donor != null ? donor.getId() : null;
+    }
+
+    /**
+     * Helper del User voluntario que devuelve su id.
+     * Transient para que no forme parte del estado persistente de la entidad
+     * (vive solo en memoria, no en la BBDD)
+     */
+    @Transient
+    public UUID getVolunteerId() {
+        return volunteer != null ? volunteer.getId() : null;
+    }
 
     @Override
     public boolean equals(Object o) {

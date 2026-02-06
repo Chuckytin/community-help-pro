@@ -24,6 +24,10 @@ public class AppUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
+        if (!user.isActive()) {
+            throw new UsernameNotFoundException("User not found with email: " + email);
+        }
+
         return new AppUserDetails(user);
     }
 
