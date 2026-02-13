@@ -22,12 +22,17 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequest, UUID> 
     /**
      * Obtiene todas las solicitudes aceptadas por un voluntario
      */
-    List<HelpRequest> findByVolunteerId(UUID volunteerId);
+    List<HelpRequest> findByVolunteer_Id(UUID volunteerId);
 
     /**
      * Filtra por estado
      */
     List<HelpRequest> findByStatus(HelpRequestStatus status);
+
+    /**
+     * Filtra por tareas activas o aceptadas
+     */
+    List<HelpRequest> findByVolunteer_IdAndStatus(UUID volunteerId, HelpRequestStatus status);
 
     /**
      * Libera todas las helpRequests de un volunteer antes de borrarlo

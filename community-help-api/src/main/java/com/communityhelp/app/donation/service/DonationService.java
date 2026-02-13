@@ -34,6 +34,8 @@ public interface DonationService {
 
     DonationResponseDto pickupDonation(UUID id, UUID volunteerId);
 
+    DonationResponseDto completeDonation(UUID id, UUID volunteerId);
+
     DonationResponseDto cancelDonation(UUID id, UUID donorId);
 
 }

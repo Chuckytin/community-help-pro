@@ -11,7 +11,15 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "help_requests")
+@Table(
+        name = "help_requests",
+        indexes = {
+                @Index(name = "idx_help_status", columnList = "status"),
+                @Index(name = "idx_help_requester", columnList = "requester_id"),
+                @Index(name = "idx_help_volunteer", columnList = "volunteer_id"),
+                @Index(name = "idx_help_requester_status", columnList = "requester_id, status")
+        }
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

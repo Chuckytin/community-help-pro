@@ -20,6 +20,4 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
      */
     boolean existsByUser_Id(UUID userId);
 
-    void deleteByUser_Id(UUID userId);
-
 }

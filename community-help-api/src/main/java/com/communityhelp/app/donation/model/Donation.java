@@ -11,7 +11,15 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "donations")
+@Table(
+        name = "donations",
+        indexes = {
+                @Index(name = "idx_donation_status", columnList = "status"),
+                @Index(name = "idx_donation_donor", columnList = "donor_id"),
+                @Index(name = "idx_donation_volunteer", columnList = "volunteer_id"),
+                @Index(name = "idx_donation_donor_status", columnList = "donor_id, status")
+        }
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -72,6 +80,12 @@ public class Donation extends AuditableLocatable {
 
     @Column(name = "picked_up_at")
     private LocalDateTime pickedUpAt;
+
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     /**
      * Helper del User donante que devuelve su id.

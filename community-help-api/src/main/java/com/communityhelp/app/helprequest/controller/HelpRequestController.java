@@ -3,6 +3,7 @@ package com.communityhelp.app.helprequest.controller;
 import com.communityhelp.app.helprequest.dto.HelpRequestCreateRequestDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
+import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.service.HelpRequestService;
 import com.communityhelp.app.security.AppUserDetails;
 import jakarta.validation.Valid;
@@ -46,6 +47,27 @@ public class HelpRequestController {
         return ResponseEntity.ok(helpRequestService.getHelpRequestById(id));
     }
 
+    @GetMapping("/assigned/me")
+    public ResponseEntity<List<HelpRequestResponseDto>> getAssignedToVolunteer (
+            @AuthenticationPrincipal AppUserDetails currentUser
+    ) {
+        return ResponseEntity.ok(helpRequestService.getAssignedToVolunteer(currentUser.getId()));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<HelpRequestResponseDto>> getByStatus(
+            @RequestParam HelpRequestStatus status) {
+
+        return ResponseEntity.ok(helpRequestService.getByStatus(status));
+    }
+
+    @GetMapping("/volunteer/{volunteerId}")
+    public ResponseEntity<List<HelpRequestResponseDto>> getByVolunteerAndStatus(
+            @PathVariable UUID volunteerId,
+            @RequestParam HelpRequestStatus status) {
+
+        return ResponseEntity.ok(helpRequestService.getByVolunteerAndStatus(volunteerId, status));
+    }
 
     @PatchMapping("/{id}")
     public ResponseEntity<HelpRequestResponseDto> updateHelpRequest (

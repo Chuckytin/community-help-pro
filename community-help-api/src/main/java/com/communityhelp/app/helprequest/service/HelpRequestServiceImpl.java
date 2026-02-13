@@ -73,6 +73,39 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<HelpRequestResponseDto> getAssignedToVolunteer(UUID volunteerId) {
+        return helpRequestRepository.findByVolunteer_Id(volunteerId)
+                .stream()
+                .map(helpRequestMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtiene todas las HelpRequests por estado.
+     * Caso típico: listar solicitudes abiertas en el marketplace.
+     */
+    public List<HelpRequestResponseDto> getByStatus(HelpRequestStatus status) {
+        return helpRequestRepository.findByStatus(status)
+                .stream()
+                .map(helpRequestMapper::toDto)
+                .toList();
+    }
+
+    /**
+     * Obtiene las tareas de un voluntario filtradas por estado.
+     * Caso típico: "mis tareas activas" o "mi historial".
+     */
+    public List<HelpRequestResponseDto> getByVolunteerAndStatus(UUID volunteerId,
+                                                                HelpRequestStatus status) {
+        return helpRequestRepository
+                .findByVolunteer_IdAndStatus(volunteerId, status)
+                .stream()
+                .map(helpRequestMapper::toDto)
+                .toList();
+    }
+
+    @Override
     public HelpRequestResponseDto updateHelpRequest(UUID id, UUID requesterId, HelpRequestUpdateRequestDto dto) {
 
         HelpRequest helpRequest = getOwnedRequest(id, requesterId);

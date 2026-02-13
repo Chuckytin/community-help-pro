@@ -5,6 +5,7 @@ import com.communityhelp.app.donation.dto.DonationResponseDto;
 import com.communityhelp.app.donation.dto.DonationUpdateRequestDto;
 import com.communityhelp.app.donation.model.DonationStatus;
 import com.communityhelp.app.donation.service.DonationService;
+import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.security.AppUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -123,6 +124,16 @@ public class DonationController {
 
         return ResponseEntity.ok(
                 donationService.pickupDonation(id, currentUser.getId())
+        );
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<DonationResponseDto> completeDonation (
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @PathVariable UUID id) {
+
+        return ResponseEntity.ok(
+                donationService.completeDonation(id, currentUser.getId())
         );
     }
 

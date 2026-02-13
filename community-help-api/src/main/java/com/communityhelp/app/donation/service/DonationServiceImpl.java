@@ -201,6 +201,25 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
+    public DonationResponseDto completeDonation(UUID id, UUID volunteerId) {
+
+        Donation donation = getById(id);
+
+        if (donation.getStatus() != DonationStatus.PICKED_UP) {
+            throw new IllegalStateException("Only PICKED UP donations can be completed");
+        }
+
+        if (!donation.getVolunteer().getUserId().equals(volunteerId)) {
+            throw new IllegalStateException("Only assigned volunteer can complete this request");
+        }
+
+        donation.setStatus(DonationStatus.COMPLETED);
+        donation.setCompletedAt(java.time.LocalDateTime.now());
+
+        return donationMapper.toDto(donation);
+    }
+
+    @Override
     public DonationResponseDto cancelDonation(UUID id, UUID donorId) {
 
         Donation donation = getOwnedDonation(id, donorId);
