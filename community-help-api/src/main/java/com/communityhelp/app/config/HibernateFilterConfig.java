@@ -8,6 +8,11 @@ import org.hibernate.Session;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Activa el filtro global "activeFilter" de Hibernate al arrancar la aplicación.
+ * Se usa para implementar soft delete en User, excluyendo automáticamente
+ * los registros con active = false de todas las consultas.
+ */
 @Component
 public class HibernateFilterConfig {
 

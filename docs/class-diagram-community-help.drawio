@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.6">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.8">
   <diagram name="Página-1" id="_FDWdUiHc73MfGVhLHBu">
-    <mxGraphModel dx="1594" dy="1280" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="413" pageHeight="583" math="0" shadow="0">
+    <mxGraphModel dx="1748" dy="1419" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="413" pageHeight="583" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -221,25 +221,10 @@
           <mxGeometry height="94" width="170" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-5" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Review" vertex="1">
-          <mxGeometry height="170" width="180" x="280" y="-270" as="geometry" />
+          <mxGeometry height="150" width="180" x="280" y="-250" as="geometry" />
         </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-6" parent="pQPHV4VAHDQWVi1Jruin-5" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- UUID reviewerId&lt;/div&gt;&lt;div&gt;- UUID reviewedUserId&lt;/div&gt;&lt;div&gt;- ReviewContext context&lt;/div&gt;&lt;div&gt;- UUID contextEntityId&lt;/div&gt;&lt;div&gt;- Integer rating&lt;/div&gt;&lt;div&gt;- String comment&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;" vertex="1">
-          <mxGeometry height="144" width="180" y="26" as="geometry" />
-        </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-7" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&amp;lt;&amp;lt;enum&amp;gt;&amp;gt;&lt;div&gt;ReviewContext&lt;/div&gt;" vertex="1">
-          <mxGeometry height="80" width="150" x="550" y="-210" as="geometry" />
-        </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-8" parent="pQPHV4VAHDQWVi1Jruin-7" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- DONATION&lt;/div&gt;&lt;div&gt;- HELP_REQUEST&lt;/div&gt;" vertex="1">
-          <mxGeometry height="54" width="150" y="26" as="geometry" />
-        </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-9" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;&lt;b&gt;has&lt;/b&gt;&lt;/font&gt;" vertex="1">
-          <mxGeometry height="30" width="60" x="480" y="-205" as="geometry" />
-        </mxCell>
-        <mxCell id="pQPHV4VAHDQWVi1Jruin-10" edge="1" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="550" y="-165.5" as="sourcePoint" />
-            <mxPoint x="460" y="-165.5" as="targetPoint" />
-          </mxGeometry>
+        <mxCell id="pQPHV4VAHDQWVi1Jruin-6" parent="pQPHV4VAHDQWVi1Jruin-5" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="- UUID id&lt;div&gt;- UUID reviewerId&lt;/div&gt;&lt;div&gt;- UUID reviewedUserId&lt;/div&gt;&lt;div&gt;- Integer rating&lt;/div&gt;&lt;div&gt;- String comment&lt;/div&gt;&lt;div&gt;- LocalDateTime createdAt&lt;/div&gt;&lt;div&gt;- LocalDateTime updatedAt&lt;/div&gt;" vertex="1">
+          <mxGeometry height="124" width="180" y="26" as="geometry" />
         </mxCell>
         <mxCell id="pQPHV4VAHDQWVi1Jruin-12" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="Proposal" vertex="1">
           <mxGeometry height="170" width="190" x="440" y="625" as="geometry" />

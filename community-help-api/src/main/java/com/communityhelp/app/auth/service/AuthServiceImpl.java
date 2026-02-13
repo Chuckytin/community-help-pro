@@ -53,7 +53,6 @@ public class AuthServiceImpl implements AuthService {
      * - Devuelve token + datos del usuario.
      */
     @Override
-    @Transactional
     public AuthResponse register(UserCreateRequestDto dto) {
 
         UserResponseDto createdUser;
