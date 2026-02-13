@@ -1,14 +1,36 @@
 package com.communityhelp.app.review.model;
 
 import com.communityhelp.app.common.persistence.Auditable;
+import com.communityhelp.app.donation.model.Donation;
+import com.communityhelp.app.helprequest.model.HelpRequest;
+import com.communityhelp.app.user.model.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Index - para cuando haya muchas reviews, consultar por target, donation, helprequest
+ * UniqueConstraint - un mismo author solo puede dejar 1 review
+ */
 @Entity
-@Table(name = "reviews")
+@Table(
+        name = "reviews",
+        indexes = {
+                @Index(name = "idx_review_target", columnList = "target_id"),
+                @Index(name = "idx_review_author", columnList = "author_id"),
+                @Index(name = "idx_review_donation", columnList = "donation_id"),
+                @Index(name = "idx_review_help_request", columnList = "help_request_id")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"author_id", "donation_id"}),
+                @UniqueConstraint(columnNames = {"author_id", "help_request_id"})
+        }
+)
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -23,30 +45,33 @@ public class Review extends Auditable {
     /**
      * Quién escribe la reseña
      */
-    @Column(name = "reviewer_id", nullable = false)
-    private UUID reviewerId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "author_id")
+    private User author;
 
     /**
      * A quién se reseña
      */
-    @Column(name = "reviewed_user_id", nullable = false)
-    private UUID reviewedUserId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "target_id")
+    private User target;
 
     /**
-     * Contexto de la reseña.
-     * - DONATION
-     * - HELP_REQUEST
+     * Puede ser nulo porque luego en el service se valida
      */
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ReviewContext context;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "donation_id")
+    private Donation donation;
 
     /**
-     * ID de la entidad relacionada (puede ser un Donation o un HelpRequest)
+     * Puede ser nulo porque luego en el service se valida
      */
-    @Column(name = "context_entity_id")
-    private UUID contextEntityId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "help_request_id")
+    private HelpRequest helpRequest;
 
+    @Min(1)
+    @Max(5)
     @Column(nullable = false)
     private Integer rating;
 
@@ -54,7 +79,35 @@ public class Review extends Auditable {
     @Column(columnDefinition = "TEXT")
     private String comment;
 
+    /**
+     * Helper del User que devuelve su identificador.
+     * Transient para que no forme parte del estado persistente de la entidad
+     * (vive solo en memoria, no en la BBDD)
+     */
+    @Transient
+    public UUID getAuthorId() {
+        return author != null ? author.getId() : null;
+    }
 
+    @Transient
+    public UUID getTargetId() {
+        return target != null ? target.getId() : null;
+    }
+
+    /**
+     * Helper del User que devuelve su nombre.
+     * Transient para que no forme parte del estado persistente de la entidad
+     * (vive solo en memoria, no en la BBDD)
+     */
+    @Transient
+    public String getAuthorName() {
+        return author != null ? author.getName() : null;
+    }
+
+    @Transient
+    public String getTargetName() {
+        return target != null ? target.getName() : null;
+    }
 
     @Override
     public boolean equals(Object o) {
