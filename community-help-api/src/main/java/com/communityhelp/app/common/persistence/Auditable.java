@@ -28,4 +28,11 @@ public abstract class Auditable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /**
+     * Para actualizar manualmente updatedAt.
+     */
+    public void touch() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
 }

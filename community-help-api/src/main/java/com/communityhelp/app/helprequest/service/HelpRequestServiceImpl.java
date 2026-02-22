@@ -1,5 +1,7 @@
 package com.communityhelp.app.helprequest.service;
 
+import com.communityhelp.app.chat.conversation.model.ConversationType;
+import com.communityhelp.app.chat.conversation.service.ConversationService;
 import com.communityhelp.app.helprequest.dto.HelpRequestCreateRequestDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
@@ -13,6 +15,8 @@ import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +33,8 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     private final HelpRequestMapper helpRequestMapper;
     private final UserRepository userRepository;
     private final VolunteerRepository volunteerRepository;
+
+    private final ConversationService conversationService;
 
     @Override
     public HelpRequestResponseDto createHelpRequest(UUID requesterId, HelpRequestCreateRequestDto dto) {
@@ -151,10 +157,17 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
         HelpRequest helpRequest = getById(helpRequestId);
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         autoExpireIfNeeded(helpRequest);
 
         if (helpRequest.getStatus() != HelpRequestStatus.OPEN) {
             throw new IllegalStateException("Only OPEN requests can be accepted");
+        }
+
+        // Verifica que el volunteer sea distinto del requester
+        if (helpRequest.getRequesterId().equals(volunteerUserId)) {
+            throw new IllegalStateException("Requester cannot accept their own help request");
         }
 
         Volunteer volunteer = volunteerRepository.findByUser_Id(volunteerUserId)
@@ -163,6 +176,14 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         helpRequest.setVolunteer(volunteer);
         helpRequest.setStatus(HelpRequestStatus.ACCEPTED);
         helpRequest.setAcceptedAt(java.time.LocalDateTime.now());
+
+        // Crea o recupera la conversación automáticamente
+        conversationService.getOrCreateConversation(
+                helpRequest.getId(),
+                ConversationType.HELP_REQUEST.name(),
+                volunteerUserId,
+                authentication
+        );
 
         return helpRequestMapper.toDto(helpRequest);
     }

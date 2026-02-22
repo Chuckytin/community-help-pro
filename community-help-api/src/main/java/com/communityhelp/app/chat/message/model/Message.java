@@ -1,6 +1,6 @@
-package com.communityhelp.app.message.model;
+package com.communityhelp.app.chat.message.model;
 
-import com.communityhelp.app.conversation.model.Conversation;
+import com.communityhelp.app.chat.conversation.model.Conversation;
 import com.communityhelp.app.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -44,6 +44,12 @@ public class Message {
 
     @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
+    private LocalDateTime deletedAt;
 
     @Transient
     public UUID getSenderId() {

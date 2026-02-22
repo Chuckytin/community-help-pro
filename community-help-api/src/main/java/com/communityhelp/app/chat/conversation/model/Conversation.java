@@ -1,7 +1,7 @@
-package com.communityhelp.app.conversation.model;
+package com.communityhelp.app.chat.conversation.model;
 
 import com.communityhelp.app.common.persistence.Auditable;
-import com.communityhelp.app.message.model.Message;
+import com.communityhelp.app.chat.message.model.Message;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -39,15 +39,30 @@ public class Conversation extends Auditable {
     private UUID relatedEntityId;
 
     /**
-     * Mensaje de la conversación.
-     * LAZY - para evitar cargar todos los mensajes al traer la conversación.
-     * Cascade ALL porque todos los mensajes pertenecen a la conversación.
+     * Participantes de la conversación
+     * Cascade ALL para que los participantes se gestionen junto a la conversación
+     * Builder.Default para evitar NullPointerException
      */
     @OneToMany(
             mappedBy = "conversation",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @Builder.Default
+    private List<ConversationParticipant> participants = new ArrayList<>();
+
+    /**
+     * Mensaje de la conversación.
+     * LAZY - para evitar cargar todos los mensajes al traer la conversación.
+     * Cascade ALL porque todos los mensajes pertenecen a la conversación.
+     * Builder.Default para evitar NullPointerException
+     */
+    @OneToMany(
+            mappedBy = "conversation",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
     private List<Message> messages = new ArrayList<>();
 
     @Override

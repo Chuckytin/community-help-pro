@@ -2,8 +2,10 @@ package com.communityhelp.app.common.exceptions;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -60,11 +62,14 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Maneja accesos denegados por Spring Security (@PreAuthorize, roles, etc.)
-     * y devuelve error 403 Forbidden.
+     * Maneja accesos denegados lanzados manualmente desde servicios
+     * (AccessDeniedException) y devuelve error 403 Forbidden.
      */
-    @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(AuthorizationDeniedException ex) {
+    @ExceptionHandler({
+            AccessDeniedException.class,
+            AuthorizationDeniedException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleForbidden(Exception ex) {
         String username = SecurityContextHolder.getContext().getAuthentication() != null
                 ? SecurityContextHolder.getContext().getAuthentication().getName()
                 : "anonymous";
@@ -87,6 +92,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalStateException(IllegalStateException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /**
+     * Maneja cualquier error de DataIntegrityViolationException de base de datos.
+     * Si por error se intentase duplicar alguna entidad única.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        return buildResponse(HttpStatus.CONFLICT, "Database constraint violation");
     }
 
     /**

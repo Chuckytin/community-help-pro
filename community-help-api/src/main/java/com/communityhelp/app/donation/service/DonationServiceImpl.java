@@ -1,5 +1,7 @@
 package com.communityhelp.app.donation.service;
 
+import com.communityhelp.app.chat.conversation.model.ConversationType;
+import com.communityhelp.app.chat.conversation.service.ConversationService;
 import com.communityhelp.app.donation.dto.DonationCreateRequestDto;
 import com.communityhelp.app.donation.dto.DonationResponseDto;
 import com.communityhelp.app.donation.dto.DonationUpdateRequestDto;
@@ -7,14 +9,14 @@ import com.communityhelp.app.donation.mapper.DonationMapper;
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.model.DonationStatus;
 import com.communityhelp.app.donation.repository.DonationRepository;
-import com.communityhelp.app.helprequest.model.HelpRequest;
-import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
 import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,8 @@ public class DonationServiceImpl implements DonationService {
     private final DonationMapper donationMapper;
     private final UserRepository userRepository;
     private final VolunteerRepository volunteerRepository;
+
+    private final ConversationService conversationService;
 
     @Override
     public DonationResponseDto createDonation(UUID donorId, DonationCreateRequestDto dto) {
@@ -158,6 +162,11 @@ public class DonationServiceImpl implements DonationService {
             throw new IllegalStateException("Only AVAILABLE donations can be reserved");
         }
 
+        // Verifica que el volunteer no sea el donor
+        if (donation.getDonorId().equals(volunteerId)) {
+            throw new IllegalStateException("Donor cannot reserve their own donation");
+        }
+
         Volunteer volunteer = volunteerRepository.findByUser_Id(volunteerId)
                 .orElseThrow(() -> new IllegalStateException("User is not a volunteer"));
 
@@ -172,11 +181,37 @@ public class DonationServiceImpl implements DonationService {
 
         Donation donation = getOwnedDonation(id, donorId);
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (donation.getStatus() != DonationStatus.RESERVED) {
             throw new IllegalStateException("Only RESERVED donations can be confirmed");
         }
 
+        // Si hay volunteer asignado, no permite que el mismo donor sea volunteer
+        if (donation.getVolunteer() != null && donation.getVolunteer().getId().equals(donorId)) {
+            throw new IllegalStateException("Donor cannot confirm as their own volunteer");
+        }
+
         donation.setStatus(DonationStatus.CONFIRMED);
+
+        // Crea o recupera la conversación automáticamente
+        UUID volunteerId = donation.getVolunteer() != null ? donation.getVolunteer().getId() : null;
+        if (volunteerId != null) {
+            conversationService.getOrCreateConversation(
+                    donation.getId(),
+                    ConversationType.DONATION.name(),
+                    volunteerId,
+                    authentication
+            );
+        }
+
+        // Asegura que el donor esté en la conversación
+        conversationService.getOrCreateConversation(
+                donation.getId(),
+                ConversationType.DONATION.name(),
+                donorId,
+                authentication
+        );
 
         return donationMapper.toDto(donation);
     }
