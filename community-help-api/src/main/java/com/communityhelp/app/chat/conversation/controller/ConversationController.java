@@ -108,4 +108,18 @@ public class ConversationController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{conversationId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable UUID conversationId,
+                                           @AuthenticationPrincipal AppUserDetails userDetails,
+                                           Authentication authentication) {
+
+        conversationService.markConversationAsRead(
+                conversationId,
+                userDetails.getId(),
+                authentication
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

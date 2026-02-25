@@ -22,7 +22,7 @@ public class MessageResponseDto {
     private UUID conversationId;
 
     private UUID senderId;
-    private String senderName; // ?
+    private String senderName;
 
     private String content;
 

@@ -35,4 +35,9 @@ public interface ConversationService {
      */
     void deleteMessage(UUID conversationId, UUID messageId, UUID currentUserId, Authentication authentication);
 
+    /**
+     * Marca la conversación como leída
+     */
+    void markConversationAsRead(UUID conversationId, UUID userId, Authentication authentication);
+
 }

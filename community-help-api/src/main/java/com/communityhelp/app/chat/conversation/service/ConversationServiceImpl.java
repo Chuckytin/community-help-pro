@@ -155,6 +155,7 @@ public class ConversationServiceImpl implements ConversationService {
      * Obtiene todas las conversaciones en las que participa un usuario ordenadas por fecha.
      * - Usuario normal - Solo sus conversaciones.
      * - Admin - Todas las conversaciones del sistema.
+     * Contabilidad los mensajes no leídos.
      */
     @Override
     public Page<ConversationResponseDto> getUserConversations(
@@ -179,6 +180,7 @@ public class ConversationServiceImpl implements ConversationService {
 
             ConversationResponseDto dto = conversationMapper.toDto(conversation);
 
+            // Participantes
             dto.setParticipants(
                     conversation.getParticipants().stream()
                             .map(p -> ConversationResponseDto.ParticipantDto.builder()
@@ -187,6 +189,37 @@ public class ConversationServiceImpl implements ConversationService {
                                     .build()
                             ).toList()
             );
+
+            // Contador de mensajes no leidos
+            if (!isAdmin(authentication)) {
+
+                ConversationParticipant participant =
+                        participantRepository
+                                .findByConversation_IdAndUser_Id(conversation.getId(), userId)
+                                .orElse(null);
+
+                long unread = 0;
+
+                if (participant != null) {
+
+                    if (participant.getLastReadAt() == null) {
+                        unread = messageRepository.countAllUnreadMessages(
+                                conversation.getId(),
+                                userId
+                        );
+                    } else {
+                        unread = messageRepository.countUnreadMessagesAfter(
+                                conversation.getId(),
+                                userId,
+                                participant.getLastReadAt()
+                        );
+                    }
+                }
+
+                dto.setUnreadCount(unread);
+            } else {
+                dto.setUnreadCount(0);
+            }
 
             return dto;
         });
@@ -302,6 +335,33 @@ public class ConversationServiceImpl implements ConversationService {
         conversationRepository.save(message.getConversation());
     }
 
+    // ACCIONES DE NEGOCIO
+
+    /**
+     * Marca el mensaje de la conversación como leído.
+     * 1. Verifica que el usuario, si no es admin, pueda visualizar la conversación.
+     * 2. Comprueba que el usuario forma parte de la conversación.
+     * 3. Establece la hora del último mensaje leído.
+     */
+    @Override
+    public void markConversationAsRead(UUID conversationId,
+                                       UUID userId,
+                                       Authentication authentication) {
+
+        if (!isAdmin(authentication)) {
+            participantRepository.findByConversation_IdAndUser_Id(conversationId, userId)
+                    .orElseThrow(() -> new AccessDeniedException("User not allowed"));
+        }
+
+        ConversationParticipant participant =
+                participantRepository
+                        .findByConversation_IdAndUser_Id(conversationId, userId)
+                        .orElseThrow(() -> new EntityNotFoundException("Participant not found"));
+
+        participant.setLastReadAt(LocalDateTime.now());
+        participantRepository.save(participant);
+    }
+
     /**
      * Valida que el usuario tenga acceso a la conversación asociada a una Donation o HelpRequest.
      * - DONATION → Solo donor o volunteer asignado.
@@ -355,5 +415,6 @@ public class ConversationServiceImpl implements ConversationService {
                 authentication.getAuthorities().stream()
                         .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
+
 
 }

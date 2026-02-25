@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+
+<h2>WebSocket Chat Test</h2>
+
+<label>JWT Token:</label>
+<input type="text" id="jwt" size="90"/>
+<br/><br/>
+
+<button onclick="connect()">Conectar</button>
+<button onclick="disconnect()">Desconectar</button>
+
+<hr/>
+
+<label>Mensaje:</label>
+<input type="text" id="messageInput" size="60"
+       oninput="sendTyping(true)"
+       onblur="sendTyping(false)"/>
+<button onclick="sendMessage()">Enviar</button>
+
+<h3>Mensajes recibidos:</h3>
+<ul id="messages"></ul>
+
+<script>
+
+    let stompClient = null;
+    const conversationId = "14c969fd-b5f8-4ea5-8edd-fe8a02bddee8";
+
+    function connect() {
+
+        const token = document.getElementById("jwt").value;
+
+        if (!token) {
+            alert("Introduce el JWT");
+            return;
+        }
+
+        const socket = new WebSocket("ws://localhost:8080/ws?token=" + token);
+
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null; // desactiva logs internos
+
+        stompClient.connect({}, function (frame) {
+
+            console.log("✅ Conectado:", frame);
+
+            // ===== SUSCRIPCIÓN MENSAJES =====
+            stompClient.subscribe('/topic/conversations/' + conversationId, msg => {
+                const body = JSON.parse(msg.body);
+                const messagesUl = document.getElementById('messages');
+
+                // Evitar duplicados si ya lo añadiste
+                if ([...messagesUl.children].some(li => li.textContent.includes(body.id))) return;
+
+                const li = document.createElement('li');
+                li.textContent = `[${body.senderId}] ${body.content}`;
+                messagesUl.appendChild(li);
+            });
+
+            // ===== SUSCRIPCIÓN PRESENCE =====
+            stompClient.subscribe(
+                "/topic/presence",
+                function (message) {
+                    console.log("🟢 Presence:", message.body);
+                }
+            );
+
+            // ===== SUSCRIPCIÓN TYPING =====
+            stompClient.subscribe(
+                "/topic/conversations/" + conversationId + "/typing",
+                function (message) {
+                    console.log("✍ Typing user:", message.body);
+                }
+            );
+
+        }, function (error) {
+            console.error("❌ Error STOMP:", error);
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect(function () {
+                console.log("🔌 Desconectado");
+            });
+        }
+    }
+
+    function sendMessage() {
+
+        const content = document.getElementById("messageInput").value;
+
+        if (!content.trim()) return;
+
+        stompClient.send(
+            "/app/chat.sendMessage",
+            {},
+            JSON.stringify({
+                conversationId: conversationId,
+                content: content
+            })
+        );
+
+        document.getElementById("messageInput").value = "";
+    }
+
+    function sendTyping(isTyping) {
+
+        if (!stompClient) return;
+
+        stompClient.send(
+            "/app/chat.typing",
+            {},
+            JSON.stringify({
+                conversationId: conversationId,
+                typing: isTyping
+            })
+        );
+    }
+
+</script>
+
+</body>
+</html>

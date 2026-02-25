@@ -33,6 +33,8 @@ public class ConversationResponseDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private long unreadCount;
+
     /**
      * DTO interno para representar participantes
      */

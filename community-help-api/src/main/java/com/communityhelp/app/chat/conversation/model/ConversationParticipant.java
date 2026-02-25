@@ -36,6 +36,10 @@ public class ConversationParticipant {
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt;
 
+    // Se inicializa en null (de primeras nunca ha leído nada)
+    @Column(name = "last_read_at")
+    private LocalDateTime lastReadAt;
+
     /**
      * Helper del User que devuelve su identificador.
      * Transient para que no forme parte del estado persistente de la entidad

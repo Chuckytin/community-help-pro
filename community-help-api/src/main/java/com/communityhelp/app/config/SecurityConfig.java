@@ -34,8 +34,9 @@ public class SecurityConfig {
      * Configuración de la cadena de filtros HTTP.
      * - Permite login público
      * - Requiere autenticación para otros endpoints privados
+     * - WebSocker requiere autenticación JWT
      * - Desactiva CSRF
-     * - Usa sesión STATELESS
+     * - Desactiva sesiones (stateless).
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -45,7 +46,15 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/ws/**",
+                                "/chat-test.html",
+                                "/error",
+                                "/favicon.ico"
+                        ).permitAll()
+                        // TODO: eliminar el requestMatchers de arriba al crear el frontend y descomentar lo de abajo
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+                        //.requestMatchers("/ws/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
