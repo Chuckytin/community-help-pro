@@ -14,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql
       - ./docker-config/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
 
-  # Adminer (sin cambios)
+  # Adminer
   adminer:
     image: adminer:latest
     restart: always

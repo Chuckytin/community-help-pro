@@ -30,11 +30,6 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
     List<Donation> findByVolunteer_Id(UUID volunteerId);
 
     /**
-     * Obtiene todas las solicitudes aceptadas por un voluntario
-     */
-    List<Donation> findByVolunteerId(UUID volunteerId);
-
-    /**
      * Filtra por estado
      */
     List<Donation> findByStatus(DonationStatus status);
@@ -53,4 +48,6 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
     @Query("UPDATE Donation d SET d.status = 'CANCELLED', d.cancelReason = :reason WHERE d.donor.id = :userId")
     void releaseDonationsAsDonor(@Param("userId") UUID userId, @Param("reason") String reason);
 
+    @Query("SELECT d FROM Donation d WHERE d.active = true")
+    List<Donation> findAllActive();
 }

@@ -2,6 +2,7 @@ package com.communityhelp.app.volunteer.service;
 
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.volunteer.event.VolunteerUpdatedEvent;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
 import com.communityhelp.app.volunteer.dto.VolunteerCreateRequestDto;
@@ -12,6 +13,7 @@ import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,8 @@ public class VolunteerServiceImpl implements VolunteerService {
     private final DonationRepository donationRepository;
     private final UserRepository userRepository;
     private final VolunteerMapper volunteerMapper;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public VolunteerResponseDto create(UUID userId, VolunteerCreateRequestDto dto) {
@@ -54,11 +58,30 @@ public class VolunteerServiceImpl implements VolunteerService {
         Volunteer volunteer = volunteerRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Volunteer not found for user with ID: " + userId));
 
-        if (dto.getAvailable() != null) volunteer.setAvailable(dto.getAvailable());
-        if (dto.getRadiusKm() != null) volunteer.setRadiusKm(dto.getRadiusKm());
-        if (dto.getSkills() != null) volunteer.setSkills(dto.getSkills());
+        boolean changed = false;
+
+        if (dto.getAvailable() != null) {
+            volunteer.setAvailable(dto.getAvailable());
+            changed = true;
+        }
+
+        if (dto.getRadiusKm() != null) {
+            volunteer.setRadiusKm(dto.getRadiusKm());
+            changed = true;
+        }
+
+        if (dto.getSkills() != null) {
+            volunteer.setSkills(dto.getSkills());
+            changed = true;
+        }
 
         Volunteer savedVolunteer = volunteerRepository.save(volunteer);
+
+        if (changed) {
+            eventPublisher.publishEvent(
+                    new VolunteerUpdatedEvent(savedVolunteer.getId())
+            );
+        }
 
         return volunteerMapper.toDto(savedVolunteer);
     }

@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
         // Si existe y está inactivo, reactiva la cuenta
         if (existingUser != null) {
             if (!existingUser.isActive()) {
-                createdUser = userService.reactivateUser(existingUser.getId(), dto.getPassword());
+                createdUser = userService.reactivateUser(existingUser.getId(), dto);
             } else {
                 throw new IllegalArgumentException("Email already in use");
             }

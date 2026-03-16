@@ -1,7 +1,10 @@
 package com.communityhelp.app.user.service;
 
+import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.repository.DonationRepository;
+import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.proposal.repository.ProposalRepository;
 import com.communityhelp.app.user.dto.*;
 import com.communityhelp.app.user.mapper.UserMapper;
 import com.communityhelp.app.user.model.Role;
@@ -27,6 +30,7 @@ public class UserServiceImpl implements UserService{
     private final DonationRepository donationRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final ProposalRepository proposalRepository;
 
     @Override
     public UserResponseDto createUser(UserCreateRequestDto dto) {
@@ -99,22 +103,42 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public void deleteUser(UUID id) {
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + id));
 
         String reason = "Cancelled because user deleted account";
 
-        // Libera voluntariado
-        helpRequestRepository.releaseHelpRequestsAsVolunteer(id, reason);
-        donationRepository.releaseDonationsAsVolunteer(id, reason);
+        // Cancela solicitudes creadas por el usuario y sus proposals asociadas
+        List<HelpRequest> helpRequests = helpRequestRepository.findByRequester_Id(id);
 
-        // Cancela sus propias donaciones y solicitudes
-        helpRequestRepository.releaseHelpRequestsAsRequester(id, reason);
-        donationRepository.releaseDonationsAsDonor(id, reason);
+        helpRequests.forEach(hr -> {
+            hr.cancel(reason);
+            proposalRepository.cancelPendingProposals(hr.getId());
+        });
 
-        // Soft delete
+        // Cancela donaciones creadas por el usuario y sus proposals asociadas
+        List<Donation> donations = donationRepository.findByDonor_Id(id);
+
+        donations.forEach(d -> {
+            d.cancel(reason);
+            proposalRepository.cancelPendingProposals(d.getId());
+        });
+
+        // Libera solicitudes donde participaba como voluntario
+        List<HelpRequest> volunteeredRequests = helpRequestRepository.findByVolunteer_Id(id);
+
+        volunteeredRequests.forEach(HelpRequest::releaseVolunteer);
+
+        // Libera donaciones donde participaba como voluntario
+        List<Donation> volunteeredDonations = donationRepository.findByVolunteer_Id(id);
+
+        volunteeredDonations.forEach(Donation::releaseVolunteer);
+
+        // Soft delete del usuario
         user.setActive(false);
         user.setDeletedAt(LocalDateTime.now());
+
         userRepository.save(user);
     }
 
@@ -127,17 +151,25 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserResponseDto reactivateUser(UUID userId, String newPassword) {
+    public UserResponseDto reactivateUser(UUID userId, UserCreateRequestDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Actualizaa TODOS los campos del DTO
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail()); // Aunque el email sea el mismo, lo actualizamos
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+
+        // Actualiza la ubicación
+        if (dto.getLatitude() != null && dto.getLongitude() != null) {
+            user.setLocation(dto.getLatitude(), dto.getLongitude());
+        }
+
+        // Reactiva
         user.setActive(true);
         user.setDeletedAt(null);
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
 
-        // Guarda el usuario existente, no crea uno nuevo
         User savedUser = userRepository.save(user);
-
         return userMapper.toDto(savedUser);
     }
 }

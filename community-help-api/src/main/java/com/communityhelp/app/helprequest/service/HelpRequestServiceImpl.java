@@ -5,10 +5,13 @@ import com.communityhelp.app.chat.conversation.service.ConversationService;
 import com.communityhelp.app.helprequest.dto.HelpRequestCreateRequestDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
+import com.communityhelp.app.helprequest.event.HelpRequestCreatedEvent;
+import com.communityhelp.app.helprequest.event.HelpRequestUpdatedEvent;
 import com.communityhelp.app.helprequest.mapper.HelpRequestMapper;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.proposal.service.ProposalService;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
 import com.communityhelp.app.volunteer.model.Volunteer;
@@ -19,7 +22,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,6 +40,9 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     private final VolunteerRepository volunteerRepository;
 
     private final ConversationService conversationService;
+    private final ProposalService proposalService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public HelpRequestResponseDto createHelpRequest(UUID requesterId, HelpRequestCreateRequestDto dto) {
@@ -57,6 +65,11 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         }
 
         HelpRequest savedHelpRequest = helpRequestRepository.save(helpRequest);
+
+        // Dispara la generación automática de proposals
+        eventPublisher.publishEvent(
+                new HelpRequestCreatedEvent(savedHelpRequest.getId())
+        );
 
         return helpRequestMapper.toDto(savedHelpRequest);
     }
@@ -134,6 +147,12 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             helpRequest.setLocation(dto.getLatitude(), dto.getLongitude());
         }
 
+        HelpRequest savedHelpRequest = helpRequestRepository.save(helpRequest);
+
+        eventPublisher.publishEvent(
+                new HelpRequestUpdatedEvent(savedHelpRequest.getId())
+        );
+
         return helpRequestMapper.toDto(helpRequest);
     }
 
@@ -173,9 +192,12 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         Volunteer volunteer = volunteerRepository.findByUser_Id(volunteerUserId)
                 .orElseThrow(() -> new IllegalStateException("User is not a volunteer"));
 
-        helpRequest.setVolunteer(volunteer);
-        helpRequest.setStatus(HelpRequestStatus.ACCEPTED);
-        helpRequest.setAcceptedAt(java.time.LocalDateTime.now());
+        // Asigna el voluntario
+        helpRequest.assignVolunteer(volunteer);
+        helpRequest.setActive(false);
+
+        // Cancela todas las otras proposals pendientes para esta HelpRequest
+        proposalService.cancelOtherProposals(helpRequest.getId(), volunteer.getId());
 
         // Crea o recupera la conversación automáticamente
         conversationService.getOrCreateConversation(
@@ -201,8 +223,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             throw new IllegalStateException("Only assigned volunteer can complete this request");
         }
 
-        helpRequest.setStatus(HelpRequestStatus.COMPLETED);
-        helpRequest.setCompletedAt(java.time.LocalDateTime.now());
+        helpRequest.complete();
 
         return helpRequestMapper.toDto(helpRequest);
     }
@@ -217,8 +238,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             throw new IllegalStateException("Cannot cancel this request");
         }
 
-        helpRequest.setStatus(HelpRequestStatus.CANCELLED);
-        helpRequest.setVolunteer(null);
+        helpRequest.cancel("Cancelled by requester");
 
         return helpRequestMapper.toDto(helpRequest);
     }
@@ -259,9 +279,9 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
         if (helpRequest.getStatus() == HelpRequestStatus.OPEN
                 && helpRequest.getDeadline() != null
-                && helpRequest.getDeadline().isBefore(java.time.LocalDateTime.now())) {
+                && helpRequest.getDeadline().isBefore(LocalDateTime.now())) {
 
-            helpRequest.setStatus(HelpRequestStatus.EXPIRED);
+            helpRequest.expire();
         }
     }
 

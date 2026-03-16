@@ -14,5 +14,5 @@ public interface UserService {
     UserResponseDto updateUser(UUID id, UserUpdateRequestDto dto);
     void deleteUser(UUID id);
     UserResponseDto getUserByEmailIncludeInactive(String email);
-    UserResponseDto reactivateUser(UUID userId, String newPassword);
+    UserResponseDto reactivateUser(UUID userId, UserCreateRequestDto dto);
 }

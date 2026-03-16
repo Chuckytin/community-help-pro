@@ -81,11 +81,21 @@ public class Donation extends AuditableLocatable {
     @Column(name = "picked_up_at")
     private LocalDateTime pickedUpAt;
 
+    @Column(name = "reserved_at")
+    private LocalDateTime reservedAt;
+
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    /**
+     * Activo si la entidad participa en el motor de matchmaking
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean active = true;
 
     /**
      * Helper del User donante que devuelve su id.
@@ -105,6 +115,48 @@ public class Donation extends AuditableLocatable {
     @Transient
     public UUID getVolunteerId() {
         return volunteer != null ? volunteer.getId() : null;
+    }
+
+    /**
+     * La Donation pasa a ser reservada
+     */
+    public void reserve(Volunteer volunteer) {
+        this.volunteer = volunteer;
+        this.status = DonationStatus.RESERVED;
+        this.reservedAt = LocalDateTime.now();
+    }
+
+    /**
+     * La donation pasa a ser confirmada
+     */
+    public void confirm() {
+        this.status = DonationStatus.CONFIRMED;
+        this.confirmedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Libera la donación cuando el voluntario deja de participar.
+     */
+    public void releaseVolunteer() {
+        this.volunteer = null;
+        this.status = DonationStatus.AVAILABLE;
+        this.reservedAt = null;
+        this.confirmedAt = null;
+    }
+
+    /**
+     * Cancela la donación y la excluye del motor de matching.
+     */
+    public void cancel(String reason) {
+        this.status = DonationStatus.CANCELLED;
+        this.cancelReason = reason;
+        this.active = false;
+
+        this.volunteer = null;
+        this.reservedAt = null;
+        this.confirmedAt = null;
+
+        this.completedAt = LocalDateTime.now();
     }
 
     @Override

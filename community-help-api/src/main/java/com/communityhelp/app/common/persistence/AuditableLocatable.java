@@ -9,6 +9,7 @@ import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.PrecisionModel;
 
 /**
  * Clase base para las entidades que requieren ambas auditorias:
@@ -19,7 +20,7 @@ import org.locationtech.jts.geom.Point;
 @Getter
 public abstract class AuditableLocatable extends Auditable {
 
-    private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
+    private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory(new PrecisionModel(), 4326);
 
     /**
      * Ubicación del usuario para eL matching geográfico
@@ -53,7 +54,6 @@ public abstract class AuditableLocatable extends Auditable {
      */
     public void setLocation(double latitude, double longitude) {
         this.location = GEOMETRY_FACTORY.createPoint(new Coordinate(longitude, latitude));
-        this.location.setSRID(4326);
     }
 
 }

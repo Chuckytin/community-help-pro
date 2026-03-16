@@ -47,5 +47,8 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequest, UUID> 
     @Modifying
     @Query("UPDATE HelpRequest h SET h.status = 'CANCELLED', h.cancelReason = :reason WHERE h.requester.id = :userId")
     void releaseHelpRequestsAsRequester(@Param("userId") UUID userId, @Param("reason") String reason);
+
+    @Query("SELECT h FROM HelpRequest h WHERE h.active = true")
+    List<HelpRequest> findAllActive();
 }
 

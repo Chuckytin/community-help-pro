@@ -73,6 +73,13 @@ public class HelpRequest extends AuditableLocatable {
     private LocalDateTime completedAt;
 
     /**
+     * Activo si la entidad participa en el motor de matchmaking
+     */
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean active = true;
+
+    /**
      * Helper del User solicitante que devuelve su id.
      * Transient para que no forme parte del estado persistente de la entidad
      * (vive solo en memoria, no en la BBDD)
@@ -90,6 +97,50 @@ public class HelpRequest extends AuditableLocatable {
     @Transient
     public UUID getVolunteerId() {
         return volunteer != null ? volunteer.getId() : null;
+    }
+
+    /**
+     * Asigna un voluntario a la solicitud.
+     */
+    public void assignVolunteer(Volunteer volunteer) {
+        this.volunteer = volunteer;
+        this.status = HelpRequestStatus.ACCEPTED;
+        this.acceptedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Libera al voluntario asignado.
+     */
+    public void releaseVolunteer() {
+        this.volunteer = null;
+        this.status = HelpRequestStatus.OPEN;
+        this.acceptedAt = null;
+    }
+
+    /**
+     * Completa una HelpRequest
+     */
+    public void complete() {
+        this.status = HelpRequestStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+        this.active = false;
+    }
+
+    /**
+     * Cancela la solicitud y la excluye del motor de matching.
+     */
+    public void cancel(String reason) {
+        this.status = HelpRequestStatus.CANCELLED;
+        this.cancelReason = reason;
+        this.active = false;
+    }
+
+    /**
+     * Expira la fecha de deadline.
+     */
+    public void expire() {
+        this.status = HelpRequestStatus.EXPIRED;
+        this.active = false;
     }
 
     @Override

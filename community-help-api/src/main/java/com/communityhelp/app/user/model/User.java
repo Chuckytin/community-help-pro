@@ -15,7 +15,9 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_users_location", columnList = "location")
+})
 @SQLDelete(sql = "UPDATE users SET active = false, deleted_at = now() WHERE id = ?")
 @FilterDef(name = "activeFilter", defaultCondition = "active = true")
 @NoArgsConstructor

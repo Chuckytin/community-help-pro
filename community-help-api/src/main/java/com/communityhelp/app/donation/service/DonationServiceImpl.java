@@ -5,6 +5,8 @@ import com.communityhelp.app.chat.conversation.service.ConversationService;
 import com.communityhelp.app.donation.dto.DonationCreateRequestDto;
 import com.communityhelp.app.donation.dto.DonationResponseDto;
 import com.communityhelp.app.donation.dto.DonationUpdateRequestDto;
+import com.communityhelp.app.donation.event.DonationCreatedEvent;
+import com.communityhelp.app.donation.event.DonationUpdatedEvent;
 import com.communityhelp.app.donation.mapper.DonationMapper;
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.model.DonationStatus;
@@ -15,11 +17,13 @@ import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,6 +39,8 @@ public class DonationServiceImpl implements DonationService {
     private final VolunteerRepository volunteerRepository;
 
     private final ConversationService conversationService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public DonationResponseDto createDonation(UUID donorId, DonationCreateRequestDto dto) {
@@ -60,6 +66,11 @@ public class DonationServiceImpl implements DonationService {
         }
 
         Donation savedDonation = donationRepository.save(donation);
+
+        // Dispara la generación automática de Donation
+        eventPublisher.publishEvent(
+                new DonationCreatedEvent(savedDonation.getId())
+        );
 
         return donationMapper.toDto(savedDonation);
 
@@ -133,6 +144,12 @@ public class DonationServiceImpl implements DonationService {
             donation.setLocation(dto.getLatitude(), dto.getLongitude());
         }
 
+        Donation savedDonation = donationRepository.save(donation);
+
+        eventPublisher.publishEvent(
+                new DonationUpdatedEvent(savedDonation.getId())
+        );
+
         return donationMapper.toDto(donation);
     }
 
@@ -172,6 +189,7 @@ public class DonationServiceImpl implements DonationService {
 
         donation.setVolunteer(volunteer);
         donation.setStatus(DonationStatus.RESERVED);
+        donation.setActive(false);
 
         return donationMapper.toDto(donation);
     }
@@ -230,7 +248,8 @@ public class DonationServiceImpl implements DonationService {
         }
 
         donation.setStatus(DonationStatus.PICKED_UP);
-        donation.setPickedUpAt(java.time.LocalDateTime.now());
+        donation.setPickedUpAt(LocalDateTime.now());
+        donation.setActive(false);
 
         return donationMapper.toDto(donation);
     }
@@ -249,7 +268,8 @@ public class DonationServiceImpl implements DonationService {
         }
 
         donation.setStatus(DonationStatus.COMPLETED);
-        donation.setCompletedAt(java.time.LocalDateTime.now());
+        donation.setCompletedAt(LocalDateTime.now());
+        donation.setActive(false);
 
         return donationMapper.toDto(donation);
     }
@@ -266,6 +286,7 @@ public class DonationServiceImpl implements DonationService {
 
         donation.setStatus(DonationStatus.CANCELLED);
         donation.setVolunteer(null);
+        donation.setActive(false);
 
         return donationMapper.toDto(donation);
     }
@@ -306,9 +327,10 @@ public class DonationServiceImpl implements DonationService {
 
         if (donation.getStatus() == DonationStatus.AVAILABLE
                 && donation.getExpiryDate() != null
-                && donation.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+                && donation.getExpiryDate().isBefore(LocalDateTime.now())) {
 
             donation.setStatus(DonationStatus.EXPIRED);
+            donation.setActive(false);
         }
     }
 
