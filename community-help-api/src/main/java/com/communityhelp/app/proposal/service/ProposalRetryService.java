@@ -26,9 +26,9 @@ public class ProposalRetryService {
 
     /**
      * Reintenta matching para entidades con proposals pendientes
-     * que superaron el tiempo de espera.
+     * que superaron el tiempo de espera cada 10 minutos.
      */
-    @Scheduled(fixedDelay = 600000) // cada 10 minutos
+    @Scheduled(fixedDelay = 600000)
     public void retryUnansweredProposals() {
 
         LocalDateTime now = LocalDateTime.now();
