@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -29,60 +30,40 @@ public class ProposalRetryService {
      * que superaron el tiempo de espera cada 10 minutos.
      */
     @Scheduled(fixedDelay = 600000)
+    @Transactional
     public void retryUnansweredProposals() {
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime threshold = now.minusMinutes(ProposalMatchingConfig.RETRY_DELAY_MINUTES);
+        LocalDateTime threshold = LocalDateTime.now()
+                .minusMinutes(ProposalMatchingConfig.RETRY_DELAY_MINUTES);
 
-        log.debug(
-                "[proposal-retry] Ejecutando reintento - threshold={} (hace {} minutos), now={}",
-                threshold,
-                ProposalMatchingConfig.RETRY_DELAY_MINUTES,
-                now
-        );
+        log.debug("[proposal-retry] threshold={}", threshold);
 
-        Set<UUID> helpRequests =
-                proposalRepository.findDistinctTargetEntityIdsForRetry(
-                        ProposalType.HELP_REQUEST,
-                        ProposalStatus.PENDING,
-                        threshold
-                );
+        Set<UUID> helpRequests = proposalRepository.findDistinctTargetEntityIdsForRetry(
+                ProposalType.HELP_REQUEST, ProposalStatus.PENDING, threshold);
 
-        Set<UUID> donations =
-                proposalRepository.findDistinctTargetEntityIdsForRetry(
-                        ProposalType.DONATION,
-                        ProposalStatus.PENDING,
-                        threshold
-                );
+        Set<UUID> donations = proposalRepository.findDistinctTargetEntityIdsForRetry(
+                ProposalType.DONATION, ProposalStatus.PENDING, threshold);
 
         if (helpRequests.isEmpty() && donations.isEmpty()) {
-            log.debug("[proposal-retry] No pending proposals to retry");
+            log.debug("[proposal-retry] Nothing to retry");
             return;
         }
 
-        log.info(
-                "[proposal-retry] Retrying {} help requests and {} donations",
-                helpRequests.size(),
-                donations.size()
-        );
+        log.info("[proposal-retry] Retrying {} help requests and {} donations",
+                helpRequests.size(), donations.size());
 
-        if (log.isDebugEnabled()) {
-            log.debug("[proposal-retry] HelpRequest count: {}", helpRequests.size());
-            log.debug("[proposal-retry] Donation count: {}", donations.size());
-        }
+        // sigue viendo las PENDING antiguas y bloquea la creación de nuevas
+        proposalRepository.expireStaleProposals(ProposalType.HELP_REQUEST, threshold);
+        proposalRepository.expireStaleProposals(ProposalType.DONATION, threshold);
 
         helpRequests.forEach(id ->
                 generatorService.generateForHelpRequest(
-                        generatorService.getHelpRequestById(id)
-                )
-        );
+                        generatorService.getHelpRequestById(id)));
 
         donations.forEach(id ->
                 generatorService.generateForDonation(
-                        generatorService.getDonationById(id)
-                )
-        );
+                        generatorService.getDonationById(id)));
 
-        log.debug("[proposal-retry] Reintento completado");
+        log.debug("[proposal-retry] Retry completed");
     }
 }

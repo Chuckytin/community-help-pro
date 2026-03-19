@@ -99,12 +99,15 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
     List<Object[]> findLastResponsesByVolunteerIds(List<UUID> volunteerIds);
 
     /**
-     * Obtiene los IDs de los voluntarios que ya tienen una proposal asociada a una entidad específica.
+     * Obtiene los IDs de los voluntarios que ya tienen una proposal ACTIVA
+     * (PENDING o ACCEPTED) para una entidad específica.
+     * Excluye CANCELLED, REJECTED y EXPIRED para permitir el retry.
      */
     @Query("""
             SELECT p.volunteer.id
             FROM Proposal p
             WHERE p.targetEntityId = :entityId
+              AND p.status IN ('PENDING', 'ACCEPTED')
             """)
     List<UUID> findVolunteerIdsWithProposal(UUID entityId);
 
@@ -122,6 +125,40 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
             ProposalType type,
             ProposalStatus status,
             LocalDateTime threshold
+    );
+
+    /**
+     * Expira una Propuesta pendiente donde el threshold supera al createdAt
+     */
+    @Modifying
+    @Query("""
+            UPDATE Proposal p
+            SET p.status = 'EXPIRED'
+            WHERE p.type = :type
+              AND p.status = 'PENDING'
+              AND p.createdAt < :threshold
+            """)
+    void expireStaleProposals(ProposalType type, LocalDateTime threshold);
+
+    /**
+     * Reactiva una proposal expirada para el retry, actualizando su score y estado a PENDING.
+     */
+    @Modifying
+    @Query("""
+            UPDATE Proposal p
+            SET p.status = 'PENDING',
+                p.score = :score,
+                p.respondedAt = NULL
+            WHERE p.volunteer.id = :volunteerId
+              AND p.targetEntityId = :entityId
+              AND p.type = :type
+              AND p.status = 'EXPIRED'
+            """)
+    int reactivateExpiredProposal(
+            UUID volunteerId,
+            UUID entityId,
+            ProposalType type,
+            double score
     );
 
 }

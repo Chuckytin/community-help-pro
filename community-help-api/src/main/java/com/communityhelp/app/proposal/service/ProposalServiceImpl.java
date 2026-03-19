@@ -17,6 +17,7 @@ import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ProposalServiceImpl implements ProposalService {
 
     private final ProposalRepository proposalRepository;
@@ -62,6 +64,20 @@ public class ProposalServiceImpl implements ProposalService {
             }
         }
 
+        // Intenta reactivar una proposal expirada antes de crear una nueva
+        int reactivated = proposalRepository.reactivateExpiredProposal(
+                volunteerId, targetEntityId, type, score);
+
+        if (reactivated > 0) {
+            log.debug("[proposal] Reactivated expired proposal for volunteer {} entity {}",
+                    volunteerId, targetEntityId);
+            return proposalRepository
+                    .findByTargetEntityIdAndVolunteer_Id(targetEntityId, volunteerId)
+                    .map(proposalMapper::toDto)
+                    .orElseThrow(() -> new RuntimeException("Proposal not found after reactivation"));
+        }
+
+        // crea una nueva proposal
         Proposal proposal = Proposal.builder()
                 .volunteer(volunteer)
                 .targetEntityId(targetEntityId)
@@ -70,16 +86,8 @@ public class ProposalServiceImpl implements ProposalService {
                 .status(ProposalStatus.PENDING)
                 .build();
 
-        // Intenta crear, si ya existe, recupera la existente
-        try {
-            Proposal saved = proposalRepository.save(proposal);
-            return proposalMapper.toDto(saved);
-        } catch (Exception e) {
-            return proposalRepository
-                    .findByTargetEntityIdAndVolunteer_Id(targetEntityId, volunteerId)
-                    .map(proposalMapper::toDto)
-                    .orElseThrow(() -> new RuntimeException("Error inesperado", e));
-        }
+        Proposal saved = proposalRepository.save(proposal);
+        return proposalMapper.toDto(saved);
     }
 
     /**
@@ -141,7 +149,7 @@ public class ProposalServiceImpl implements ProposalService {
 
             assignTargetEntity(saved);
 
-            cancelOtherProposals(saved);
+            cancelOtherProposals(saved.getTargetEntityId(), saved.getVolunteer().getId());
 
             return proposalMapper.toDto(saved);
 
@@ -182,21 +190,6 @@ public class ProposalServiceImpl implements ProposalService {
             if (!proposal.getVolunteer().getId().equals(acceptedVolunteerId)) {
                 proposal.setStatus(ProposalStatus.CANCELLED);
                 proposal.setActive(false);
-            }
-        }
-
-        proposalRepository.saveAll(proposals);
-    }
-
-    private void cancelOtherProposals(Proposal accepted) {
-
-        List<Proposal> proposals =
-                proposalRepository.findAllByTargetEntityId(accepted.getTargetEntityId());
-
-        for (Proposal proposal : proposals) {
-
-            if (!proposal.getId().equals(accepted.getId())) {
-                proposal.setStatus(ProposalStatus.CANCELLED);
             }
         }
 

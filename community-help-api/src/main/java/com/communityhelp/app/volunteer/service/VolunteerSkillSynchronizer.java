@@ -30,14 +30,14 @@ public class VolunteerSkillSynchronizer {
     public void verifySkillsInDatabase() {
         Set<VolunteerSkill> allSkills = EnumSet.allOf(VolunteerSkill.class);
 
-        log.debug("===[skill-sync] Verificación de Skills ===");
-        log.debug("Total de skills en el enum: {}", allSkills.size());
+        log.debug("===[skill-sync] Skills verification ===");
+        log.debug("Total skills in enum: {}", allSkills.size());
 
         List<String> existingSkills = jdbcTemplate.queryForList(
                 "SELECT DISTINCT skills FROM volunteer_skills", String.class
         );
 
-        log.debug("Total de skills actualmente en uso por voluntarios: {}", existingSkills.size());
+        log.debug("Total skills currently in use by volunteers: {}", existingSkills.size());
 
         Set<String> unusedSkills = allSkills.stream()
                 .map(Enum::name)
@@ -45,12 +45,12 @@ public class VolunteerSkillSynchronizer {
                 .collect(Collectors.toSet());
 
         if (!unusedSkills.isEmpty()) {
-            log.debug("Nuevos skills disponibles (ningún voluntario los tiene aún): {}",
+            log.debug("New skills available (no volunteer has them yet): {}",
                     unusedSkills.stream().sorted().collect(Collectors.joining(", ")));
         } else {
-            log.debug("Todos los skills del enum están siendo usados por al menos un voluntario");
+            log.debug("All enum skills are being used by at least one volunteer");
         }
 
-        log.debug("=== [skill-sync] Fin de verificación ===");
+        log.debug("=== [skill-sync] End of verification ===");
     }
 }

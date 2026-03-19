@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.communityhelp</groupId>
 	<artifactId>community-help-api</artifactId>
-	<version>0.12.1</version>
+	<version>0.12.2</version>
 	<name>community-help-api</name>
 	<description>Backend API for Community Help platform</description>
 	<url/>
@@ -76,6 +76,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>42.7.10</version>
 			<scope>runtime</scope>
 		</dependency>
 		<!-- Hibernate Spatial (PostGIS) -->

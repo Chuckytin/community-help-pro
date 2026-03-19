@@ -61,6 +61,7 @@ public class User extends AuditableLocatable {
      * LAZY - se carga solo cuando se accede a él.
      * All - las operaciones de persistencia se propagan al Volunteer.
      */
+    @Builder.Default
     @OneToMany(
             mappedBy = "requester",
             fetch = FetchType.LAZY
