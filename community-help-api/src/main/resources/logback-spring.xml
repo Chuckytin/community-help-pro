@@ -1,5 +1,6 @@
 <configuration>
     <springProperty scope="context" name="APP_NAME" source="spring.application.name"/>
+
     <!-- Patrón para logs en consola -->
     <property name="LOG_PATTERN"
               value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
@@ -12,6 +13,35 @@
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Appender FILE común reutilizable -->
+    <appender name="FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+        <!-- Archivo principal -->
+        <file>logs/community-help.log</file>
+
+        <!-- Política de rotación: por fecha + tamaño -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+
+            <!-- Nombre de archivos rotados -->
+            <fileNamePattern>logs/community-help.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+
+            <!-- Rotación también por tamaño -->
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+
+            <!-- Mantener logs 30 días -->
+            <maxHistory>30</maxHistory>
+
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
@@ -38,34 +68,6 @@
 
     <springProfile name="prod">
 
-        <appender name="FILE"
-                  class="ch.qos.logback.core.rolling.RollingFileAppender">
-
-            <!-- Archivo principal -->
-            <file>logs/community-help.log</file>
-
-            <!-- Política de rotación: por fecha + tamaño -->
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-
-                <!-- Nombre de archivos rotados -->
-                <fileNamePattern>logs/community-help.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-
-                <!-- Rotación también por tamaño -->
-                <timeBasedFileNamingAndTriggeringPolicy
-                        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                    <maxFileSize>10MB</maxFileSize>
-                </timeBasedFileNamingAndTriggeringPolicy>
-
-                <!-- Mantener logs 30 días -->
-                <maxHistory>30</maxHistory>
-
-            </rollingPolicy>
-
-            <encoder>
-                <pattern>${FILE_LOG_PATTERN}</pattern>
-            </encoder>
-        </appender>
-
         <!-- Logs de la app -->
         <logger name="com.communityhelp.app" level="INFO"/>
 
@@ -84,32 +86,9 @@
     </springProfile>
 
     <springProfile name="!dev &amp; !prod &amp; !test">
-
-        <!-- Reutiliza el comportamiento de producción -->
+        
         <logger name="com.communityhelp.app" level="INFO"/>
         <logger name="org.hibernate.SQL" level="WARN"/>
-
-        <!-- Appender FILE -->
-        <appender name="FILE"
-                  class="ch.qos.logback.core.rolling.RollingFileAppender">
-
-            <file>logs/community-help.log</file>
-
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>logs/community-help.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-
-                <timeBasedFileNamingAndTriggeringPolicy
-                        class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                    <maxFileSize>10MB</maxFileSize>
-                </timeBasedFileNamingAndTriggeringPolicy>
-
-                <maxHistory>30</maxHistory>
-            </rollingPolicy>
-
-            <encoder>
-                <pattern>${FILE_LOG_PATTERN}</pattern>
-            </encoder>
-        </appender>
 
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
