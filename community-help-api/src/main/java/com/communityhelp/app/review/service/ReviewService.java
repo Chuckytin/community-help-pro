@@ -3,8 +3,8 @@ package com.communityhelp.app.review.service;
 import com.communityhelp.app.review.dto.ReviewCreateRequestDto;
 import com.communityhelp.app.review.dto.ReviewResponseDto;
 import com.communityhelp.app.review.dto.ReviewUpdateRequestDto;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface ReviewService {
@@ -15,6 +15,6 @@ public interface ReviewService {
 
     void delete(UUID reviewId, UUID authorId);
 
-    List<ReviewResponseDto> getReviewsForUser(UUID targetId);
+    Page<ReviewResponseDto> getReviewsForUser(UUID targetId, int page, int size);
 
 }

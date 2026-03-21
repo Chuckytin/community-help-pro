@@ -6,6 +6,7 @@ import com.communityhelp.app.chat.message.dto.MessageResponseDto;
 import com.communityhelp.app.chat.websocket.dto.ChatMessageWsDto;
 import com.communityhelp.app.chat.websocket.dto.TypingWsDto;
 import com.communityhelp.app.security.AppUserDetails;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -18,11 +19,30 @@ import java.util.UUID;
 
 /**
  * Controlador WebSocket para mensajería en tiempo real.
- * Maneja:
- * - Envío de mensajes.
- * - Eventos de escritura (typing).
+ * Maneja envío de mensajes y eventos de escritura (typing).
  * Obtiene el usuario autenticado desde la sesión WebSocket.
  */
+@Tag(
+        name = "Chat",
+        description = """
+        REST messaging API and real-time WebSocket protocol.
+        
+        **WebSocket connection:**
+        - URL: `ws://localhost:8080/ws`
+        - Protocol: STOMP over WebSocket
+        - Auth: send JWT token as query param → `/ws?token=YOUR_JWT`
+        
+        **Send a message:**
+        - Destination: `/app/chat.sendMessage`
+        - Body: `{ "conversationId": "uuid", "content": "text" }`
+        - Subscribe to receive: `/topic/conversations/{conversationId}`
+        
+        **Typing indicator:**
+        - Destination: `/app/chat.typing`
+        - Body: `{ "conversationId": "uuid" }`
+        - Subscribe to receive: `/topic/conversations/{conversationId}/typing`
+        """
+)
 @Controller
 @RequiredArgsConstructor
 public class ChatWebSocketController {

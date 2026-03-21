@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,7 +33,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
      * Obtiene todas las Review de un User target
      */
     @Query("SELECT r FROM Review r JOIN FETCH r.author JOIN FETCH r.target WHERE r.target.id = :targetId")
-    List<Review> findByTarget_Id(UUID targetId);
+    Page<Review> findByTarget_Id(UUID targetId, Pageable pageable);
 
     /**
      * Selecciona la media de las Review de un User target

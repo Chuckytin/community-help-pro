@@ -24,7 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * - UserDetailsService personalizado.
  * - Filtro JWT y su integración en la cadena de filtros.
  * - Reglas de acceso a los endpoints.
- * @EnableMethodSecurity - activa la seguridad a nivel de métodos con anotaciones como @PreAuthorize
+ * EnableMethodSecurity - activa la seguridad a nivel de métodos con anotaciones como @PreAuthorize
  */
 @Configuration
 @EnableMethodSecurity
@@ -55,6 +55,12 @@ public class SecurityConfig {
                         // TODO: eliminar el requestMatchers de arriba al crear el frontend y descomentar lo de abajo
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                         //.requestMatchers("/ws/**").authenticated()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

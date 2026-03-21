@@ -5,6 +5,9 @@ import com.communityhelp.app.chat.conversation.service.ConversationService;
 import com.communityhelp.app.chat.message.dto.MessageCreateRequestDto;
 import com.communityhelp.app.chat.message.dto.MessageResponseDto;
 import com.communityhelp.app.security.AppUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Tag(name = "Chat", description = "REST messaging. For real-time use the WebSocket endpoint at /ws with STOMP.")
 @RestController
 @RequestMapping("/api/v1/conversations")
 @RequiredArgsConstructor
@@ -23,6 +27,9 @@ public class ConversationController {
 
     private final ConversationService conversationService;
 
+    @Operation(summary = "Get or create a conversation",
+            description = "Creates the conversation if it does not exist for the given entity")
+    @ApiResponse(responseCode = "201", description = "Conversation created or retrieved")
     @PostMapping
     public ResponseEntity<ConversationResponseDto> getOrCreateConversation(
             @RequestParam UUID relatedEntityId,
@@ -39,6 +46,7 @@ public class ConversationController {
                 ));
     }
 
+    @Operation(summary = "Get my conversations")
     @GetMapping
     public ResponseEntity<Page<ConversationResponseDto>> getUserConversations(
             @RequestParam(defaultValue = "0") int page,
@@ -56,6 +64,8 @@ public class ConversationController {
         );
     }
 
+    @Operation(summary = "Send a message via REST",
+            description = "HTTP alternative to WebSocket for sending messages")
     @PostMapping("/{conversationId}/messages")
     public ResponseEntity<MessageResponseDto> sendMessage(
             @PathVariable UUID conversationId,
@@ -72,6 +82,7 @@ public class ConversationController {
                 ));
     }
 
+    @Operation(summary = "Get messages from a conversation")
     @GetMapping("/{conversationId}/messages")
     public ResponseEntity<Page<MessageResponseDto>> getMessages(
             @PathVariable UUID conversationId,
@@ -90,6 +101,8 @@ public class ConversationController {
                 ));
     }
 
+    @Operation(summary = "Delete a message")
+    @ApiResponse(responseCode = "204", description = "Message deleted")
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{conversationId}/messages/{messageId}")
     public ResponseEntity<Void> deleteMessage(
@@ -108,6 +121,8 @@ public class ConversationController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Mark conversation as read")
+    @ApiResponse(responseCode = "204", description = "Conversation marked as read")
     @PatchMapping("/{conversationId}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable UUID conversationId,
                                            @AuthenticationPrincipal AppUserDetails userDetails,

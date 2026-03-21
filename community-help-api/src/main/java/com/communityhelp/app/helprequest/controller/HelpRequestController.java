@@ -6,6 +6,9 @@ import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.service.HelpRequestService;
 import com.communityhelp.app.security.AppUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Help Requests", description = "Requests for specific help. Creating one triggers the automatic matching engine for nearby volunteers.")
 @RestController
 @RequestMapping("/api/v1/help-requests")
 @RequiredArgsConstructor
@@ -24,6 +28,9 @@ public class HelpRequestController {
 
     private final HelpRequestService helpRequestService;
 
+    @Operation(summary = "Create a help request",
+            description = "Automatically triggers the matching engine to find nearby volunteers")
+    @ApiResponse(responseCode = "201", description = "Request created and matching started")
     @PostMapping
     public ResponseEntity<HelpRequestResponseDto> createHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,
@@ -33,6 +40,7 @@ public class HelpRequestController {
                 .body(helpRequestService.createHelpRequest(currentUser.getId(), dto));
     }
 
+    @Operation(summary = "Get my help requests")
     @GetMapping("/me")
     public ResponseEntity<List<HelpRequestResponseDto>> getMyHelpRequests (
             @AuthenticationPrincipal AppUserDetails currentUser) {
@@ -42,11 +50,13 @@ public class HelpRequestController {
         );
     }
 
+    @Operation(summary = "Get help request by ID")
     @GetMapping("/{id}")
     public ResponseEntity<HelpRequestResponseDto> getHelpRequestById (@PathVariable UUID id) {
         return ResponseEntity.ok(helpRequestService.getHelpRequestById(id));
     }
 
+    @Operation(summary = "Get requests assigned to me as volunteer")
     @GetMapping("/assigned/me")
     public ResponseEntity<List<HelpRequestResponseDto>> getAssignedToVolunteer (
             @AuthenticationPrincipal AppUserDetails currentUser
@@ -54,6 +64,7 @@ public class HelpRequestController {
         return ResponseEntity.ok(helpRequestService.getAssignedToVolunteer(currentUser.getId()));
     }
 
+    @Operation(summary = "List by status", description = "Useful for the public marketplace")
     @GetMapping
     public ResponseEntity<List<HelpRequestResponseDto>> getByStatus(
             @RequestParam HelpRequestStatus status) {
@@ -61,6 +72,7 @@ public class HelpRequestController {
         return ResponseEntity.ok(helpRequestService.getByStatus(status));
     }
 
+    @Operation(summary = "Get a volunteer's requests filtered by status")
     @GetMapping("/volunteer/{volunteerId}")
     public ResponseEntity<List<HelpRequestResponseDto>> getByVolunteerAndStatus(
             @PathVariable UUID volunteerId,
@@ -69,6 +81,8 @@ public class HelpRequestController {
         return ResponseEntity.ok(helpRequestService.getByVolunteerAndStatus(volunteerId, status));
     }
 
+    @Operation(summary = "Update a help request",
+            description = "Only OPEN requests can be updated. Regenerates proposals if location or type changes")
     @PatchMapping("/{id}")
     public ResponseEntity<HelpRequestResponseDto> updateHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,
@@ -81,6 +95,8 @@ public class HelpRequestController {
         return ResponseEntity.ok(helpRequestResponseDto);
     }
 
+    @Operation(summary = "Delete a help request")
+    @ApiResponse(responseCode = "204", description = "Request deleted")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,
@@ -90,6 +106,8 @@ public class HelpRequestController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Delete a help request (admin)", description = "Admin only")
+    @ApiResponse(responseCode = "204", description = "Request deleted")
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}/admin")
     public ResponseEntity<Void> deleteHelpRequestAsAdmin(@PathVariable UUID id) {
@@ -99,6 +117,8 @@ public class HelpRequestController {
 
     // ACCIONES DE NEGOCIO
 
+    @Operation(summary = "Accept a help request as volunteer",
+            description = "Assigns the volunteer to the request and cancels all other pending proposals")
     @PostMapping("/{id}/accept")
     public ResponseEntity<HelpRequestResponseDto> acceptHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,
@@ -109,6 +129,8 @@ public class HelpRequestController {
         );
     }
 
+    @Operation(summary = "Mark as completed",
+            description = "Only the assigned volunteer can complete the request")
     @PostMapping("/{id}/complete")
     public ResponseEntity<HelpRequestResponseDto> completeHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,
@@ -119,6 +141,7 @@ public class HelpRequestController {
         );
     }
 
+    @Operation(summary = "Cancel a help request")
     @PostMapping("/{id}/cancel")
     public ResponseEntity<HelpRequestResponseDto> cancelHelpRequest (
             @AuthenticationPrincipal AppUserDetails currentUser,

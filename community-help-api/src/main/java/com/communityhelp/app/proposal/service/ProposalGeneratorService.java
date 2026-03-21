@@ -95,8 +95,7 @@ public class ProposalGeneratorService {
                                 (a, b) -> a
                         ));
 
-        List<Volunteer> volunteers =
-                volunteerRepository.findAllById(distanceMap.keySet());
+        List<Volunteer> volunteers = volunteerRepository.findAllByIdWithUser(distanceMap.keySet());
 
         List<VolunteerCandidate> candidates =
                 volunteers.stream()
@@ -211,8 +210,7 @@ public class ProposalGeneratorService {
                                 (a, b) -> a
                         ));
 
-        List<Volunteer> volunteers =
-                volunteerRepository.findAllById(distanceMap.keySet());
+        List<Volunteer> volunteers = volunteerRepository.findAllByIdWithUser(distanceMap.keySet());
 
         List<VolunteerCandidate> candidates =
                 volunteers.stream()

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +26,12 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
     boolean existsByUser_Id(UUID userId);
 
     /**
+     * Obtiene todos los ids de los voluntarios con join en User.
+     */
+    @Query("SELECT v FROM Volunteer v JOIN FETCH v.user WHERE v.id IN :ids")
+    List<Volunteer> findAllByIdWithUser(Collection<UUID> ids);
+
+    /**
      * Busca Voluntarios disponibles dentro de un radio de distancia con PostGIS
      */
     @Query(value = """
@@ -35,6 +42,10 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
             JOIN users u ON v.user_id = u.id
             WHERE v.available = true
             AND ST_DWithin(u.location, :location, :radius)
+            AND (
+                v.radius_km IS NULL
+                OR ST_Distance(u.location, :location) <= v.radius_km * 1000
+            )
             ORDER BY u.location <-> :location
             """, nativeQuery = true)
     List<Object[]> findNearbyVolunteerIds(
@@ -61,6 +72,10 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
             JOIN users u ON v.user_id = u.id
             WHERE v.available = true
             AND ST_DWithin(u.location, :location, :radius)
+            AND (
+                v.radius_km IS NULL
+                OR ST_Distance(u.location, :location) <= v.radius_km * 1000
+            )
             ORDER BY u.location <-> :location
             """, nativeQuery = true)
     List<Object[]> findNearbyVolunteerData(

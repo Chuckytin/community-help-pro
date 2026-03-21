@@ -37,6 +37,9 @@ public class Volunteer extends Auditable {
     @Column(nullable = false)
     private boolean available = true;
 
+    /**
+     * Radio máximo en el que el voluntario quiere operar.
+     */
     @Column(name = "radius_km")
     private Double radiusKm;
 

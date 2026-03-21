@@ -16,10 +16,12 @@ import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -152,12 +154,10 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ReviewResponseDto> getReviewsForUser(UUID targetId) {
-
-        return reviewRepository.findByTarget_Id(targetId)
-                .stream()
-                .map(reviewMapper::toDto)
-                .toList();
+    public Page<ReviewResponseDto> getReviewsForUser(UUID targetId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return reviewRepository.findByTarget_Id(targetId, pageable)
+                .map(reviewMapper::toDto);
     }
 
     /**

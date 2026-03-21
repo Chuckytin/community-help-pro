@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService{
         }
 
         User user = userMapper.toEntity(dto);
-        user.setRole(Role.REQUESTER);
+        user.setRole(Role.USER);
         user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
 
         //Si se envía la location
