@@ -70,16 +70,28 @@ La especificación OpenAPI en JSON está disponible en `/v3/api-docs`.
 
 ### Variables de entorno
 
-Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
+Crea un archivo `.env` en la raíz del proyecto:
 ```env
+# PostgreSQL (Docker)
+POSTGRES_DB=community_help_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=yourpassword
+
+# Spring datasource (app)
 SPRING_DATASOURCE_DB=community_help_db
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=yourpassword
-JWT_SECRET=your_jwt_secret
+
+# JWT
+JWT_SECRET=your_jwt_secret_min_32_chars
 JWT_EXPIRATION_MS=86400000
 JWT_EXPIRED_IN=86400000
+
+# Admin inicial
 ADMIN_EMAIL=admin@communityhelp.com
 ADMIN_PASSWORD=adminpassword
+
+# OpenRoute
 OPENROUTE_API_KEY=your_openroute_key
 ```
 
@@ -109,12 +121,13 @@ CREATE INDEX IF NOT EXISTS idx_users_location_gist ON users USING GIST(location)
 community-help-api/
 ├── auth/           # Autenticación JWT
 ├── chat/           # Mensajería REST y WebSocket
-├── common/         # Auditoría, excepciones, persistencia base
-├── config/         # Seguridad, OpenAPI, inicialización
+├── common/         # Location, excepciones, openroute persistencia base
+├── config/         # Seguridad, OpenAPI, inicialización, etc
 ├── donation/       # Donaciones y su ciclo de vida
 ├── helprequest/    # Solicitudes de ayuda y su ciclo de vida
 ├── proposal/       # Motor de matching, scoring y gestión de proposals
 ├── review/         # Reseñas y recálculo de rating
+├── security/       # Spring Security
 ├── user/           # Gestión de usuarios
 └── volunteer/      # Perfil y habilidades del voluntario
 ```
