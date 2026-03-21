@@ -4,28 +4,32 @@ import com.communityhelp.app.proposal.config.ProposalMatchingConfig;
 import com.communityhelp.app.proposal.scoring.ScoreStrategy;
 import com.communityhelp.app.volunteer.dto.VolunteerCandidate;
 import com.communityhelp.app.volunteer.model.Volunteer;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Motor genérico de selección de candidatos.
  * Calcula el ranking de voluntarios según score y devuelve los mejores candidatos.
  */
 @Slf4j
+@RequiredArgsConstructor
+@Component
 public class MatchingEngine {
 
-    public static <T> List<Map.Entry<Volunteer, Double>> rankCandidates(
+    private final ProposalMatchingConfig proposalMatchingConfig;
+
+    public <T> List<Map.Entry<Volunteer, Double>> rankCandidates(
             T entity,
             List<VolunteerCandidate> candidates,
             ScoreStrategy<T> scoreStrategy,
-            Map<UUID, Long> pendingCounts
+            Map<UUID, Long> pendingCounts,
+            int retryCount
     ) {
 
-        int limit = ProposalMatchingConfig.MAX_PROPOSALS_PER_ENTITY;
+        int limit = proposalMatchingConfig.getMaxProposalsPerEntity();
 
         PriorityQueue<Map.Entry<Volunteer, Double>> topCandidates =
                 new PriorityQueue<>(Map.Entry.comparingByValue());
@@ -35,7 +39,7 @@ public class MatchingEngine {
             Volunteer volunteer = candidate.volunteer();
             double distance = candidate.distanceMeters();
 
-            MatchingContext context = new MatchingContext(distance, pendingCounts);
+            MatchingContext context = new MatchingContext(distance, pendingCounts, retryCount);
 
             double score = scoreStrategy.calculate(entity, volunteer, context);
 
@@ -52,7 +56,7 @@ public class MatchingEngine {
 
             if (topCandidates.size() < limit) {
                 topCandidates.add(entry);
-            } else if (score > topCandidates.peek().getValue()) {
+            } else if (score > Objects.requireNonNull(topCandidates.peek()).getValue()) {
                 topCandidates.poll();
                 topCandidates.add(entry);
             }

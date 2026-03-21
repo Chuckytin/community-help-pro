@@ -11,6 +11,7 @@ import com.communityhelp.app.donation.mapper.DonationMapper;
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.model.DonationStatus;
 import com.communityhelp.app.donation.repository.DonationRepository;
+import com.communityhelp.app.proposal.matching.service.ProposalMatchingStateService;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
 import com.communityhelp.app.volunteer.model.Volunteer;
@@ -37,10 +38,9 @@ public class DonationServiceImpl implements DonationService {
     private final DonationMapper donationMapper;
     private final UserRepository userRepository;
     private final VolunteerRepository volunteerRepository;
-
     private final ConversationService conversationService;
-
     private final ApplicationEventPublisher eventPublisher;
+    private final ProposalMatchingStateService matchingStateService;
 
     @Override
     public DonationResponseDto createDonation(UUID donorId, DonationCreateRequestDto dto) {
@@ -187,9 +187,7 @@ public class DonationServiceImpl implements DonationService {
         Volunteer volunteer = volunteerRepository.findByUser_Id(volunteerId)
                 .orElseThrow(() -> new IllegalStateException("User is not a volunteer"));
 
-        donation.setVolunteer(volunteer);
-        donation.setStatus(DonationStatus.RESERVED);
-        donation.setActive(false);
+        donation.reserve(volunteer);
 
         return donationMapper.toDto(donation);
     }
@@ -210,7 +208,7 @@ public class DonationServiceImpl implements DonationService {
             throw new IllegalStateException("Donor cannot confirm as their own volunteer");
         }
 
-        donation.setStatus(DonationStatus.CONFIRMED);
+        donation.confirm();
 
         // Crea o recupera la conversación automáticamente
         UUID volunteerId = donation.getVolunteer() != null ? donation.getVolunteer().getId() : null;
@@ -247,9 +245,7 @@ public class DonationServiceImpl implements DonationService {
             throw new IllegalStateException("Only assigned volunteer can pickup");
         }
 
-        donation.setStatus(DonationStatus.PICKED_UP);
-        donation.setPickedUpAt(LocalDateTime.now());
-        donation.setActive(false);
+        donation.pickedUp();
 
         return donationMapper.toDto(donation);
     }
@@ -267,9 +263,7 @@ public class DonationServiceImpl implements DonationService {
             throw new IllegalStateException("Only assigned volunteer can complete this request");
         }
 
-        donation.setStatus(DonationStatus.COMPLETED);
-        donation.setCompletedAt(LocalDateTime.now());
-        donation.setActive(false);
+        donation.complete();
 
         return donationMapper.toDto(donation);
     }
@@ -287,6 +281,9 @@ public class DonationServiceImpl implements DonationService {
         donation.setStatus(DonationStatus.CANCELLED);
         donation.setVolunteer(null);
         donation.setActive(false);
+
+        // Limpia el estado de matching
+        matchingStateService.clearState(id);
 
         return donationMapper.toDto(donation);
     }
@@ -329,8 +326,8 @@ public class DonationServiceImpl implements DonationService {
                 && donation.getExpiryDate() != null
                 && donation.getExpiryDate().isBefore(LocalDateTime.now())) {
 
-            donation.setStatus(DonationStatus.EXPIRED);
-            donation.setActive(false);
+            donation.expire();
+            matchingStateService.clearState(donation.getId());
         }
     }
 

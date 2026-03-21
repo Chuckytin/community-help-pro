@@ -46,6 +46,8 @@ public class ProposalGeneratorService {
     private final HelpRequestScoreEngine helpRequestScoreEngine;
     private final DonationScoreEngine  donationScoreEngine;
     private final ProposalRankingService rankingService;
+    private final ProposalMatchingConfig proposalMatchingConfig;
+    private final MatchingEngine matchingEngine;
 
     /**
      * Genera proposals para los mejores voluntarios disponibles para una HelpRequest.
@@ -60,7 +62,7 @@ public class ProposalGeneratorService {
      * - - ya tienen una proposal para esta entidad
      * Es el núcleo del motor de matching entre HelpRequest y voluntarios disponibles.
      */
-    public void generateForHelpRequest(HelpRequest helpRequest) {
+    public void generateForHelpRequest(HelpRequest helpRequest, int radiusMeters, int retryCount) {
 
         long start = System.currentTimeMillis();
 
@@ -69,11 +71,11 @@ public class ProposalGeneratorService {
         List<Object[]> rows =
                 volunteerRepository.findNearbyVolunteerIds(
                         helpRequest.getLocation(),
-                        ProposalMatchingConfig.MAX_RADIUS_DISTANCE,
+                        radiusMeters,
                         PageRequest.of(
                                 0,
-                                ProposalMatchingConfig.MAX_PROPOSALS_PER_ENTITY *
-                                        ProposalMatchingConfig.MAX_CANDIDATES_MULTIPLIER
+                                proposalMatchingConfig.getMaxProposalsPerEntity() *
+                                        proposalMatchingConfig.getMaxCandidatesMultiplier()
                         )
                 );
 
@@ -114,11 +116,12 @@ public class ProposalGeneratorService {
         long afterPreload = System.currentTimeMillis();
 
         List<Map.Entry<Volunteer, Double>> ranked =
-                MatchingEngine.rankCandidates(
+                matchingEngine.rankCandidates(
                         helpRequest,
                         candidates,
                         helpRequestScoreEngine,
-                        pendingCounts
+                        pendingCounts,
+                        retryCount
                 );
 
         long afterRanking = System.currentTimeMillis();
@@ -156,6 +159,13 @@ public class ProposalGeneratorService {
     }
 
     /**
+     * Overload para el primer disparo desde el listener
+     */
+    public void generateForHelpRequest(HelpRequest helpRequest) {
+        generateForHelpRequest(helpRequest, proposalMatchingConfig.getMaxRadiusDistance(), 0);
+    }
+
+    /**
      * Genera proposals para los mejores voluntarios disponibles para una Donation.
      * - Obtiene voluntarios disponibles dentro del radio máximo configurado.
      * - Excluye al usuario que creó la solicitud
@@ -168,7 +178,7 @@ public class ProposalGeneratorService {
      * - - ya tienen una proposal para esta entidad
      * Es el núcleo del motor de matching entre Donation y voluntarios disponibles.
      */
-    public void generateForDonation(Donation donation) {
+    public void generateForDonation(Donation donation, int radiusMeters, int retryCount) {
 
         long start = System.currentTimeMillis();
 
@@ -177,11 +187,11 @@ public class ProposalGeneratorService {
         List<Object[]> rows =
                 volunteerRepository.findNearbyVolunteerIds(
                         donation.getLocation(),
-                        ProposalMatchingConfig.MAX_RADIUS_DISTANCE,
+                        radiusMeters,
                         PageRequest.of(
                                 0,
-                                ProposalMatchingConfig.MAX_PROPOSALS_PER_ENTITY *
-                                        ProposalMatchingConfig.MAX_CANDIDATES_MULTIPLIER
+                                proposalMatchingConfig.getMaxProposalsPerEntity() *
+                                        proposalMatchingConfig.getMaxCandidatesMultiplier()
                         )
                 );
 
@@ -212,7 +222,7 @@ public class ProposalGeneratorService {
                         ))
                         .toList();
 
-        log.info("[matching-helprequest] Volunteers found for Donation {}: {}",
+        log.info("[matching-donation] Volunteers found for Donation {}: {}",
                 donation.getId(),
                 candidates.size());
 
@@ -222,11 +232,12 @@ public class ProposalGeneratorService {
         long afterPreload = System.currentTimeMillis();
 
         List<Map.Entry<Volunteer, Double>> ranked =
-                MatchingEngine.rankCandidates(
+                matchingEngine.rankCandidates(
                         donation,
                         candidates,
                         donationScoreEngine,
-                        pendingCounts
+                        pendingCounts,
+                        retryCount
                 );
 
         long afterRanking = System.currentTimeMillis();
@@ -261,6 +272,13 @@ public class ProposalGeneratorService {
                 (end - afterRanking),
                 (end - start)
         );
+    }
+
+    /**
+     * Overload para el primer disparo desde el listener
+     */
+    public void generateForDonation(Donation donation) {
+        generateForDonation(donation, proposalMatchingConfig.getMaxRadiusDistance(), 0);
     }
 
     /**
@@ -350,7 +368,7 @@ public class ProposalGeneratorService {
     private boolean hasReachedMaxProposals(UUID volunteerId, Map<UUID, Long> counts) {
 
         long activeProposals = counts.getOrDefault(volunteerId, 0L);
-        return activeProposals >= ProposalMatchingConfig.MAX_ACTIVE_PROPOSALS;
+        return activeProposals >= proposalMatchingConfig.getMaxActiveProposals();
     }
 
     /**
@@ -366,7 +384,7 @@ public class ProposalGeneratorService {
         if (respondedAt == null) return false;
 
         return respondedAt
-                .plusMinutes(ProposalMatchingConfig.PROPOSAL_COOLDOWN_MINUTES)
+                .plusMinutes(proposalMatchingConfig.getProposalCooldownMinutes())
                 .isAfter(LocalDateTime.now());
     }
 

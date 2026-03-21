@@ -23,6 +23,7 @@ import java.util.UUID;
 public class ProposalRankingService {
 
     private final ProposalRepository proposalRepository;
+    private final ProposalMatchingConfig proposalMatchingConfig;
 
     /**
      * Recalcula el ranking de propuestas para un voluntario.
@@ -33,13 +34,14 @@ public class ProposalRankingService {
         List<Proposal> proposals =
                 proposalRepository.findAllByVolunteer_IdOrderByScoreDesc(volunteerId);
 
-        if (proposals.size() <= ProposalMatchingConfig.MAX_ACTIVE_PROPOSALS) {
+        if (proposals.size() <= proposalMatchingConfig.getMaxActiveProposals()) {
             return;
         }
 
         List<Proposal> toDeactivate =
-                proposals.subList(ProposalMatchingConfig.MAX_ACTIVE_PROPOSALS, proposals.size());
+                proposals.subList(proposalMatchingConfig.getMaxActiveProposals(), proposals.size());
 
         toDeactivate.forEach(p -> p.setActive(false));
+        proposalRepository.saveAll(toDeactivate);
     }
 }

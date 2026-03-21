@@ -1,6 +1,8 @@
 package com.communityhelp.app.proposal.service;
 
 import com.communityhelp.app.proposal.config.ProposalMatchingConfig;
+import com.communityhelp.app.proposal.matching.model.ProposalMatchingState;
+import com.communityhelp.app.proposal.matching.service.ProposalMatchingStateService;
 import com.communityhelp.app.proposal.model.ProposalStatus;
 import com.communityhelp.app.proposal.model.ProposalType;
 import com.communityhelp.app.proposal.repository.ProposalRepository;
@@ -24,17 +26,19 @@ public class ProposalRetryService {
 
     private final ProposalRepository proposalRepository;
     private final ProposalGeneratorService generatorService;
+    private final ProposalMatchingConfig proposalMatchingConfig;
+    private final ProposalMatchingStateService matchingStateService;
+    private final ProposalExpirationService expirationService;
 
     /**
      * Reintenta matching para entidades con proposals pendientes
      * que superaron el tiempo de espera cada 10 minutos.
      */
     @Scheduled(fixedDelay = 600000)
-    @Transactional
     public void retryUnansweredProposals() {
 
         LocalDateTime threshold = LocalDateTime.now()
-                .minusMinutes(ProposalMatchingConfig.RETRY_DELAY_MINUTES);
+                .minusMinutes(proposalMatchingConfig.getRetryDelayMinutes());
 
         log.debug("[proposal-retry] threshold={}", threshold);
 
@@ -52,18 +56,31 @@ public class ProposalRetryService {
         log.info("[proposal-retry] Retrying {} help requests and {} donations",
                 helpRequests.size(), donations.size());
 
-        // sigue viendo las PENDING antiguas y bloquea la creación de nuevas
-        proposalRepository.expireStaleProposals(ProposalType.HELP_REQUEST, threshold);
-        proposalRepository.expireStaleProposals(ProposalType.DONATION, threshold);
+        expirationService.expireStaleProposals(threshold);
 
-        helpRequests.forEach(id ->
-                generatorService.generateForHelpRequest(
-                        generatorService.getHelpRequestById(id)));
+        helpRequests.forEach(id -> {
+            ProposalMatchingState state = matchingStateService.getNextState(id, ProposalType.HELP_REQUEST);
+            log.info("[proposal-retry] HelpRequest {} retry={} radius={}m",
+                    id, state.getRetryCount(), state.getCurrentRadiusMeters());
+            generatorService.generateForHelpRequest(
+                    generatorService.getHelpRequestById(id),
+                    state.getCurrentRadiusMeters(),
+                    state.getRetryCount()
+            );
+        });
 
-        donations.forEach(id ->
-                generatorService.generateForDonation(
-                        generatorService.getDonationById(id)));
+        donations.forEach(id -> {
+            ProposalMatchingState state = matchingStateService.getNextState(id, ProposalType.DONATION);
+            log.info("[proposal-retry] Donation {} retry={} radius={}m",
+                    id, state.getRetryCount(), state.getCurrentRadiusMeters());
+            generatorService.generateForDonation(
+                    generatorService.getDonationById(id),
+                    state.getCurrentRadiusMeters(),
+                    state.getRetryCount()
+            );
+        });
 
         log.debug("[proposal-retry] Retry completed");
     }
+
 }

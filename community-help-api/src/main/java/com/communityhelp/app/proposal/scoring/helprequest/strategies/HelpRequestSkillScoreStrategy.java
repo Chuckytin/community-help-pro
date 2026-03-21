@@ -7,6 +7,7 @@ import com.communityhelp.app.proposal.scoring.ScoreStrategy;
 import com.communityhelp.app.proposal.util.SkillMatcher;
 import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.model.VolunteerSkill;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -16,7 +17,10 @@ import java.util.Set;
  * entre el voluntario y las requeridas por la solicitud.
  */
 @Service
+@RequiredArgsConstructor
 public class HelpRequestSkillScoreStrategy implements ScoreStrategy<HelpRequest> {
+
+    private final ProposalMatchingConfig proposalMatchingConfig;
 
     /**
      * Cuenta cuántas skills del voluntario coinciden con las necesarias.
@@ -34,7 +38,7 @@ public class HelpRequestSkillScoreStrategy implements ScoreStrategy<HelpRequest>
     }
 
     @Override
-    public double weight() {
-        return ProposalMatchingConfig.MAX_WEIGHT_SKILLS;
+    public double weight(MatchingContext context) {
+        return proposalMatchingConfig.getMaxWeightSkills();
     }
 }

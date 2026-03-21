@@ -10,5 +10,5 @@ public interface ScoreStrategy<T> {
 
     double calculate(T target, Volunteer volunteer, MatchingContext context);
 
-    double weight();
+    double weight(MatchingContext context);
 }

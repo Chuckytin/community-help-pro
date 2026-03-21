@@ -1,6 +1,7 @@
 package com.communityhelp.app.donation.model;
 
 import com.communityhelp.app.common.persistence.AuditableLocatable;
+import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.volunteer.model.Volunteer;
 import jakarta.persistence.*;
@@ -132,6 +133,32 @@ public class Donation extends AuditableLocatable {
     public void confirm() {
         this.status = DonationStatus.CONFIRMED;
         this.confirmedAt = LocalDateTime.now();
+    }
+
+    /**
+     * La donation pasa a ser recogida
+     */
+    public void pickedUp() {
+        this.status = DonationStatus.PICKED_UP;
+        this.pickedUpAt = LocalDateTime.now();
+        this.active = false;
+    }
+
+    /**
+     * La donation pasa a ser recogida
+     */
+    public void complete() {
+        this.status = DonationStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+        this.active = false;
+    }
+
+    /**
+     * Expira la fecha de deadline.
+     */
+    public void expire() {
+        this.status = DonationStatus.EXPIRED;
+        this.active = false;
     }
 
     /**

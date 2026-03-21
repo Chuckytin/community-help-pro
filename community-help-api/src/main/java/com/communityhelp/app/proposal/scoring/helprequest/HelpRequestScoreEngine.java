@@ -27,12 +27,12 @@ public class HelpRequestScoreEngine implements ScoreStrategy<HelpRequest> {
     public double calculate(HelpRequest helpRequest, Volunteer volunteer, MatchingContext context) {
 
         return strategies.stream()
-                .mapToDouble(s -> s.calculate(helpRequest, volunteer, context) * s.weight())
+                .mapToDouble(s -> s.calculate(helpRequest, volunteer, context) * s.weight(context))
                 .sum();
     }
 
     @Override
-    public double weight() {
+    public double weight(MatchingContext context) {
         return 1.0;
     }
 

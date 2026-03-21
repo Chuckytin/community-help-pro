@@ -5,13 +5,17 @@ import com.communityhelp.app.proposal.config.ProposalMatchingConfig;
 import com.communityhelp.app.proposal.matching.MatchingContext;
 import com.communityhelp.app.proposal.scoring.ScoreStrategy;
 import com.communityhelp.app.volunteer.model.Volunteer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
  * Strategy de scoring basada en distancia para donaciones.
  */
 @Service
+@RequiredArgsConstructor
 public class DonationDistanceScoreStrategy implements ScoreStrategy<Donation> {
+
+    private final ProposalMatchingConfig proposalMatchingConfig;
 
     /**
      * Calcula la puntuación de distancia entre donación y voluntario.
@@ -32,12 +36,15 @@ public class DonationDistanceScoreStrategy implements ScoreStrategy<Donation> {
 
         double normalized = 1 - (distanceMeters / radiusMeters);
 
-        return normalized * ProposalMatchingConfig.MAX_DISTANCE_SCORE;
+        return normalized * proposalMatchingConfig.getMaxDistanceScore();
     }
 
     @Override
-    public double weight() {
-        return ProposalMatchingConfig.MAX_WEIGHT_DISTANCE;
+    public double weight(MatchingContext context) {
+        return Math.max(
+                proposalMatchingConfig.getMaxWeightDistance() - (context.retryCount() * 0.05),
+                0.20
+        );
     }
 
 }

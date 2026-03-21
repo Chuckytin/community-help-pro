@@ -8,6 +8,7 @@ import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
 import com.communityhelp.app.proposal.dto.ProposalResponseDto;
 import com.communityhelp.app.proposal.mapper.ProposalMapper;
+import com.communityhelp.app.proposal.matching.service.ProposalMatchingStateService;
 import com.communityhelp.app.proposal.model.Proposal;
 import com.communityhelp.app.proposal.model.ProposalStatus;
 import com.communityhelp.app.proposal.model.ProposalType;
@@ -40,6 +41,7 @@ public class ProposalServiceImpl implements ProposalService {
     private final HelpRequestRepository helpRequestRepository;
     private final DonationRepository donationRepository;
     private final ProposalMapper proposalMapper;
+    private final ProposalMatchingStateService matchingStateService;
 
     /**
      * Crea una proposal para un voluntario y entidad objetivo.
@@ -50,7 +52,6 @@ public class ProposalServiceImpl implements ProposalService {
 
         Volunteer volunteer = volunteerRepository.findById(volunteerId)
                 .orElseThrow(() -> new EntityNotFoundException("Volunteer not found"));
-
         switch (type) {
             case HELP_REQUEST -> {
                 if (!helpRequestRepository.existsById(targetEntityId)) {
@@ -187,10 +188,8 @@ public class ProposalServiceImpl implements ProposalService {
                 proposalRepository.findPendingByTargetEntityExcludingVolunteer(targetEntityId, acceptedVolunteerId);
 
         for (Proposal proposal : proposals) {
-            if (!proposal.getVolunteer().getId().equals(acceptedVolunteerId)) {
-                proposal.setStatus(ProposalStatus.CANCELLED);
-                proposal.setActive(false);
-            }
+            proposal.setStatus(ProposalStatus.CANCELLED);
+            proposal.setActive(false);
         }
 
         proposalRepository.saveAll(proposals);
@@ -215,6 +214,9 @@ public class ProposalServiceImpl implements ProposalService {
                 helpRequest.setActive(false);
 
                 helpRequestRepository.save(helpRequest);
+
+                // Limpia el estado de matching para esta HelpRequest, ya que quedó resuelta
+                matchingStateService.clearState(proposal.getTargetEntityId());
             }
 
             case DONATION -> {
@@ -228,6 +230,9 @@ public class ProposalServiceImpl implements ProposalService {
                 donation.setActive(false);
 
                 donationRepository.save(donation);
+
+                // Limpia el estado de matching para esta Donation, ya que quedó resuelta
+                matchingStateService.clearState(proposal.getTargetEntityId());
             }
         }
     }

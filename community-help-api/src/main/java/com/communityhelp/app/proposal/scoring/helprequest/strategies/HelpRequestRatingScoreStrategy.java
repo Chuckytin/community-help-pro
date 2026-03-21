@@ -5,13 +5,17 @@ import com.communityhelp.app.proposal.config.ProposalMatchingConfig;
 import com.communityhelp.app.proposal.matching.MatchingContext;
 import com.communityhelp.app.proposal.scoring.ScoreStrategy;
 import com.communityhelp.app.volunteer.model.Volunteer;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
  * Strategy que calcula puntuación basada en el rating.
  */
 @Service
+@RequiredArgsConstructor
 public class HelpRequestRatingScoreStrategy implements ScoreStrategy<HelpRequest> {
+
+    private final ProposalMatchingConfig proposalMatchingConfig;
 
     /**
      * Otorga mayor puntuación cuanto mayor sea el rating (0-5).
@@ -31,7 +35,7 @@ public class HelpRequestRatingScoreStrategy implements ScoreStrategy<HelpRequest
     }
 
     @Override
-    public double weight() {
-        return ProposalMatchingConfig.MAX_WEIGHT_RATING;
+    public double weight(MatchingContext context) {
+        return proposalMatchingConfig.getMaxWeightRating();
     }
 }

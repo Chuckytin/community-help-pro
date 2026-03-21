@@ -11,6 +11,7 @@ import com.communityhelp.app.helprequest.mapper.HelpRequestMapper;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.proposal.matching.service.ProposalMatchingStateService;
 import com.communityhelp.app.proposal.service.ProposalService;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
@@ -38,11 +39,10 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     private final HelpRequestMapper helpRequestMapper;
     private final UserRepository userRepository;
     private final VolunteerRepository volunteerRepository;
-
     private final ConversationService conversationService;
     private final ProposalService proposalService;
-
     private final ApplicationEventPublisher eventPublisher;
+    private final ProposalMatchingStateService matchingStateService;
 
     @Override
     public HelpRequestResponseDto createHelpRequest(UUID requesterId, HelpRequestCreateRequestDto dto) {
@@ -240,6 +240,9 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
         helpRequest.cancel("Cancelled by requester");
 
+        // Limpia el estado de matching
+        matchingStateService.clearState(helpRequestId);
+
         return helpRequestMapper.toDto(helpRequest);
     }
 
@@ -282,6 +285,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
                 && helpRequest.getDeadline().isBefore(LocalDateTime.now())) {
 
             helpRequest.expire();
+            matchingStateService.clearState(helpRequest.getId());
         }
     }
 

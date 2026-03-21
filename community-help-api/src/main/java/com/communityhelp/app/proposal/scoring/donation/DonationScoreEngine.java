@@ -25,12 +25,12 @@ public class DonationScoreEngine implements ScoreStrategy<Donation> {
     @Override
     public double calculate(Donation donation, Volunteer volunteer, MatchingContext context) {
         return strategies.stream()
-                .mapToDouble(s -> s.calculate(donation, volunteer, context) * s.weight())
+                .mapToDouble(s -> s.calculate(donation, volunteer, context) * s.weight(context))
                 .sum();
     }
 
     @Override
-    public double weight() {
+    public double weight(MatchingContext context) {
         return 1.0;
     }
 }

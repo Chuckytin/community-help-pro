@@ -1,66 +1,85 @@
 package com.communityhelp.app.proposal.config;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
 /**
  * Configuración central del motor de matching.
  */
-public final class ProposalMatchingConfig {
+@ConfigurationProperties(prefix = "proposal.matching")
+@Component
+@Getter
+@Setter
+public class ProposalMatchingConfig {
 
     /**
      * Máximo número de proposals activas por voluntario.
      */
-    public static final int MAX_ACTIVE_PROPOSALS = 5;
+    public int maxActiveProposals = 5;
 
     /**
      * Minutos de espera antes de volver a recomendar algo
      * a un voluntario que rechazó una proposal.
      */
-    public static final int PROPOSAL_COOLDOWN_MINUTES = 30;
+    public int proposalCooldownMinutes = 20;
 
     /**
      * Minutos de espera para reintentar generar proposals
      * cuando nadie acepta una recomendación.
      */
-    public static final int RETRY_DELAY_MINUTES = 20;
+    public int retryDelayMinutes = 30;
 
     /**
      * Número máximo de voluntarios a los que enviar proposals.
      */
-    public static final int MAX_PROPOSALS_PER_ENTITY = 5;
+    public int maxProposalsPerEntity = 5;
 
     /**
      * Distancia máxima de radio en metros.
      */
-    public static final int MAX_RADIUS_DISTANCE = 20000;
+    public int maxRadiusDistance = 10000;
 
     /**
      * Puntuación máxima de score por distancia.
      */
-    public static final double MAX_DISTANCE_SCORE = 30;
+    public double maxDistanceScore = 30;
 
     /**
      * Puntuación máxima por distancia
      */
-    public static final double MAX_WEIGHT_DISTANCE = 0.5;
+    public double maxWeightDistance = 0.5;
 
     /**
      * Puntuación máxima por skills
      */
-    public static final double MAX_WEIGHT_SKILLS = 0.35;
+    public double maxWeightSkills = 0.35;
 
     /**
      * Puntuación máxima por rating
      */
-    public static final double MAX_WEIGHT_RATING = 0.10;
+    public double maxWeightRating = 0.10;
 
     /**
      * Puntuación del peso máximo del factor de la carga de trabajo del voluntario.
      */
-    public static final double MAX_WEIGHT_LOAD = 0.05;
+    public double maxWeightLoad = 0.05;
 
     /**
      * Para traer más candidatos de los necesarios
      */
-    public static final int MAX_CANDIDATES_MULTIPLIER = 6;
+    public int maxCandidatesMultiplier = 6;
+
+    /**
+     * Radio de expansión en metros para buscar más voluntarios si no se encuentran suficientes candidatos.
+     */
+    private int radiusExpansionStep = 10000;
+
+    /**
+     * Radio de expansión máximo en metros para buscar voluntarios adicionales si no se encuentran suficientes candidatos dentro del radio inicial.
+     */
+    private int maxExpandedRadius = 50000;
 
     private ProposalMatchingConfig() {}
 }

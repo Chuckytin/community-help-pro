@@ -1,5 +1,7 @@
 package com.communityhelp.app.proposal.listener;
 
+import com.communityhelp.app.proposal.matching.service.ProposalMatchingStateService;
+import com.communityhelp.app.proposal.model.ProposalType;
 import com.communityhelp.app.volunteer.service.VolunteerReevaluationService;
 import com.communityhelp.app.donation.event.DonationCreatedEvent;
 import com.communityhelp.app.donation.event.DonationUpdatedEvent;
@@ -32,6 +34,7 @@ public class ProposalGenerationListener {
 
     private final ProposalGeneratorService proposalGeneratorService;
     private final VolunteerReevaluationService volunteerReevaluationService;
+    private final ProposalMatchingStateService matchingStateService;
 
     /**
      * Genera proposals tras la creación de una HelpRequest.
@@ -39,7 +42,7 @@ public class ProposalGenerationListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onHelpRequestCreated(HelpRequestCreatedEvent event) {
-
+        matchingStateService.initState(event.helpRequestId(), ProposalType.HELP_REQUEST);
         handleHelpRequestMatching(event.helpRequestId(), "new");
     }
 
@@ -49,7 +52,6 @@ public class ProposalGenerationListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onHelpRequestUpdated(HelpRequestUpdatedEvent event) {
-
         handleHelpRequestMatching(event.helpRequestId(), "updated");
     }
 
@@ -59,7 +61,7 @@ public class ProposalGenerationListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onDonationCreated(DonationCreatedEvent event) {
-
+        matchingStateService.initState(event.donationId(), ProposalType.DONATION);
         handleDonationMatching(event.donationId(), "new");
     }
 
@@ -69,7 +71,6 @@ public class ProposalGenerationListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onDonationUpdated(DonationUpdatedEvent event) {
-
         handleDonationMatching(event.donationId(), "updated");
     }
 
@@ -79,9 +80,7 @@ public class ProposalGenerationListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onVolunteerUpdated(VolunteerUpdatedEvent event) {
-
         log.info("[event-volunteer] Volunteer updated {}, reevaluating proposals", event.volunteerId());
-
         volunteerReevaluationService.reevaluate(event.volunteerId());
     }
 
@@ -89,9 +88,7 @@ public class ProposalGenerationListener {
      * Ejecuta matching para una HelpRequest.
      */
     private void handleHelpRequestMatching(UUID helpRequestId, String action) {
-
         log.info("[event-helprequest] Generating proposals for {} HelpRequest {}", action, helpRequestId);
-
         proposalGeneratorService.generateForHelpRequest(
                 proposalGeneratorService.getHelpRequestById(helpRequestId)
         );
@@ -101,9 +98,7 @@ public class ProposalGenerationListener {
      * Ejecuta matching para una Donation.
      */
     private void handleDonationMatching(UUID donationId, String action) {
-
         log.info("[event-donation] Generating proposals for {} Donation {}", action, donationId);
-
         proposalGeneratorService.generateForDonation(
                 proposalGeneratorService.getDonationById(donationId)
         );
