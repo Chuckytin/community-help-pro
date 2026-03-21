@@ -27,11 +27,12 @@ Se utiliza la imagen oficial `postgis/postgis:18-3.6` que ya incluye PostGIS par
 docker compose up -d db
 ```
 
-2. El script docker-config/postgres-init.sql activa la extensión PostGIS automáticamente al crear la base de datos:
+2. El script docker-config/postgres-init.sql activa la extensión PostGIS automáticamente y crea un índice espacial GIST sobre la columna 'location' de la tabla 'users' para optimizar las búsquedas por proximidad. al crear la base de datos:
 
 ```
 -- docker-config/postgres-init.sql
 CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE INDEX IF NOT EXISTS idx_users_location_gist ON users USING GIST(location);
 ```
 
 - Está montado en docker-compose.yml
