@@ -85,6 +85,10 @@ public class Proposal extends Auditable {
     @Column(name = "responded_at")
     private LocalDateTime respondedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cancel_reason")
+    private ProposalCancelReason cancelReason;
+
     /**
      * Para evitar Race Condition por si dos voluntarios acepten a la vez
      */

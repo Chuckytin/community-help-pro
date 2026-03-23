@@ -11,6 +11,7 @@ public enum VolunteerSkill {
     ELDERLY_CARE,
     SHOPPING,
     COMMUNICATION,
+    COMPANIONSHIP,
     PET_CARE,
     BABY_CARE,
     TECH,

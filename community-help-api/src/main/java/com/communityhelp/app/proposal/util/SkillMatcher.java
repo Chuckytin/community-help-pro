@@ -42,6 +42,7 @@ public class SkillMatcher {
 
         HELP_REQUEST_SKILLS.put(HelpRequestType.COMPANIONSHIP, Set.of(
                 VolunteerSkill.COMMUNICATION,
+                VolunteerSkill.COMPANIONSHIP,
                 VolunteerSkill.PATIENT,
                 VolunteerSkill.ELDERLY_CARE,
                 VolunteerSkill.BABY_CARE,
@@ -66,6 +67,7 @@ public class SkillMatcher {
                 VolunteerSkill.COMMUNICATION,
                 VolunteerSkill.LANGUAGE,
                 VolunteerSkill.PATIENT,
+                VolunteerSkill.COMPANIONSHIP,
                 VolunteerSkill.TEACHING,
                 VolunteerSkill.WRITING
         ));
@@ -74,6 +76,7 @@ public class SkillMatcher {
                 VolunteerSkill.PET_CARE,
                 VolunteerSkill.PATIENT,
                 VolunteerSkill.LOGISTICS,
+                VolunteerSkill.COMPANIONSHIP,
                 VolunteerSkill.SHOPPING
         ));
 
@@ -81,6 +84,7 @@ public class SkillMatcher {
                 VolunteerSkill.BABY_CARE,
                 VolunteerSkill.PATIENT,
                 VolunteerSkill.COMMUNICATION,
+                VolunteerSkill.COMPANIONSHIP,
                 VolunteerSkill.CHILD_CARE,
                 VolunteerSkill.SHOPPING
         ));

@@ -58,30 +58,35 @@ public class VolunteerServiceImpl implements VolunteerService {
         Volunteer volunteer = volunteerRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Volunteer not found for user with ID: " + userId));
 
-        boolean changed = false;
+        boolean availableChanged = dto.getAvailable() != null &&
+                !dto.getAvailable().equals(volunteer.isAvailable());
+
+        boolean radiusChanged = dto.getRadiusKm() != null;
+        boolean skillsChanged = dto.getSkills() != null;
 
         if (dto.getAvailable() != null) {
             volunteer.setAvailable(dto.getAvailable());
-            changed = true;
         }
 
         if (dto.getRadiusKm() != null) {
             volunteer.setRadiusKm(dto.getRadiusKm());
-            changed = true;
         }
 
         if (dto.getSkills() != null) {
             volunteer.setSkills(dto.getSkills());
-            changed = true;
         }
 
         Volunteer savedVolunteer = volunteerRepository.save(volunteer);
 
-        if (changed) {
-            eventPublisher.publishEvent(
-                    new VolunteerUpdatedEvent(savedVolunteer.getId())
-            );
-        }
+        eventPublisher.publishEvent(
+                new VolunteerUpdatedEvent(
+                        savedVolunteer.getId(),
+                        availableChanged,
+                        savedVolunteer.isAvailable(),
+                        radiusChanged,
+                        skillsChanged
+                )
+        );
 
         return volunteerMapper.toDto(savedVolunteer);
     }

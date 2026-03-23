@@ -72,6 +72,7 @@ public class ProposalGeneratorService {
                 volunteerRepository.findNearbyVolunteerIds(
                         helpRequest.getLocation(),
                         radiusMeters,
+                        helpRequest.getRequester().getId(),
                         PageRequest.of(
                                 0,
                                 proposalMatchingConfig.getMaxProposalsPerEntity() *
@@ -187,6 +188,7 @@ public class ProposalGeneratorService {
                 volunteerRepository.findNearbyVolunteerIds(
                         donation.getLocation(),
                         radiusMeters,
+                        donation.getDonor().getId(),
                         PageRequest.of(
                                 0,
                                 proposalMatchingConfig.getMaxProposalsPerEntity() *
@@ -321,6 +323,11 @@ public class ProposalGeneratorService {
             Volunteer volunteer = entry.getKey();
             double score = entry.getValue();
 
+            if (!volunteer.isAvailable()) {
+                log.debug("Skipping volunteer {} NOT_AVAILABLE", volunteer.getId());
+                continue;
+            }
+
             if (hasReachedMaxProposals(volunteer.getId(), pendingCounts)) {
                 log.debug("Skipping volunteer {} MAX_PROPOSALS", volunteer.getId());
                 continue;
@@ -344,7 +351,6 @@ public class ProposalGeneratorService {
             );
 
             affectedVolunteers.add(volunteer.getId());
-
             created++;
 
             log.debug(

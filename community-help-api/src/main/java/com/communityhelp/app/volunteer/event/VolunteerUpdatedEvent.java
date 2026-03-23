@@ -9,5 +9,10 @@ import java.util.UUID;
  * - disponibilidad
  * Permite recalcular automáticamente los scores de proposals.
  */
-public record VolunteerUpdatedEvent(UUID volunteerId) {
-}
+public record VolunteerUpdatedEvent(
+        UUID volunteerId,
+        boolean availableChanged,
+        boolean isAvailable,
+        boolean radiusChanged,
+        boolean skillsChanged
+) {}

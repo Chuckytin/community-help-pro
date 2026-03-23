@@ -45,6 +45,15 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
     List<Proposal> findAllByTargetEntityId(UUID targetEntityId);
 
     /**
+     * Obtiene la Proposal del Volunteer con la entidad y el tipo
+     */
+    Optional<Proposal> findByVolunteer_IdAndTargetEntityIdAndType(
+            UUID volunteerId,
+            UUID targetEntityId,
+            ProposalType type
+    );
+
+    /**
      * Cncela las proposals asociadas si cancela una HelpRequest o una Donation.
      */
     @Modifying
@@ -55,6 +64,18 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
             AND p.status = 'PENDING'
             """)
     void cancelPendingProposals(UUID entityId);
+
+    /**
+     * Cancela todas las proposals PENDING de un volunteer cuando su disponibilidad es false.
+     */
+    @Modifying
+    @Query("""
+                UPDATE Proposal p
+                SET p.status = 'CANCELLED'
+                WHERE p.volunteer.id = :volunteerId
+                AND p.status = 'PENDING'
+            """)
+    void cancelPendingByVolunteer(UUID volunteerId);
 
     /**
      * Obtiene todas las proposals pendientes de una entidad,

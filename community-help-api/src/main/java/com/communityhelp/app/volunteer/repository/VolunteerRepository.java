@@ -41,6 +41,7 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
             FROM volunteers v
             JOIN users u ON v.user_id = u.id
             WHERE v.available = true
+            AND v.user_id <> :excludedUserId
             AND ST_DWithin(u.location, :location, :radius)
             AND (
                 v.radius_km IS NULL
@@ -51,6 +52,7 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
     List<Object[]> findNearbyVolunteerIds(
             Point location,
             double radius,
+            UUID excludedUserId,
             Pageable pageable
     );
 
@@ -71,6 +73,7 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
             FROM volunteers v
             JOIN users u ON v.user_id = u.id
             WHERE v.available = true
+            AND v.user_id <> :excludedUserId\s
             AND ST_DWithin(u.location, :location, :radius)
             AND (
                 v.radius_km IS NULL
@@ -81,6 +84,7 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
     List<Object[]> findNearbyVolunteerData(
             Point location,
             double radius,
+            UUID excludedUserId,
             Pageable pageable
     );
 

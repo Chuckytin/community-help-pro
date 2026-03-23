@@ -1,8 +1,8 @@
 package com.communityhelp.app.user.service;
 
 import com.communityhelp.app.user.dto.*;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
@@ -10,7 +10,7 @@ public interface UserService {
     UserResponseDto createUser(UserCreateRequestDto dto);
     UserResponseDto getUserByEmail(String email);
     UserResponseDto getUserById(UUID id);
-    List<UserResponseDto> getAllUsers();
+    Page<UserResponseDto> getAllUsers(int page, int size);
     UserResponseDto updateUser(UUID id, UserUpdateRequestDto dto);
     void deleteUser(UUID id);
     UserResponseDto getUserByEmailIncludeInactive(String email);

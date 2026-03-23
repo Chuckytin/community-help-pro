@@ -4,6 +4,7 @@ import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.proposal.repository.ProposalRepository;
 import com.communityhelp.app.proposal.service.ProposalGeneratorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class VolunteerReevaluationService {
     private final HelpRequestRepository helpRequestRepository;
     private final DonationRepository donationRepository;
     private final ProposalGeneratorService proposalGeneratorService;
+    private final ProposalRepository proposalRepository;
 
     /**
      * Reevalúa proposals afectadas por cambios en un voluntario.
@@ -51,5 +53,16 @@ public class VolunteerReevaluationService {
         for (Donation donation : activeDonations) {
             proposalGeneratorService.generateForDonation(donation);
         }
+    }
+
+    /**
+     * Cancela proposals pendientes para un voluntario que se vuelve no disponible.
+     */
+    @Transactional
+    public void handleVolunteerUnavailable(UUID volunteerId) {
+
+        proposalRepository.cancelPendingByVolunteer(volunteerId);
+
+        log.info("[volunteer] Cancelled proposals for unavailable volunteer {}", volunteerId);
     }
 }

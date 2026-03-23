@@ -75,13 +75,28 @@ public class ProposalGenerationListener {
     }
 
     /**
-     * Reevalúa proposals cuando cambia un voluntario.
+     * Reevalúa proposals cuando cambia un voluntario o se marca como no disponible.
      */
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onVolunteerUpdated(VolunteerUpdatedEvent event) {
         log.info("[event-volunteer] Volunteer updated {}, reevaluating proposals", event.volunteerId());
-        volunteerReevaluationService.reevaluate(event.volunteerId());
+        // 1. Caso: el voluntario pasa a unavailable
+        if (event.availableChanged() && !event.isAvailable()) {
+            volunteerReevaluationService.handleVolunteerUnavailable(event.volunteerId());
+            return;
+        }
+
+        // 2. Caso: vuelve a available, reevaluación completa
+        if (event.availableChanged() && event.isAvailable()) {
+            volunteerReevaluationService.reevaluate(event.volunteerId());
+            return;
+        }
+
+        // 3. Caso: sigue available pero cambian atributos relevantes
+        if (event.isAvailable() && (event.radiusChanged() || event.skillsChanged())) {
+            volunteerReevaluationService.reevaluate(event.volunteerId());
+        }
     }
 
     /**

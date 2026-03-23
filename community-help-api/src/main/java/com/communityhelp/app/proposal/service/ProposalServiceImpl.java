@@ -10,6 +10,7 @@ import com.communityhelp.app.proposal.dto.ProposalResponseDto;
 import com.communityhelp.app.proposal.mapper.ProposalMapper;
 import com.communityhelp.app.proposal.matching.service.ProposalMatchingStateService;
 import com.communityhelp.app.proposal.model.Proposal;
+import com.communityhelp.app.proposal.model.ProposalCancelReason;
 import com.communityhelp.app.proposal.model.ProposalStatus;
 import com.communityhelp.app.proposal.model.ProposalType;
 import com.communityhelp.app.proposal.repository.ProposalRepository;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -48,10 +50,18 @@ public class ProposalServiceImpl implements ProposalService {
      * Inicializa score y estado.
      */
     @Override
-    public ProposalResponseDto createProposal(UUID volunteerId, UUID targetEntityId, ProposalType type, double score) {
+    public void createProposal(UUID volunteerId, UUID targetEntityId, ProposalType type, double score) {
 
         Volunteer volunteer = volunteerRepository.findById(volunteerId)
                 .orElseThrow(() -> new EntityNotFoundException("Volunteer not found"));
+
+        // Si no está disponible, no genera proposals
+        if (!volunteer.isAvailable()) {
+            log.debug("[proposal] Skipping creation for unavailable volunteer {}", volunteerId);
+            return;
+        }
+
+        // Valida la existencia de la entidad objetivo
         switch (type) {
             case HELP_REQUEST -> {
                 if (!helpRequestRepository.existsById(targetEntityId)) {
@@ -65,30 +75,69 @@ public class ProposalServiceImpl implements ProposalService {
             }
         }
 
-        // Intenta reactivar una proposal expirada antes de crear una nueva
+        // Busca proposal existente
+        Optional<Proposal> existingOpt = proposalRepository
+                .findByVolunteer_IdAndTargetEntityIdAndType(volunteerId, targetEntityId, type);
+
+        if (existingOpt.isPresent()) {
+
+            Proposal existing = existingOpt.get();
+
+            // Si ya está PENDING, no hace nada
+            if (existing.getStatus() == ProposalStatus.PENDING) {
+                log.debug("[proposal] Proposal already PENDING for volunteer {} entity {}",
+                        volunteerId, targetEntityId);
+                return;
+            }
+
+            // Si fue REJECTED, no vuelve a proponer
+            if (existing.getStatus() == ProposalStatus.REJECTED) {
+                log.debug("[proposal] Proposal was REJECTED, skipping re-proposal for volunteer {} entity {}",
+                        volunteerId, targetEntityId);
+                return;
+            }
+
+            // Si estaba CANCELLED, permitir regeneración
+            if (existing.getStatus() == ProposalStatus.CANCELLED) {
+
+                existing.setStatus(ProposalStatus.PENDING);
+                existing.setActive(true);
+                existing.setScore(score);
+                existing.touch();
+
+                proposalRepository.save(existing);
+
+                log.debug("[proposal] Reactivated CANCELLED proposal for volunteer {} entity {}",
+                        volunteerId, targetEntityId);
+
+                return;
+            }
+        }
+
+        // Reintento de expiradas
         int reactivated = proposalRepository.reactivateExpiredProposal(
                 volunteerId, targetEntityId, type, score);
 
         if (reactivated > 0) {
             log.debug("[proposal] Reactivated expired proposal for volunteer {} entity {}",
                     volunteerId, targetEntityId);
-            return proposalRepository
-                    .findByTargetEntityIdAndVolunteer_Id(targetEntityId, volunteerId)
-                    .map(proposalMapper::toDto)
-                    .orElseThrow(() -> new RuntimeException("Proposal not found after reactivation"));
+            return;
         }
 
-        // crea una nueva proposal
+        // Crea la nueva proposal
         Proposal proposal = Proposal.builder()
                 .volunteer(volunteer)
                 .targetEntityId(targetEntityId)
                 .type(type)
                 .score(score)
                 .status(ProposalStatus.PENDING)
+                .active(true)
                 .build();
 
         Proposal saved = proposalRepository.save(proposal);
-        return proposalMapper.toDto(saved);
+
+        log.debug("[proposal] Created new proposal id={} for volunteer {} entity {}",
+                saved.getId(), volunteerId, targetEntityId);
     }
 
     /**
@@ -190,6 +239,7 @@ public class ProposalServiceImpl implements ProposalService {
         for (Proposal proposal : proposals) {
             proposal.setStatus(ProposalStatus.CANCELLED);
             proposal.setActive(false);
+            proposal.setCancelReason(ProposalCancelReason.OTHER_PROPOSAL_ACCEPTED);
         }
 
         proposalRepository.saveAll(proposals);
