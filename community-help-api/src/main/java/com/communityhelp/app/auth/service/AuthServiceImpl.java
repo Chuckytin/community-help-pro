@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
             if (!existingUser.isActive()) {
                 createdUser = userService.reactivateUser(existingUser.getId(), dto);
             } else {
-                throw new IllegalArgumentException("Email already in use");
+                throw new IllegalStateException("Email already in use");
             }
         } else {
             // Si no existe, crea la cuenta

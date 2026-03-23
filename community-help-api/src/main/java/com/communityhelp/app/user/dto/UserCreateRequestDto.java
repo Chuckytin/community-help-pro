@@ -20,7 +20,7 @@ public class UserCreateRequestDto {
 
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 30, message = "Name must be between {min} and {max} characters")
-    @Pattern(regexp = "^[\\w\\s-]+$", message = "Name can only contain letters, numbers, spaces and hyphens")
+    @Pattern(regexp = "^[\\p{L}\\s-]+$", message = "Name can only contain letters, spaces and hyphens")
     private String name;
 
     @NotBlank(message = "Email is required")

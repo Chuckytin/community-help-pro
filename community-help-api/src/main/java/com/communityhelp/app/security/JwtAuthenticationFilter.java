@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,11 +20,11 @@ import java.io.IOException;
  * - Extrae el token JWT que se ejecuta una vez por request.
  * - Valida el token y obtiene los datos del usuario.
  * - Establece la autenticación en el SecurityContext.
- * - Si el token es inválido continúa la request sin autenticar al usuario.
+ * - Si el token es inválido propaga la excepción para que sea manejada por GlobalExceptionHandler
  */
 @RequiredArgsConstructor
 @Slf4j
-public class JwtAuthenticationFilter extends OncePerRequestFilter{
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthenticationService authenticationService;
 
@@ -33,34 +34,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
      * - Se crea un UsernamePasswordAuthenticationToken.
      * - Se guarda en el SecurityContextHolder.
      * - Se añade el userId al request si el UserDetails lo soporta.
+     * Si el token es inválido o expirado, propaga la excepción.
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String token = extractToken(request);
+
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-            String token = extractToken(request);
+            UserDetails userDetails = authenticationService.validateToken(token);
 
-            if (token != null) {
-                UserDetails userDetails = authenticationService.validateToken(token);
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
 
-                // Establece authentication en Spring Security
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-
-                // Añade el UUID del usuario a la request
-                if (userDetails instanceof AppUserDetails) {
-                    request.setAttribute("userId", ((AppUserDetails) userDetails).getId());
-                }
+            if (userDetails instanceof AppUserDetails appUser) {
+                request.setAttribute("userId", appUser.getId());
             }
+
         } catch (Exception e) {
-            // No autentica al usuario pero no se interrumpe la request
-            log.warn("[security][JwtAuthenticationFilter] Received invalid auth token");
+            SecurityContextHolder.clearContext();
+            log.warn("[security][JwtAuthenticationFilter] Invalid JWT token: {}", e.getMessage());
+            throw new RuntimeException("Invalid JWT token", e);
         }
 
         filterChain.doFilter(request, response);

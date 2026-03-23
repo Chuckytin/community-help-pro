@@ -2,6 +2,8 @@ package com.communityhelp.app.config;
 
 import com.communityhelp.app.auth.service.AuthenticationService;
 import com.communityhelp.app.security.AppUserDetailsService;
+import com.communityhelp.app.security.CustomAccessDeniedHandler;
+import com.communityhelp.app.security.CustomAuthenticationEntryPoint;
 import com.communityhelp.app.security.JwtAuthenticationFilter;
 import com.communityhelp.app.user.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
@@ -39,12 +41,22 @@ public class SecurityConfig {
      * - Desactiva sesiones (stateless).
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            CustomAuthenticationEntryPoint authenticationEntryPoint,
+            CustomAccessDeniedHandler accessDeniedHandler
+    ) throws Exception {
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/ws/**",
