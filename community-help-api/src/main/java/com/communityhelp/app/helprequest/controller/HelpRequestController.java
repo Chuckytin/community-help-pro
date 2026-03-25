@@ -11,13 +11,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Help Requests", description = "Requests for specific help. Creating one triggers the automatic matching engine for nearby volunteers.")
@@ -32,7 +32,7 @@ public class HelpRequestController {
             description = "Automatically triggers the matching engine to find nearby volunteers")
     @ApiResponse(responseCode = "201", description = "Request created and matching started")
     @PostMapping
-    public ResponseEntity<HelpRequestResponseDto> createHelpRequest (
+    public ResponseEntity<HelpRequestResponseDto> createHelpRequest(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @Valid @RequestBody HelpRequestCreateRequestDto dto) {
 
@@ -40,51 +40,92 @@ public class HelpRequestController {
                 .body(helpRequestService.createHelpRequest(currentUser.getId(), dto));
     }
 
-    @Operation(summary = "Get my help requests")
+    @Operation(summary = "Get my help requests as requester")
     @GetMapping("/me")
-    public ResponseEntity<List<HelpRequestResponseDto>> getMyHelpRequests (
-            @AuthenticationPrincipal AppUserDetails currentUser) {
+    public ResponseEntity<Page<HelpRequestResponseDto>> getMyHelpRequests(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) HelpRequestStatus status
+    ) {
 
         return ResponseEntity.ok(
-                helpRequestService.getMyHelpRequests(currentUser.getId())
+                helpRequestService.getMyHelpRequests(currentUser.getId(), page, size, status)
         );
     }
 
-    @Operation(summary = "Get help request by ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<HelpRequestResponseDto> getHelpRequestById (@PathVariable UUID id) {
-        return ResponseEntity.ok(helpRequestService.getHelpRequestById(id));
+    @Operation(summary = "Get my specific help request")
+    @GetMapping("/me/{id}")
+    public ResponseEntity<HelpRequestResponseDto> getMyHelpRequestById(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @PathVariable UUID id) {
+
+        return ResponseEntity.ok(
+                helpRequestService.getMyHelpRequestById(currentUser.getId(), id)
+        );
+    }
+
+    @Operation(summary = "Get all open help requests",
+            description = "Public marketplace - shows available requests")
+    @GetMapping
+    public ResponseEntity<Page<HelpRequestResponseDto>> getOpenHelpRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return ResponseEntity.ok(
+                helpRequestService.getOpenHelpRequests(page, size)
+        );
     }
 
     @Operation(summary = "Get requests assigned to me as volunteer")
     @GetMapping("/assigned/me")
-    public ResponseEntity<List<HelpRequestResponseDto>> getAssignedToVolunteer (
-            @AuthenticationPrincipal AppUserDetails currentUser
+    public ResponseEntity<Page<HelpRequestResponseDto>> getAssignedToVolunteer(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) HelpRequestStatus status
     ) {
-        return ResponseEntity.ok(helpRequestService.getAssignedToVolunteer(currentUser.getId()));
+        return ResponseEntity.ok(
+                helpRequestService.getAssignedToVolunteer(currentUser.getId(), page, size, status)
+        );
     }
 
-    @Operation(summary = "List by status", description = "Useful for the public marketplace")
-    @GetMapping
-    public ResponseEntity<List<HelpRequestResponseDto>> getByStatus(
-            @RequestParam HelpRequestStatus status) {
-
-        return ResponseEntity.ok(helpRequestService.getByStatus(status));
+    @Operation(summary = "Get help request by ID", description = "Admin only")
+    @GetMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<HelpRequestResponseDto> getHelpRequestById(@PathVariable UUID id) {
+        return ResponseEntity.ok(helpRequestService.getHelpRequestById(id));
     }
 
-    @Operation(summary = "Get a volunteer's requests filtered by status")
-    @GetMapping("/volunteer/{volunteerId}")
-    public ResponseEntity<List<HelpRequestResponseDto>> getByVolunteerAndStatus(
+    @Operation(summary = "Get requests by status", description = "Admin only")
+    @GetMapping("/admin/by-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<HelpRequestResponseDto>> getByStatus(
+            @RequestParam HelpRequestStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+
+        return ResponseEntity.ok(helpRequestService.getByStatus(status, page, size));
+    }
+
+    @Operation(summary = "Get a volunteer's requests filtered by status", description = "Admin only")
+    @GetMapping("/admin/volunteer/{volunteerId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<HelpRequestResponseDto>> getByVolunteerAndStatus(
             @PathVariable UUID volunteerId,
-            @RequestParam HelpRequestStatus status) {
+            @RequestParam HelpRequestStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
 
-        return ResponseEntity.ok(helpRequestService.getByVolunteerAndStatus(volunteerId, status));
+        return ResponseEntity.ok(helpRequestService.getByVolunteerAndStatus(volunteerId, status, page, size));
     }
 
     @Operation(summary = "Update a help request",
             description = "Only OPEN requests can be updated. Regenerates proposals if location or type changes")
     @PatchMapping("/{id}")
-    public ResponseEntity<HelpRequestResponseDto> updateHelpRequest (
+    public ResponseEntity<HelpRequestResponseDto> updateHelpRequest(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @PathVariable UUID id,
             @Valid @RequestBody HelpRequestUpdateRequestDto dto) {
@@ -98,7 +139,7 @@ public class HelpRequestController {
     @Operation(summary = "Delete a help request")
     @ApiResponse(responseCode = "204", description = "Request deleted")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteHelpRequest (
+    public ResponseEntity<Void> deleteHelpRequest(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @PathVariable UUID id) {
 
@@ -120,7 +161,7 @@ public class HelpRequestController {
     @Operation(summary = "Accept a help request as volunteer",
             description = "Assigns the volunteer to the request and cancels all other pending proposals")
     @PostMapping("/{id}/accept")
-    public ResponseEntity<HelpRequestResponseDto> acceptHelpRequest (
+    public ResponseEntity<HelpRequestResponseDto> acceptHelpRequest(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @PathVariable UUID id) {
 
@@ -132,7 +173,7 @@ public class HelpRequestController {
     @Operation(summary = "Mark as completed",
             description = "Only the assigned volunteer can complete the request")
     @PostMapping("/{id}/complete")
-    public ResponseEntity<HelpRequestResponseDto> completeHelpRequest (
+    public ResponseEntity<HelpRequestResponseDto> completeHelpRequest(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @PathVariable UUID id) {
 
@@ -143,7 +184,7 @@ public class HelpRequestController {
 
     @Operation(summary = "Cancel a help request")
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<HelpRequestResponseDto> cancelHelpRequest (
+    public ResponseEntity<HelpRequestResponseDto> cancelHelpRequest(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @PathVariable UUID id) {
 

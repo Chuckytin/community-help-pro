@@ -4,8 +4,8 @@ import com.communityhelp.app.helprequest.dto.HelpRequestCreateRequestDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface HelpRequestService {
@@ -15,13 +15,17 @@ public interface HelpRequestService {
 
     HelpRequestResponseDto getHelpRequestById(UUID id);
 
-    List<HelpRequestResponseDto> getMyHelpRequests(UUID requesterId);
+    Page<HelpRequestResponseDto> getMyHelpRequests(UUID requesterId, int page, int size, HelpRequestStatus status);
 
-    List<HelpRequestResponseDto> getAssignedToVolunteer(UUID volunteerId);
+    HelpRequestResponseDto getMyHelpRequestById(UUID requesterId, UUID requestId);
 
-    List<HelpRequestResponseDto> getByStatus(HelpRequestStatus status);
+    Page<HelpRequestResponseDto> getOpenHelpRequests(int page, int size);
 
-    List<HelpRequestResponseDto> getByVolunteerAndStatus(UUID volunteerId, HelpRequestStatus status);
+    Page<HelpRequestResponseDto> getAssignedToVolunteer(UUID volunteerId, int page, int size, HelpRequestStatus status);
+
+    Page<HelpRequestResponseDto> getByStatus(HelpRequestStatus status, int page, int size);
+
+    Page<HelpRequestResponseDto> getByVolunteerAndStatus(UUID volunteerId, HelpRequestStatus status, int page, int size);
 
     HelpRequestResponseDto updateHelpRequest(UUID id, UUID requesterId, HelpRequestUpdateRequestDto dto);
 

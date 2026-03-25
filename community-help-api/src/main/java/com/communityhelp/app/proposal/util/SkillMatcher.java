@@ -110,6 +110,15 @@ public class SkillMatcher {
                 VolunteerSkill.TRANSLATION
         ));
 
+        HELP_REQUEST_SKILLS.put(HelpRequestType.SHOPPING, Set.of(
+                VolunteerSkill.SHOPPING,
+                VolunteerSkill.PHYSICAL_LABOR,
+                VolunteerSkill.LOGISTICS,
+                VolunteerSkill.DRIVING,
+                VolunteerSkill.TRANSPORT,
+                VolunteerSkill.ELDERLY_CARE
+        ));
+
         HELP_REQUEST_SKILLS.put(HelpRequestType.OTHER, Set.of(
                 VolunteerSkill.GARDENING,
                 VolunteerSkill.LANGUAGE,

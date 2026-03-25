@@ -14,5 +14,6 @@ public enum HelpRequestType {
     BABY_CARE,
     COMMUNITY_EVENTS,
     EMERGENCY,
+    SHOPPING,
     OTHER
 }

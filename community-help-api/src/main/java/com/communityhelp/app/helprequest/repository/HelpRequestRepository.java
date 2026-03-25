@@ -2,12 +2,15 @@ package com.communityhelp.app.helprequest.repository;
 
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +20,17 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequest, UUID> 
     /**
      * Obtiene todas las solicitudes de un usuario
      */
-    List<HelpRequest> findByRequester_Id(UUID requesterId);
+    List<HelpRequest> findByRequester_Id(UUID id);
+
+    /**
+     * Obtiene todas las solicitudes de un usuario
+     */
+    Page<HelpRequest> findByRequester_Id(UUID requesterId, Pageable pageable);
+
+    /**
+     * Obtiene todas las solicitudes de un usuario filtradas por estado
+     */
+    Page<HelpRequest> findByRequester_IdAndStatus(UUID requesterId, HelpRequestStatus status, Pageable pageable);
 
     /**
      * Obtiene todas las solicitudes aceptadas por un voluntario
@@ -25,14 +38,29 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequest, UUID> 
     List<HelpRequest> findByVolunteer_Id(UUID volunteerId);
 
     /**
-     * Filtra por estado
+     * Filtra HelpRequests por estado
      */
-    List<HelpRequest> findByStatus(HelpRequestStatus status);
+    Page<HelpRequest> findByStatus(HelpRequestStatus status, Pageable pageable);
+
+    /**
+     * Filtra HelpRequests por estado y fecha de vencimiento futura (para evitar mostrar tareas vencidas)
+     */
+    Page<HelpRequest> findByStatusAndDeadlineAfter(HelpRequestStatus status, LocalDateTime localDateTime, Pageable pageable);
 
     /**
      * Filtra por tareas activas o aceptadas
      */
-    List<HelpRequest> findByVolunteer_IdAndStatus(UUID volunteerId, HelpRequestStatus status);
+    Page<HelpRequest> findByVolunteer_IdAndStatus(UUID volunteerId, HelpRequestStatus status, Pageable pageable);
+
+    /**
+     * Filtra por tareas activas o aceptadas para un voluntario específico
+     */
+    Page<HelpRequest> findByVolunteer_UserIdAndStatus(UUID volunteerId, HelpRequestStatus status, Pageable pageable);
+
+    /**
+     * Filtra por tareas activas o aceptadas para un voluntario específico sin importar el estado
+     */
+    Page<HelpRequest> findByVolunteer_UserId(UUID volunteerId, Pageable pageable);
 
     /**
      * Libera todas las helpRequests de un volunteer antes de borrarlo

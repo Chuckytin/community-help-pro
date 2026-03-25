@@ -19,6 +19,11 @@ import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -26,9 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -80,48 +83,112 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         return helpRequestMapper.toDto(getById(id));
     }
 
+    /**
+     * Obtiene todas las solicitudes como requester.
+     * Posibilidad de filtrar por estado de la solicitud.
+     */
     @Override
     @Transactional(readOnly = true)
-    public List<HelpRequestResponseDto> getMyHelpRequests(UUID requesterId) {
+    public Page<HelpRequestResponseDto> getMyHelpRequests(
+            UUID requesterId,
+            int page,
+            int size,
+            HelpRequestStatus status) {
 
-        return helpRequestRepository.findByRequester_Id(requesterId)
-                .stream()
-                .peek(this::autoExpireIfNeeded)
-                .map(helpRequestMapper::toDto)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+
+        Page<HelpRequest> myRequests;
+
+        if (status != null) {
+            myRequests = helpRequestRepository
+                    .findByRequester_IdAndStatus(requesterId, status, pageable);
+        } else {
+            myRequests = helpRequestRepository
+                    .findByRequester_Id(requesterId, pageable);
+        }
+
+        return myRequests.map(helpRequestMapper::toDto);
+    }
+
+    /**
+     * Obtiene una solicitud como requester y valida que pertenezca al usuario autenticado.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public HelpRequestResponseDto getMyHelpRequestById(UUID requesterId, UUID requestId) {
+        HelpRequest helpRequest = getOwnedRequest(requestId, requesterId);
+        return helpRequestMapper.toDto(helpRequest);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<HelpRequestResponseDto> getAssignedToVolunteer(UUID volunteerId) {
-        return helpRequestRepository.findByVolunteer_Id(volunteerId)
-                .stream()
-                .map(helpRequestMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<HelpRequestResponseDto> getOpenHelpRequests(int page, int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50),
+                Sort.by("createdAt").descending());
+
+        Page<HelpRequest> openRequests = helpRequestRepository
+                .findByStatusAndDeadlineAfter(
+                        HelpRequestStatus.OPEN,
+                        LocalDateTime.now(),
+                        pageable
+                );
+
+        return openRequests.map(helpRequestMapper::toDto);
+    }
+
+    /**
+     * Obtiene todas las solicitudes asignadas al voluntario.
+     * Posibilidad de filtrar por estado de la solicitud.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<HelpRequestResponseDto> getAssignedToVolunteer(
+            UUID volunteerId,
+            int page,
+            int size,
+            HelpRequestStatus status) {
+
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+
+        Page<HelpRequest> assignedRequests;
+
+        if (status != null) {
+            assignedRequests = helpRequestRepository
+                    .findByVolunteer_UserIdAndStatus(volunteerId, status, pageable);
+        } else {
+            assignedRequests = helpRequestRepository
+                    .findByVolunteer_UserId(volunteerId, pageable);
+        }
+
+        return assignedRequests.map(helpRequestMapper::toDto);
     }
 
     /**
      * Obtiene todas las HelpRequests por estado.
-     * Caso típico: listar solicitudes abiertas en el marketplace.
+     * Solo Admin
      */
-    public List<HelpRequestResponseDto> getByStatus(HelpRequestStatus status) {
-        return helpRequestRepository.findByStatus(status)
-                .stream()
-                .map(helpRequestMapper::toDto)
-                .toList();
+    @Override
+    @Transactional(readOnly = true)
+    public Page<HelpRequestResponseDto> getByStatus(HelpRequestStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+        return helpRequestRepository.findByStatus(status, pageable)
+                .map(helpRequestMapper::toDto);
     }
 
     /**
      * Obtiene las tareas de un voluntario filtradas por estado.
      * Caso típico: "mis tareas activas" o "mi historial".
      */
-    public List<HelpRequestResponseDto> getByVolunteerAndStatus(UUID volunteerId,
-                                                                HelpRequestStatus status) {
+    @Override
+    @Transactional(readOnly = true)
+    public Page<HelpRequestResponseDto> getByVolunteerAndStatus(UUID volunteerId,
+                                                                HelpRequestStatus status,
+                                                                int page,
+                                                                int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return helpRequestRepository
-                .findByVolunteer_IdAndStatus(volunteerId, status)
-                .stream()
-                .map(helpRequestMapper::toDto)
-                .toList();
+                .findByVolunteer_IdAndStatus(volunteerId, status, pageable)
+                .map(helpRequestMapper::toDto);
     }
 
     @Override
@@ -288,6 +355,5 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             matchingStateService.clearState(helpRequest.getId());
         }
     }
-
 
 }
