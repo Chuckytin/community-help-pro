@@ -25,7 +25,7 @@ public interface HelpRequestService {
 
     Page<HelpRequestResponseDto> getByStatus(HelpRequestStatus status, int page, int size);
 
-    Page<HelpRequestResponseDto> getByVolunteerAndStatus(UUID volunteerId, HelpRequestStatus status, int page, int size);
+    Page<HelpRequestResponseDto> getByVolunteer(UUID volunteerId, int page, int size);
 
     HelpRequestResponseDto updateHelpRequest(UUID id, UUID requesterId, HelpRequestUpdateRequestDto dto);
 

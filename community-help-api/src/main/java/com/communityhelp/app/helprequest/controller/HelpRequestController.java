@@ -109,17 +109,16 @@ public class HelpRequestController {
         return ResponseEntity.ok(helpRequestService.getByStatus(status, page, size));
     }
 
-    @Operation(summary = "Get a volunteer's requests filtered by status", description = "Admin only")
+    @Operation(summary = "Get volunteer's requests", description = "Admin only")
     @GetMapping("/admin/volunteer/{volunteerId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<HelpRequestResponseDto>> getByVolunteerAndStatus(
+    public ResponseEntity<Page<HelpRequestResponseDto>> getByVolunteer(
             @PathVariable UUID volunteerId,
-            @RequestParam HelpRequestStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
 
-        return ResponseEntity.ok(helpRequestService.getByVolunteerAndStatus(volunteerId, status, page, size));
+        return ResponseEntity.ok(helpRequestService.getByVolunteer(volunteerId, page, size));
     }
 
     @Operation(summary = "Update a help request",

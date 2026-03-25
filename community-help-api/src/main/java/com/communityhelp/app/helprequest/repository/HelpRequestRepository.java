@@ -48,19 +48,14 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequest, UUID> 
     Page<HelpRequest> findByStatusAndDeadlineAfter(HelpRequestStatus status, LocalDateTime localDateTime, Pageable pageable);
 
     /**
-     * Filtra por tareas activas o aceptadas
+     * Filtra por tareas activas o aceptadas para un voluntario específico
      */
     Page<HelpRequest> findByVolunteer_IdAndStatus(UUID volunteerId, HelpRequestStatus status, Pageable pageable);
 
     /**
-     * Filtra por tareas activas o aceptadas para un voluntario específico
-     */
-    Page<HelpRequest> findByVolunteer_UserIdAndStatus(UUID volunteerId, HelpRequestStatus status, Pageable pageable);
-
-    /**
      * Filtra por tareas activas o aceptadas para un voluntario específico sin importar el estado
      */
-    Page<HelpRequest> findByVolunteer_UserId(UUID volunteerId, Pageable pageable);
+    Page<HelpRequest> findByVolunteer_Id(UUID volunteerId, Pageable pageable);
 
     /**
      * Libera todas las helpRequests de un volunteer antes de borrarlo

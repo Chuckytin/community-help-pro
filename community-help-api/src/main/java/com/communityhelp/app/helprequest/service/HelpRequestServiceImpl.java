@@ -23,7 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -154,10 +154,10 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
         if (status != null) {
             assignedRequests = helpRequestRepository
-                    .findByVolunteer_UserIdAndStatus(volunteerId, status, pageable);
+                    .findByVolunteer_IdAndStatus(volunteerId, status, pageable);
         } else {
             assignedRequests = helpRequestRepository
-                    .findByVolunteer_UserId(volunteerId, pageable);
+                    .findByVolunteer_Id(volunteerId, pageable);
         }
 
         return assignedRequests.map(helpRequestMapper::toDto);
@@ -181,13 +181,12 @@ public class HelpRequestServiceImpl implements HelpRequestService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<HelpRequestResponseDto> getByVolunteerAndStatus(UUID volunteerId,
-                                                                HelpRequestStatus status,
+    public Page<HelpRequestResponseDto> getByVolunteer(UUID volunteerId,
                                                                 int page,
                                                                 int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return helpRequestRepository
-                .findByVolunteer_IdAndStatus(volunteerId, status, pageable)
+                .findByVolunteer_Id(volunteerId, pageable)
                 .map(helpRequestMapper::toDto);
     }
 
@@ -334,7 +333,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         HelpRequest helpRequest = getById(id);
 
         if (!helpRequest.getRequesterId().equals(requesterId)) {
-            throw new IllegalStateException("Not allowed");
+            throw new AccessDeniedException("Not allowed");
         }
 
         return helpRequest;
