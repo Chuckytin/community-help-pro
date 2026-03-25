@@ -17,6 +17,7 @@ import java.util.List;
 public class ApiErrorResponse {
 
     private int status;
+    private String code;
     private String message;
     private List<FieldError> errors;
 

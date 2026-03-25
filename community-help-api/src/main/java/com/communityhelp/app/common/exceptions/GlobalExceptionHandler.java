@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -13,8 +14,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -31,17 +34,25 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationErrorsException(MethodArgumentNotValidException ex) {
+
+        List<ApiErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fieldError -> new ApiErrorResponse.FieldError(
+                        fieldError.getField(),
+                        fieldError.getDefaultMessage()))
+                .collect(Collectors.toList());
+
+        log.warn("Validation failed with {} errors: {}", fieldErrors.size(), fieldErrors);
+
         ApiErrorResponse errorResponse = ApiErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
+                .code(ErrorCode.VALIDATION_ERROR.name())
                 .message("Validation failed")
-                .errors(ex.getBindingResult().getFieldErrors()
-                        .stream()
-                        .map(fieldError -> new ApiErrorResponse.FieldError(
-                                fieldError.getField(),
-                                fieldError.getDefaultMessage()))
-                        .collect(Collectors.toList()))
+                .errors(fieldErrors)
                 .build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     /**
@@ -49,7 +60,30 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_REQUEST, "Invalid request parameters");
+    }
+
+    /**
+     * Maneja errores de conversión de tipos en parámetros de consulta o path variables y devuelve error 400.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String expectedType = ex.getRequiredType() != null
+                ? ex.getRequiredType().getSimpleName()
+                : "unknown";
+        String message = String.format("Parameter '%s' with value '%s' is invalid. Expected type: %s",
+                ex.getName(), ex.getValue(), expectedType);
+        log.warn("Type mismatch: {}", message);
+        return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.TYPE_MISMATCH, message);
+    }
+
+    /**
+     * Maneja errores cuando el JSON enviado está mal formado.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        log.warn("Malformed JSON request: {}", ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.MALFORMED_JSON,"Malformed JSON request");
     }
 
     /**
@@ -58,7 +92,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiErrorResponse>handleBadCredentialException(BadCredentialsException ex) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        return buildResponse(HttpStatus.UNAUTHORIZED, ErrorCode.INVALID_CREDENTIALS, "Invalid credentials");
 
     }
 
@@ -67,23 +101,31 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiErrorResponse> handleAuthenticationException(AuthenticationException ex) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Authentication required");
+        return buildResponse(HttpStatus.UNAUTHORIZED, ErrorCode.AUTHENTICATION_REQUIRED, "Authentication required");
     }
 
     /**
-     * Maneja accesos denegados lanzados manualmente desde servicios
-     * (AccessDeniedException) y devuelve error 403 Forbidden.
+     * Maneja errores de acceso denegado de usuarios, error 403
      */
-    @ExceptionHandler({
-            AccessDeniedException.class,
-            AuthorizationDeniedException.class
-    })
-    public ResponseEntity<ApiErrorResponse> handleForbidden(Exception ex) {
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         String username = SecurityContextHolder.getContext().getAuthentication() != null
                 ? SecurityContextHolder.getContext().getAuthentication().getName()
                 : "anonymous";
-        log.warn("User {} tried to access without permission: {}", username, ex.getMessage());
-        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+        log.warn("Access denied for user {}: {}", username, ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, ErrorCode.ACCESS_DENIED, "You don't have permission to access this resource");
+    }
+
+    /**
+     * Maneja errores de falta de permisos para el usuario, error 403
+     */
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException ex) {
+        String username = SecurityContextHolder.getContext().getAuthentication() != null
+                ? SecurityContextHolder.getContext().getAuthentication().getName()
+                : "anonymous";
+        log.warn("Authorization denied for user {}: {}", username, ex.getMessage());
+        return buildResponse(HttpStatus.FORBIDDEN, ErrorCode.ACCESS_DENIED, "You don't have permission to access this resource");
     }
 
     /**
@@ -92,7 +134,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiErrorResponse>handleEntityNotException(EntityNotFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+        log.warn("Entity not found: {}", ex.getMessage());
+        return buildResponse(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, "Resource not found");
     }
 
     /**
@@ -100,7 +143,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalStateException(IllegalStateException ex) {
-        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+        log.warn("Business rule violation: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ErrorCode.CONFLICT, "Conflict occurred");
     }
 
     /**
@@ -109,7 +153,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        return buildResponse(HttpStatus.CONFLICT, "Database constraint violation");
+        return buildResponse(HttpStatus.CONFLICT, ErrorCode.DATABASE_CONSTRAINT, "Database constraint violation");
     }
 
     /**
@@ -118,15 +162,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleException(Exception ex) {
         log.error("Unexpected error occurred", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR, "An unexpected error occurred");
     }
 
     /**
      * Helper para construir la respuesta de cada Exception.
      */
-    private ResponseEntity<ApiErrorResponse> buildResponse(HttpStatus status, String message) {
+    private ResponseEntity<ApiErrorResponse> buildResponse(
+            HttpStatus status,
+            ErrorCode code,
+            String message
+    ) {
         ApiErrorResponse errorResponse = ApiErrorResponse.builder()
                 .status(status.value())
+                .code(code.name())
                 .message(message)
                 .errors(Collections.emptyList())
                 .build();

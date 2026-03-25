@@ -1,0 +1,19 @@
+package com.communityhelp.app.common.exceptions;
+
+public enum ErrorCode {
+
+    VALIDATION_ERROR,
+    INVALID_REQUEST,
+    TYPE_MISMATCH,
+    MALFORMED_JSON,
+
+    INVALID_CREDENTIALS,
+    AUTHENTICATION_REQUIRED,
+    ACCESS_DENIED,
+
+    RESOURCE_NOT_FOUND,
+    CONFLICT,
+    DATABASE_CONSTRAINT,
+
+    INTERNAL_ERROR
+}
