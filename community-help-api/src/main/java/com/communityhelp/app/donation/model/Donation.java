@@ -182,6 +182,7 @@ public class Donation extends AuditableLocatable {
         this.volunteer = null;
         this.reservedAt = null;
         this.confirmedAt = null;
+        this.pickedUpAt =  null;
 
         this.completedAt = LocalDateTime.now();
     }

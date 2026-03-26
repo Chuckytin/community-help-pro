@@ -2,6 +2,8 @@ package com.communityhelp.app.donation.repository;
 
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.model.DonationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,22 +19,24 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
     /**
      * Obtiene todas las donaciones de un usuario
      */
-    List<Donation> findByDonor_Id(UUID donorId);
+    Page<Donation> findByDonor_Id(UUID donorId, Pageable pageable);
+    List<Donation> findByDonor_Id(UUID id);
 
     /**
      * Obtiene todas las donaciones de un usuario por estado
      */
-    List<Donation> findByDonor_IdAndStatus(UUID donorId, DonationStatus donationStatus);
+    Page<Donation> findByDonor_IdAndStatus(UUID donorId, DonationStatus donationStatus, Pageable pageable);
 
     /**
      * Obtiene todas las donaciones de un voluntario
      */
-    List<Donation> findByVolunteer_Id(UUID volunteerId);
+    Page<Donation> findByVolunteer_Id(UUID volunteerId, Pageable pageable);
+    List<Donation> findByVolunteer_Id(UUID id);
 
     /**
      * Filtra por estado
      */
-    List<Donation> findByStatus(DonationStatus status);
+    Page<Donation> findByStatus(DonationStatus status, Pageable pageable);
 
     /**
      * Libera las donaciones donde el usuario era volunteer

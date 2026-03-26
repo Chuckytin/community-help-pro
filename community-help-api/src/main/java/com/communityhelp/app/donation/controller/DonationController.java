@@ -11,16 +11,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
-@Tag(name = "Donations", description = "Goods donations. Lifecycle: AVAILABLE → RESERVED → PICKED_UP → COMPLETED.")
+@Tag(name = "Donations", description = "Goods donations. Lifecycle: AVAILABLE → RESERVED → CONFIRMED → PICKED_UP → COMPLETED.")
 @RestController
 @RequestMapping(path = "/api/v1/donations")
 @RequiredArgsConstructor
@@ -48,32 +48,41 @@ public class DonationController {
 
     @Operation(summary = "Get my donations")
     @GetMapping("/me")
-    public ResponseEntity<List<DonationResponseDto>> getMyDonations(
-            @AuthenticationPrincipal AppUserDetails currentUser) {
+    public ResponseEntity<Page<DonationResponseDto>> getMyDonations(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
 
         return ResponseEntity.ok(
-                donationService.getMyDonations(currentUser.getId())
+                donationService.getMyDonations(currentUser.getId(), page, size)
         );
     }
 
     @Operation(summary = "Get my donations filtered by status")
     @GetMapping("/me/status/{status}")
-    public ResponseEntity<List<DonationResponseDto>> getMyDonationsByStatus(
+    public ResponseEntity<Page<DonationResponseDto>> getMyDonationsByStatus(
             @AuthenticationPrincipal AppUserDetails currentUser,
-            @PathVariable DonationStatus status) {
+            @PathVariable DonationStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
 
         return ResponseEntity.ok(
-                donationService.getDonationsByStatus(currentUser.getId(), status)
+                donationService.getDonationsByStatus(currentUser.getId(), status, page, size)
         );
     }
 
     @Operation(summary = "Get donations assigned to me as volunteer")
     @GetMapping("/assigned/me")
-    public ResponseEntity<List<DonationResponseDto>> getAssigned(
-            @AuthenticationPrincipal AppUserDetails currentUser) {
+    public ResponseEntity<Page<DonationResponseDto>> getAssigned(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
 
         return ResponseEntity.ok(
-                donationService.getDonationsAssignedToVolunteer(currentUser.getId())
+                donationService.getDonationsAssignedToVolunteer(currentUser.getId(), page, size)
         );
     }
 

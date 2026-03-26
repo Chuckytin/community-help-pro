@@ -19,15 +19,16 @@ import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -86,36 +87,43 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DonationResponseDto> getMyDonations(UUID donorId) {
+    public Page<DonationResponseDto> getMyDonations(UUID donorId, int page, int size) {
 
-        return donationRepository.findByDonor_Id(donorId)
-                .stream()
-                .peek(this::autoExpireIfNeeded)
-                .map(donationMapper::toDto)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
 
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DonationResponseDto> getDonationsByStatus(UUID donorId, DonationStatus status) {
-
-        return donationRepository.findByDonor_IdAndStatus(donorId, status)
-                .stream()
-                .peek(this::autoExpireIfNeeded)
-                .map(donationMapper::toDto)
-                .collect(Collectors.toList());
+        return donationRepository.findByDonor_Id(donorId, pageable)
+                .map(donation -> {
+                    autoExpireIfNeeded(donation);
+                    return donationMapper.toDto(donation);
+                });
 
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DonationResponseDto> getDonationsAssignedToVolunteer(UUID volunteerId) {
+    public Page<DonationResponseDto> getDonationsByStatus(UUID donorId, DonationStatus status, int page, int size) {
 
-        return donationRepository.findByVolunteer_Id(volunteerId)
-                .stream()
-                .map(donationMapper::toDto)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+
+        return donationRepository.findByDonor_IdAndStatus(donorId, status, pageable)
+                .map(donation -> {
+                    autoExpireIfNeeded(donation);
+                    return donationMapper.toDto(donation);
+                });
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DonationResponseDto> getDonationsAssignedToVolunteer(UUID volunteerId, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+
+        return donationRepository.findByVolunteer_Id(volunteerId, pageable)
+                .map(donation -> {
+                    autoExpireIfNeeded(donation);
+                    return donationMapper.toDto(donation);
+                });
 
     }
 
@@ -278,9 +286,7 @@ public class DonationServiceImpl implements DonationService {
             throw new IllegalStateException("Cannot cancel this donation");
         }
 
-        donation.setStatus(DonationStatus.CANCELLED);
-        donation.setVolunteer(null);
-        donation.setActive(false);
+        donation.cancel("Cancelled by donor");
 
         // Limpia el estado de matching
         matchingStateService.clearState(id);

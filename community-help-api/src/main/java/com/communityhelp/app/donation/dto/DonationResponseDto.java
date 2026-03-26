@@ -30,10 +30,14 @@ public class DonationResponseDto {
     private Double latitude;
     private Double longitude;
     private DonationStatus status;
+    private boolean active;
     private String cancelReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime expiryDate;
     private LocalDateTime pickedUpAt;
+    private LocalDateTime reservedAt;
+    private LocalDateTime confirmedAt;
+    private LocalDateTime completedAt;
 
 }

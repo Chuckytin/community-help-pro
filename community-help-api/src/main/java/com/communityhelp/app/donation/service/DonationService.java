@@ -4,8 +4,8 @@ import com.communityhelp.app.donation.dto.DonationCreateRequestDto;
 import com.communityhelp.app.donation.dto.DonationResponseDto;
 import com.communityhelp.app.donation.dto.DonationUpdateRequestDto;
 import com.communityhelp.app.donation.model.DonationStatus;
+import org.springframework.data.domain.Page;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface DonationService {
@@ -15,11 +15,11 @@ public interface DonationService {
 
     DonationResponseDto getDonationById(UUID id);
 
-    List<DonationResponseDto> getMyDonations(UUID donorId);
+    Page<DonationResponseDto> getMyDonations(UUID donorId, int page, int size);
 
-    List<DonationResponseDto> getDonationsByStatus(UUID donorId, DonationStatus status);
+    Page<DonationResponseDto> getDonationsByStatus(UUID donorId, DonationStatus status, int page, int size);
 
-    List<DonationResponseDto> getDonationsAssignedToVolunteer(UUID volunteerId);
+    Page<DonationResponseDto> getDonationsAssignedToVolunteer(UUID volunteerId, int page, int size);
 
     DonationResponseDto updateDonation(UUID id, UUID donorId, DonationUpdateRequestDto dto);
 
