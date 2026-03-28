@@ -38,7 +38,7 @@ public class ProposalController {
 
     @Operation(summary = "List proposals by status", description = "Admin only")
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/status/{status}")
+    @GetMapping("/admin/status/{status}")
     public ResponseEntity<Page<ProposalResponseDto>> getByStatus(
             @PathVariable ProposalStatus status,
             @RequestParam(defaultValue = "0") int page,
@@ -49,14 +49,25 @@ public class ProposalController {
         );
     }
 
-    @Operation(summary = "Get proposal by entity ID")
-    @GetMapping("/entity/{entityId}")
-    public ResponseEntity<ProposalResponseDto> getProposal(
-            @PathVariable UUID entityId,
+    @Operation(summary = "Get my proposal by ID")
+    @GetMapping("/{proposalId}")
+    public ResponseEntity<ProposalResponseDto> getProposalById(
+            @PathVariable UUID proposalId,
             @AuthenticationPrincipal AppUserDetails userDetails
     ) {
         return ResponseEntity.ok(
-                proposalService.getProposal(userDetails.getId(), entityId)
+                proposalService.getProposalByVolunteerAndId(userDetails.getId(), proposalId)
+        );
+    }
+
+    @Operation(summary = "Get proposal by entity ID", description = "Admin only")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/entity/{entityId}")
+    public ResponseEntity<ProposalResponseDto> getProposalByEntityId(
+            @PathVariable UUID entityId
+    ) {
+        return ResponseEntity.ok(
+                proposalService.getProposalByEntityId(entityId)
         );
     }
 

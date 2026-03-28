@@ -166,13 +166,32 @@ public class ProposalServiceImpl implements ProposalService {
     }
 
     /**
-     * Recupera una proposal específica por voluntario y entidad objetivo.
+     * Obtiene una propuesta por ID, verificando que pertenezca al voluntario
      */
     @Override
     @Transactional(readOnly = true)
-    public ProposalResponseDto getProposal(UUID volunteerId, UUID targetEntityId) {
-        Proposal proposal = proposalRepository.findByTargetEntityIdAndVolunteer_Id(targetEntityId, volunteerId)
-                .orElseThrow(() -> new EntityNotFoundException("Proposal not found"));
+    public ProposalResponseDto getProposalByVolunteerAndId(UUID volunteerId, UUID proposalId) {
+        Proposal proposal = proposalRepository.findByIdAndVolunteer_Id(proposalId, volunteerId)
+                .orElseThrow(() -> {
+                    log.warn("Volunteer {} attempted to access non-existent or unauthorized proposal {}",
+                            volunteerId, proposalId);
+                    return new AccessDeniedException("Proposal not found or access denied");
+                });
+
+        return proposalMapper.toDto(proposal);
+    }
+
+    /**
+     * Obtiene una propuesta por entityId (solo Admin)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public ProposalResponseDto getProposalByEntityId(UUID entityId) {
+        Proposal proposal = proposalRepository.findByTargetEntityId(entityId)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("No proposal found for entity: " + entityId));
+
         return proposalMapper.toDto(proposal);
     }
 

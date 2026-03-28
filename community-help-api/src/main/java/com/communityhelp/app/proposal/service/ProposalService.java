@@ -15,7 +15,9 @@ public interface ProposalService {
 
     Page<ProposalResponseDto> getProposalsByStatus(ProposalStatus status, int page, int size);
 
-    ProposalResponseDto getProposal(UUID volunteerId, UUID targetEntityId);
+    ProposalResponseDto getProposalByVolunteerAndId(UUID volunteerId, UUID proposalId);
+
+    ProposalResponseDto getProposalByEntityId(UUID entityId);
 
     ProposalResponseDto acceptProposal(UUID volunteerId, UUID proposalId);
 

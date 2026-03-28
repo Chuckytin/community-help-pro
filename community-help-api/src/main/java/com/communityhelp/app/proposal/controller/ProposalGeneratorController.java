@@ -29,7 +29,7 @@ public class ProposalGeneratorController {
             description = "Manually triggers the matching engine. Useful in development or to force a retry.")
     @ApiResponse(responseCode = "200", description = "Matching triggered")
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/help-request/{helpRequestId}")
+    @PostMapping("/admin/help-request/{helpRequestId}")
     public ResponseEntity<Void> generateForHelpRequest(
             @PathVariable UUID helpRequestId
     ) {
@@ -46,7 +46,7 @@ public class ProposalGeneratorController {
             description = "Manually triggers the matching engine. Useful in development or to force a retry.")
     @ApiResponse(responseCode = "200", description = "Matching triggered")
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/donation/{donationId}")
+    @PostMapping("/admin/donation/{donationId}")
     public ResponseEntity<Void> generateForDonation(
             @PathVariable UUID donationId
     ) {

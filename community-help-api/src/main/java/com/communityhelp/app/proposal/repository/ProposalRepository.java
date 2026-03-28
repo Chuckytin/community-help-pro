@@ -29,10 +29,16 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
      */
     Page<Proposal> findByStatus(ProposalStatus status, Pageable pageable);
 
+
     /**
-     * Obtiene una proposal por entidad objetivo y voluntario.
+     * Obtiene proposals por entidad
      */
-    Optional<Proposal> findByTargetEntityIdAndVolunteer_Id(UUID targetEntityId, UUID volunteerId);
+    List<Proposal> findByTargetEntityId(UUID targetEntityId);
+
+    /**
+     * Obtiene proposals por el ID que pertenezca al voluntario
+     */
+    Optional<Proposal> findByIdAndVolunteer_Id(UUID id, UUID volunteerId);
 
     /**
      * Obtiene proposals ordenadas por score descendente para el ranking del voluntario.
