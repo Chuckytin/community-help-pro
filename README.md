@@ -59,7 +59,7 @@ Para probar los endpoints autenticados:
 
 La especificación OpenAPI en JSON está disponible en `/v3/api-docs`.
 
-El plan de pruebas completo con los casos de prueba organizados por módulo está disponible en [`docs/api/community-help-api-test.xlsx`](docs/api/community-help-api-test.xlsx).
+El plan de pruebas completo con los casos de prueba organizados por módulo está disponible en [Google Sheets]([https://docs.google.com/spreadsheets/d/...](https://docs.google.com/spreadsheets/d/1We3w7b18pmL2A87966vYyekEPzlfY47H3h4I0qm116g/edit?usp=sharing)).
 
 ---
 
