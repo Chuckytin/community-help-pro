@@ -59,6 +59,8 @@ Para probar los endpoints autenticados:
 
 La especificación OpenAPI en JSON está disponible en `/v3/api-docs`.
 
+El plan de pruebas completo con los casos de prueba organizados por módulo está disponible en [`docs/api/test-plan.xlsx`](docs/api/test-plan.xlsx).
+
 ---
 
 ## Configuración y arranque
@@ -70,7 +72,12 @@ La especificación OpenAPI en JSON está disponible en `/v3/api-docs`.
 
 ### Variables de entorno
 
-Crea un archivo `.env` en la raíz del proyecto:
+Copia `.env.example` y rellena tus valores:
+```bash
+cp .env.example .env
+```
+
+El archivo `.env` debe estar en la raíz de `community-help-api/`. Spring lo carga automáticamente en el perfil `dev` — no es necesario configurar nada en el IDE.
 ```env
 # PostgreSQL (Docker)
 POSTGRES_DB=community_help_db
@@ -121,13 +128,13 @@ CREATE INDEX IF NOT EXISTS idx_users_location_gist ON users USING GIST(location)
 community-help-api/
 ├── auth/           # Autenticación JWT
 ├── chat/           # Mensajería REST y WebSocket
-├── common/         # Location, excepciones, openroute persistencia base
-├── config/         # Seguridad, OpenAPI, inicialización, etc
+├── common/         # Location, excepciones, OpenRoute, persistencia base
+├── config/         # Seguridad, OpenAPI, inicialización
 ├── donation/       # Donaciones y su ciclo de vida
 ├── helprequest/    # Solicitudes de ayuda y su ciclo de vida
 ├── proposal/       # Motor de matching, scoring y gestión de proposals
 ├── review/         # Reseñas y recálculo de rating
-├── security/       # Spring Security
+├── security/       # Filtros y configuración de Spring Security
 ├── user/           # Gestión de usuarios
 └── volunteer/      # Perfil y habilidades del voluntario
 ```
@@ -138,5 +145,5 @@ community-help-api/
 
 | Perfil | Uso | Radio inicial | Retry |
 |---|---|---|---|
-| `dev` | Local | 5km | 10min |
-| `prod` | Producción | 10km | 30min |
+| `dev` | Local | 5 km | 10 min |
+| `prod` | Producción | 10 km | 30 min |
