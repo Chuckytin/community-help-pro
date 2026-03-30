@@ -25,6 +25,7 @@
 - **Motor de matching automático** que conecta voluntarios cercanos con donaciones y solicitudes compatibles, evaluando distancia, habilidades, rating y carga de trabajo. El radio de búsqueda se amplía progresivamente si no hay respuesta.
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
+- **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña.
 - **API documentada con Swagger / OpenAPI** accesible en `/swagger-ui.html`.
 
 ---
@@ -54,8 +55,9 @@ http://localhost:8080/swagger-ui.html
 Para probar los endpoints autenticados:
 
 1. Regístrate con `POST /api/v1/auth/register`
-2. Obtén tu token con `POST /api/v1/auth/login`
-3. Haz clic en **Authorize** (icono de candado) e introduce `Bearer <token>`
+2. Verifica tu email con `POST /api/v1/auth/verify-email` (revisa tu bandeja de entrada)
+3. Obtén tu token con `POST /api/v1/auth/login`
+4. Haz clic en **Authorize** (icono de candado) e introduce `Bearer <token>`
 
 La especificación OpenAPI en JSON está disponible en `/v3/api-docs`.
 
@@ -69,6 +71,7 @@ El plan de pruebas completo con los casos de prueba organizados por módulo est�
 
 - Java 21
 - Docker
+- Cuenta en [Brevo](https://app.brevo.com) para el envío de emails (plan gratuito suficiente)
 
 ### Variables de entorno
 
@@ -81,26 +84,39 @@ El archivo `.env` debe estar en la raíz de `community-help-api/`. Spring lo car
 ```env
 # PostgreSQL (Docker)
 POSTGRES_DB=community_help_db
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=yourpassword
+POSTGRES_USER=your_postgres_user
+POSTGRES_PASSWORD=your_postgres_password
 
 # Spring datasource (app)
 SPRING_DATASOURCE_DB=community_help_db
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=yourpassword
+SPRING_DATASOURCE_USERNAME=your_postgres_user
+SPRING_DATASOURCE_PASSWORD=your_postgres_password
 
 # JWT
-JWT_SECRET=your_jwt_secret_min_32_chars
-JWT_EXPIRATION_MS=86400000
-JWT_EXPIRED_IN=86400000
+JWT_SECRET=your_jwt_secret_minimum_32_characters_long
+JWT_EXPIRATION_MS=3600000
+JWT_EXPIRED_IN=3600000
 
 # Admin inicial
-ADMIN_EMAIL=admin@communityhelp.com
-ADMIN_PASSWORD=adminpassword
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=your_admin_password
 
-# OpenRoute
-OPENROUTE_API_KEY=your_openroute_key
+# OpenRoute Service API
+OPENROUTE_API_KEY=your_openroute_api_key
+
+# Email (Brevo SMTP — https://app.brevo.com)
+MAIL_HOST=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_USERNAME=your_brevo_smtp_user
+MAIL_PASSWORD=your_brevo_smtp_password
+MAIL_FROM=your_verified_sender@example.com
+
+# Frontend URLs
+URL_FRONTEND=your_frontend_url
+URL_FRONTEND_LOGIN=your_frontend_login_url
 ```
+
+> **Nota sobre Brevo:** las claves SMTP de Brevo expiran tras 90 días de inactividad. Si llevas tiempo sin usar el proyecto, genera una nueva clave desde `Settings > SMTP & API` en tu cuenta de Brevo.
 
 ### Arranque
 
@@ -123,15 +139,37 @@ CREATE INDEX IF NOT EXISTS idx_users_location_gist ON users USING GIST(location)
 
 ---
 
+## Pruebas y desarrollo
+
+### Verificación de email
+
+Al registrarse, el sistema envía un OTP al email del usuario. Si durante las pruebas usas emails inventados o no tienes acceso al buzón, puedes verificar las cuentas manualmente:
+```sql
+-- Verificar todos los usuarios de una vez
+UPDATE users SET email_verified = true;
+
+-- O verificar un usuario concreto
+UPDATE users SET email_verified = true WHERE email = 'usuario@ejemplo.com';
+```
+
+También puedes consultar el OTP generado directamente en la tabla para probar el flujo completo sin necesitar el email:
+```sql
+SELECT email, code, type, expires_at, used FROM otp_codes ORDER BY expires_at DESC;
+```
+
+---
+
 ## Estructura del proyecto
 ```
 community-help-api/
-├── auth/           # Autenticación JWT
+├── auth/           # Autenticación JWT, verificación de email y recuperación de contraseña
 ├── chat/           # Mensajería REST y WebSocket
 ├── common/         # Location, excepciones, OpenRoute, persistencia base
 ├── config/         # Seguridad, OpenAPI, inicialización
 ├── donation/       # Donaciones y su ciclo de vida
+├── email/          # Servicio de envío de emails con plantillas Thymeleaf
 ├── helprequest/    # Solicitudes de ayuda y su ciclo de vida
+├── otp/            # Generación y validación de códigos OTP
 ├── proposal/       # Motor de matching, scoring y gestión de proposals
 ├── review/         # Reseñas y recálculo de rating
 ├── security/       # Filtros y configuración de Spring Security
