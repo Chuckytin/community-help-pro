@@ -111,9 +111,9 @@ MAIL_USERNAME=your_brevo_smtp_user
 MAIL_PASSWORD=your_brevo_smtp_password
 MAIL_FROM=your_verified_sender@example.com
 
-# Frontend URLs (puedes usar placeholders mientras desarrollas)
-URL_FRONTEND=http://localhost:5173
-URL_FRONTEND_LOGIN=http://localhost:5173/login
+# Frontend URLs
+URL_FRONTEND=your_frontend_url
+URL_FRONTEND_LOGIN=your_frontend_login_url
 ```
 
 > **Nota sobre Brevo:** las claves SMTP de Brevo expiran tras 90 días de inactividad. Si llevas tiempo sin usar el proyecto, genera una nueva clave desde `Settings > SMTP & API` en tu cuenta de Brevo.
