@@ -1,5 +1,6 @@
 package com.communityhelp.app.volunteer.dto;
 
+import com.communityhelp.app.common.openroute.model.TransportMode;
 import com.communityhelp.app.volunteer.model.VolunteerSkill;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,7 @@ public class VolunteerResponseDto {
     private boolean available;
     private Double radiusKm;
     private Set<VolunteerSkill> skills;
+    private TransportMode transportMode;
 
     private Double latitude;
     private Double longitude;

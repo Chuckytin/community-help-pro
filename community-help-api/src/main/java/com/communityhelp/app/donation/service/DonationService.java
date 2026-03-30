@@ -13,7 +13,7 @@ public interface DonationService {
     // CRUD base
     DonationResponseDto createDonation(UUID donorId, DonationCreateRequestDto dto);
 
-    DonationResponseDto getDonationById(UUID id);
+    DonationResponseDto getDonationById(UUID id, UUID currentUserId);
 
     Page<DonationResponseDto> getMyDonations(UUID donorId, int page, int size);
 

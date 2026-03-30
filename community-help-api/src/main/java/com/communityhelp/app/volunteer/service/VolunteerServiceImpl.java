@@ -1,5 +1,6 @@
 package com.communityhelp.app.volunteer.service;
 
+import com.communityhelp.app.common.openroute.model.TransportMode;
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
 import com.communityhelp.app.volunteer.event.VolunteerUpdatedEvent;
@@ -46,6 +47,9 @@ public class VolunteerServiceImpl implements VolunteerService {
                 .available(dto.getAvailable() != null ? dto.getAvailable() : true)
                 .radiusKm(dto.getRadiusKm())
                 .skills(dto.getSkills())
+                .transportMode(dto.getTransportMode() != null
+                        ? dto.getTransportMode()
+                        : TransportMode.FOOT_WALKING)
                 .build();
 
         Volunteer savedVolunteer = volunteerRepository.save(volunteer);
@@ -74,6 +78,10 @@ public class VolunteerServiceImpl implements VolunteerService {
 
         if (dto.getSkills() != null) {
             volunteer.setSkills(dto.getSkills());
+        }
+
+        if (dto.getTransportMode() != null) {
+            volunteer.setTransportMode(dto.getTransportMode());
         }
 
         Volunteer savedVolunteer = volunteerRepository.save(volunteer);

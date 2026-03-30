@@ -42,8 +42,10 @@ public class DonationController {
 
     @Operation(summary = "Get donation by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<DonationResponseDto> getDonationById(@PathVariable UUID id) {
-        return ResponseEntity.ok(donationService.getDonationById(id));
+    public ResponseEntity<DonationResponseDto> getDonationById(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(donationService.getDonationById(id, currentUser.getId()));
     }
 
     @Operation(summary = "Get my donations")

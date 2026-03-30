@@ -23,6 +23,7 @@ public interface VolunteerMapper {
     @Mapping(target = "rating", source = "user.rating")
     @Mapping(target = "latitude", expression = "java(volunteer.getUser().getLatitude())")
     @Mapping(target = "longitude", expression = "java(volunteer.getUser().getLongitude())")
+    @Mapping(target = "transportMode", source = "transportMode")
     VolunteerResponseDto toDto(Volunteer volunteer);
 
 }

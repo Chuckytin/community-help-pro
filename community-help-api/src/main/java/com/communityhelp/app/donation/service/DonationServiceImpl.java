@@ -2,6 +2,10 @@ package com.communityhelp.app.donation.service;
 
 import com.communityhelp.app.chat.conversation.model.ConversationType;
 import com.communityhelp.app.chat.conversation.service.ConversationService;
+import com.communityhelp.app.common.openroute.dto.FastestTravelResponse;
+import com.communityhelp.app.common.openroute.dto.TravelTimeResponse;
+import com.communityhelp.app.common.openroute.model.TransportMode;
+import com.communityhelp.app.common.openroute.service.TravelFeasibilityService;
 import com.communityhelp.app.donation.dto.DonationCreateRequestDto;
 import com.communityhelp.app.donation.dto.DonationResponseDto;
 import com.communityhelp.app.donation.dto.DonationUpdateRequestDto;
@@ -42,6 +46,7 @@ public class DonationServiceImpl implements DonationService {
     private final ConversationService conversationService;
     private final ApplicationEventPublisher eventPublisher;
     private final ProposalMatchingStateService matchingStateService;
+    private final TravelFeasibilityService travelFeasibilityService;
 
     @Override
     public DonationResponseDto createDonation(UUID donorId, DonationCreateRequestDto dto) {
@@ -79,10 +84,38 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     @Transactional(readOnly = true)
-    public DonationResponseDto getDonationById(UUID id) {
+    public DonationResponseDto getDonationById(UUID id, UUID currentUserId) {
 
-        return donationMapper.toDto(getById(id));
+        Donation donation = getById(id);
+        DonationResponseDto dto = donationMapper.toDto(donation);
 
+        // Solo calcula si ambos tienen ubicación
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (currentUser.getLocation() != null && donation.getLocation() != null) {
+
+            // Estimación con el modo del voluntario
+            TransportMode mode = (currentUser.getVolunteer() != null
+                    && currentUser.getVolunteer().getTransportMode() != null)
+                    ? currentUser.getVolunteer().getTransportMode()
+                    : TransportMode.FOOT_WALKING;
+
+            TravelTimeResponse travel = travelFeasibilityService.getEstimatedTravel(
+                    currentUser.getLocation(), donation.getLocation(), mode);
+            dto.setEstimatedTravelSeconds(travel.getDuration());
+            dto.setEstimatedDistanceMeters(travel.getDistance());
+            dto.setUsedTransportMode(mode);
+
+            // Estimación del más rápido
+            FastestTravelResponse fastest = travelFeasibilityService.getFastestTravel(
+                    currentUser.getLocation(), donation.getLocation());
+            dto.setFastestTravelSeconds(fastest.getDuration());
+            dto.setFastestDistanceMeters(fastest.getDistance());
+            dto.setFastestTransportMode(fastest.getFastestMode());
+        }
+
+        return dto;
     }
 
     @Override

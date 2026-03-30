@@ -1,5 +1,6 @@
 package com.communityhelp.app.volunteer.model;
 
+import com.communityhelp.app.common.openroute.model.TransportMode;
 import com.communityhelp.app.common.persistence.Auditable;
 import com.communityhelp.app.user.model.User;
 import jakarta.persistence.*;
@@ -53,6 +54,11 @@ public class Volunteer extends Auditable {
     @CollectionTable(name = "volunteer_skills", joinColumns = @JoinColumn(name = "volunteer_id"))
     @Enumerated(EnumType.STRING)
     private Set<VolunteerSkill> skills = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "transport_mode")
+    @Builder.Default
+    private TransportMode transportMode = TransportMode.FOOT_WALKING;
 
     /**
      * Helper del User que devuelve su identificador.

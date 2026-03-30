@@ -4,12 +4,11 @@ public enum TransportMode {
 
     FOOT_WALKING("foot-walking"),
     DRIVING_CAR("driving-car"),
-    CYCLING("cycling-regular");
+    CYCLING_REGULAR("cycling-regular");
 
     public final String apiValue;
 
     TransportMode(String apiValue) {
         this.apiValue = apiValue;
     }
-
 }

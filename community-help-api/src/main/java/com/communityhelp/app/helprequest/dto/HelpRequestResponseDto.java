@@ -1,5 +1,6 @@
 package com.communityhelp.app.helprequest.dto;
 
+import com.communityhelp.app.common.openroute.model.TransportMode;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.model.HelpRequestType;
 import lombok.*;
@@ -34,4 +35,13 @@ public class HelpRequestResponseDto {
     private LocalDateTime acceptedAt;
     private LocalDateTime completedAt;
 
+    // Estimación según el modo de transporte del voluntario
+    private Double estimatedTravelSeconds;
+    private Double estimatedDistanceMeters;
+    private TransportMode usedTransportMode;
+
+    // Estimación del modo más rápido disponible
+    private Double fastestTravelSeconds;
+    private Double fastestDistanceMeters;
+    private TransportMode fastestTransportMode;
 }

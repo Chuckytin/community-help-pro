@@ -69,11 +69,12 @@ public class HelpRequestController {
             description = "Public marketplace - shows available requests")
     @GetMapping
     public ResponseEntity<Page<HelpRequestResponseDto>> getOpenHelpRequests(
+            @AuthenticationPrincipal AppUserDetails currentUser,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         return ResponseEntity.ok(
-                helpRequestService.getOpenHelpRequests(page, size)
+                helpRequestService.getOpenHelpRequests(currentUser.getId(), page, size)
         );
     }
 

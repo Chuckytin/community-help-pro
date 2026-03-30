@@ -1,5 +1,6 @@
 package com.communityhelp.app.volunteer.dto;
 
+import com.communityhelp.app.common.openroute.model.TransportMode;
 import com.communityhelp.app.volunteer.model.VolunteerSkill;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -27,4 +28,5 @@ public class VolunteerUpdateRequestDto {
     @Size(max = 20, message = "Too many skills selected")
     private Set<VolunteerSkill> skills;
 
+    private TransportMode transportMode;
 }

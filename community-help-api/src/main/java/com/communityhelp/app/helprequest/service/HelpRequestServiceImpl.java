@@ -2,6 +2,10 @@ package com.communityhelp.app.helprequest.service;
 
 import com.communityhelp.app.chat.conversation.model.ConversationType;
 import com.communityhelp.app.chat.conversation.service.ConversationService;
+import com.communityhelp.app.common.openroute.dto.FastestTravelResponse;
+import com.communityhelp.app.common.openroute.dto.TravelTimeResponse;
+import com.communityhelp.app.common.openroute.model.TransportMode;
+import com.communityhelp.app.common.openroute.service.TravelFeasibilityService;
 import com.communityhelp.app.helprequest.dto.HelpRequestCreateRequestDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
@@ -46,6 +50,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     private final ProposalService proposalService;
     private final ApplicationEventPublisher eventPublisher;
     private final ProposalMatchingStateService matchingStateService;
+    private final TravelFeasibilityService travelFeasibilityService;
 
     @Override
     public HelpRequestResponseDto createHelpRequest(UUID requesterId, HelpRequestCreateRequestDto dto) {
@@ -122,18 +127,43 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<HelpRequestResponseDto> getOpenHelpRequests(int page, int size) {
+    public Page<HelpRequestResponseDto> getOpenHelpRequests(UUID currentUserId, int page, int size) {
+
         Pageable pageable = PageRequest.of(page, Math.min(size, 50),
                 Sort.by("createdAt").descending());
 
-        Page<HelpRequest> openRequests = helpRequestRepository
-                .findByStatusAndDeadlineAfter(
-                        HelpRequestStatus.OPEN,
-                        LocalDateTime.now(),
-                        pageable
-                );
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        return openRequests.map(helpRequestMapper::toDto);
+        return helpRequestRepository
+                .findByStatusAndDeadlineAfter(HelpRequestStatus.OPEN, LocalDateTime.now(), pageable)
+                .map(hr -> {
+                    HelpRequestResponseDto dto = helpRequestMapper.toDto(hr);
+
+                    if (currentUser.getLocation() != null && hr.getLocation() != null) {
+
+                        // Modo del voluntario
+                        TransportMode mode = (currentUser.getVolunteer() != null
+                                && currentUser.getVolunteer().getTransportMode() != null)
+                                ? currentUser.getVolunteer().getTransportMode()
+                                : TransportMode.FOOT_WALKING;
+
+                        TravelTimeResponse travel = travelFeasibilityService.getEstimatedTravel(
+                                currentUser.getLocation(), hr.getLocation(), mode);
+                        dto.setEstimatedTravelSeconds(travel.getDuration());
+                        dto.setEstimatedDistanceMeters(travel.getDistance());
+                        dto.setUsedTransportMode(mode);
+
+                        // Más rápido
+                        FastestTravelResponse fastest = travelFeasibilityService.getFastestTravel(
+                                currentUser.getLocation(), hr.getLocation());
+                        dto.setFastestTravelSeconds(fastest.getDuration());
+                        dto.setFastestDistanceMeters(fastest.getDistance());
+                        dto.setFastestTransportMode(fastest.getFastestMode());
+                    }
+
+                    return dto;
+                });
     }
 
     /**
@@ -182,8 +212,8 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     @Override
     @Transactional(readOnly = true)
     public Page<HelpRequestResponseDto> getByVolunteer(UUID volunteerId,
-                                                                int page,
-                                                                int size) {
+                                                       int page,
+                                                       int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 50));
         return helpRequestRepository
                 .findByVolunteer_Id(volunteerId, pageable)
