@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido a Community Help</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f9fc;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .content { padding: 20px; }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #718096;
+            border-top: 1px solid #eaeaea;
+        }
+        @media only screen and (max-width: 600px) {
+            .container { margin: 10px; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>¡Bienvenido a Community Help!</h2>
+    </div>
+    <div class="content">
+        <p>Hola <span th:text="${name} ?: 'Usuario'">Usuario</span>,</p>
+        <p>¡Tu cuenta ha sido verificada y ya puedes acceder a la plataforma!</p>
+        <p>En Community Help puedes publicar donaciones, pedir ayuda puntual y conectar con voluntarios cercanos.</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a th:href="${loginUrl}" class="button">Iniciar sesión</a>
+        </div>
+        <p>Si tienes cualquier duda, no dudes en contactarnos.</p>
+    </div>
+    <div class="footer">
+        <p>© 2026 Community Help. Todos los derechos reservados.</p>
+    </div>
+</div>
+</body>
+</html>

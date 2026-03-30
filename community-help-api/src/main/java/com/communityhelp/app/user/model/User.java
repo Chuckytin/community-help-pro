@@ -72,6 +72,10 @@ public class User extends AuditableLocatable {
     @Builder.Default
     private boolean active = true;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailVerified = false;
+
     private LocalDateTime deletedAt;
 
     @Override

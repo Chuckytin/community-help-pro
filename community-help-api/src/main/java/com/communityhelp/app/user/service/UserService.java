@@ -12,6 +12,8 @@ public interface UserService {
     UserResponseDto getUserById(UUID id);
     Page<UserResponseDto> getAllUsers(int page, int size);
     UserResponseDto updateUser(UUID id, UserUpdateRequestDto dto);
+    void markEmailVerified(String email);
+    void updatePassword(String email, String rawPassword);
     void deleteUser(UUID id);
     UserResponseDto getUserByEmailIncludeInactive(String email);
     UserResponseDto reactivateUser(UUID userId, UserCreateRequestDto dto);

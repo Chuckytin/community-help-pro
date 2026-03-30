@@ -130,6 +130,16 @@
 			<version>3.0.2</version>
 			<scope>compile</scope>
 		</dependency>
+		<!-- Email Brevo -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<!-- Thymeleaf -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
 		<!-- TESTS -->
 		<dependency>
 			<groupId>com.h2database</groupId>

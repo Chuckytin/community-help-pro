@@ -19,6 +19,7 @@ public interface UserMapper {
      */
     @Mapping(target = "latitude", expression = "java(user.getLatitude())")
     @Mapping(target = "longitude", expression = "java(user.getLongitude())")
+    @Mapping(target = "emailVerified", source = "emailVerified")
     UserResponseDto toDto(User user);
 
     /**

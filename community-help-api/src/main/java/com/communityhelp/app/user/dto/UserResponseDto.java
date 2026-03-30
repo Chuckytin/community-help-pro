@@ -21,9 +21,10 @@ public class UserResponseDto {
     private String name;
     private String email;
     private Role role;
-    private Float rating; // puede ser null
+    private Float rating;
 
     private boolean active;
+    private boolean emailVerified;
 
     private Double latitude;
     private Double longitude;

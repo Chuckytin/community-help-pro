@@ -1,6 +1,12 @@
 package com.communityhelp.app.auth.service;
 
 import com.communityhelp.app.auth.dto.AuthResponse;
+import com.communityhelp.app.auth.dto.ResetPasswordRequestDto;
+import com.communityhelp.app.auth.dto.VerifyEmailRequestDto;
+import com.communityhelp.app.common.exceptions.EmailNotVerifiedException;
+import com.communityhelp.app.email.service.EmailService;
+import com.communityhelp.app.otp.entity.OtpType;
+import com.communityhelp.app.otp.service.OtpService;
 import com.communityhelp.app.user.dto.LoginRequestDto;
 import com.communityhelp.app.user.dto.UserCreateRequestDto;
 import com.communityhelp.app.user.dto.UserResponseDto;
@@ -18,11 +24,14 @@ public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationService authenticationService;
     private final UserService userService;
+    private final OtpService otpService;
+    private final EmailService emailService;
 
     /**
      * Autentica al usuario con email y contraseña.
      * - Si las credenciales son válidas, genera un token JWT.
-     * - Devuelve un {@link AuthResponse} que incluye el token, el tiempo de expiración y los datos del usuario.
+     * - Verifica que el email del usuario esté verificado, si no lo está lanza una excepción.
+     * - Devuelve el token JWT y los datos del usuario en la respuesta.
      */
     @Override
     public AuthResponse login(LoginRequestDto dto) {
@@ -38,7 +47,10 @@ public class AuthServiceImpl implements AuthService {
 
         UserResponseDto userResponseDto = userService.getUserByEmail(dto.getEmail());
 
-        // Construcción del AuthResponse
+        if (!userResponseDto.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Email not verified");
+        }
+
         return AuthResponse.builder()
                 .token(token)
                 .expiredIn(authenticationService.getJwtExpiryMs())
@@ -48,24 +60,23 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Registra al usuario con email y contraseña.
-     * - Crea el usuario.
-     * - Lo autentica automáticamente.
-     * - Devuelve token + datos del usuario.
+     * - Busca al usuario existente, incluyendo inactivo, si no existe continúa para crear la cuenta.
+     * - Si existe el user y está inactivo, reactiva la cuenta, si no existe crea la cuenta.
+     * - Autentica al usuario para generar el token JWT.
+     * - Genera un OTP de verificación de email y lo envía al usuario.
      */
     @Override
     public AuthResponse register(UserCreateRequestDto dto) {
 
         UserResponseDto createdUser;
 
-        // Busca el usuario existente, incluyendo inactivo
         UserResponseDto existingUser = null;
         try {
             existingUser = userService.getUserByEmailIncludeInactive(dto.getEmail());
         } catch (EntityNotFoundException ignored) {
-            // Si no existe, continua para crear cuenta
+
         }
 
-        // Si existe y está inactivo, reactiva la cuenta
         if (existingUser != null) {
             if (!existingUser.isActive()) {
                 createdUser = userService.reactivateUser(existingUser.getId(), dto);
@@ -73,19 +84,63 @@ public class AuthServiceImpl implements AuthService {
                 throw new IllegalStateException("Email already in use");
             }
         } else {
-            // Si no existe, crea la cuenta
             createdUser = userService.createUser(dto);
         }
 
-        // Autenticación + token
         UserDetails userDetails = authenticationService.authenticate(dto.getEmail(), dto.getPassword());
         String token = authenticationService.generateToken(userDetails);
+
+        String otp = otpService.generateAndSave(createdUser.getEmail(), OtpType.VERIFY_EMAIL);
+        emailService.sendVerificationEmail(createdUser.getEmail(), createdUser.getName(), otp);
 
         return AuthResponse.builder()
                 .token(token)
                 .expiredIn(authenticationService.getJwtExpiryMs())
                 .user(createdUser)
                 .build();
+    }
+
+    /**
+     * Verifica el email del usuario con el código OTP.
+     */
+    @Override
+    @Transactional
+    public void verifyEmail(VerifyEmailRequestDto dto) {
+        boolean valid = otpService.validate(dto.getEmail(), dto.getCode(), OtpType.VERIFY_EMAIL);
+        if (!valid) {
+            throw new BadCredentialsException("Invalid or expired verification code");
+        }
+        userService.markEmailVerified(dto.getEmail());
+
+        UserResponseDto user = userService.getUserByEmail(dto.getEmail());
+        emailService.sendWelcomeEmail(user.getEmail(), user.getName());
+    }
+
+    /**
+     * Inicia el proceso de recuperación de contraseña.
+     * - Genera un código OTP para restablecer la contraseña y lo guarda asociado al email del usuario.
+     * - Envía un email al usuario con el código OTP para restable
+     */
+    @Override
+    public void forgotPassword(String email) {
+        UserResponseDto user = userService.getUserByEmail(email);
+        String code = otpService.generateAndSave(email, OtpType.RESET_PASSWORD);
+        emailService.sendPasswordResetEmail(email, user.getName(), code);
+    }
+
+    /**
+     * Restablece la contraseña del usuario.
+     * - Valida el código OTP para restablecer la contraseña.
+     * - Si el código es válido, actualiza la contraseña del usuario.
+     */
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequestDto dto) {
+        boolean valid = otpService.validate(dto.getEmail(), dto.getCode(), OtpType.RESET_PASSWORD);
+        if (!valid) {
+            throw new BadCredentialsException("Invalid or expired reset code");
+        }
+        userService.updatePassword(dto.getEmail(), dto.getNewPassword());
     }
 
 }

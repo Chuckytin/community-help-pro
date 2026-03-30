@@ -104,6 +104,22 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    public void markEmailVerified(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        user.setEmailVerified(true);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void updatePassword(String email, String rawPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        userRepository.save(user);
+    }
+
+    @Override
     public void deleteUser(UUID id) {
 
         User user = userRepository.findById(id)

@@ -128,6 +128,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ErrorCode.ACCESS_DENIED, "You don't have permission to access this resource");
     }
 
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmailNotVerified(EmailNotVerifiedException ex) {
+        return buildResponse(HttpStatus.FORBIDDEN, ErrorCode.EMAIL_NOT_VERIFIED,
+                "Email not verified. Please check your inbox.");
+    }
+
     /**
      * Maneja cualquier EntityNotFoundException
      * y devuelve error 404 si la entidad no se encuentra.
