@@ -72,10 +72,20 @@ public class ProposalMatchingConfig {
     public int maxCandidatesMultiplier = 6;
 
     /**
-     * Máximo número de candidatos para calcular travel time (para optimizar llamadas API)
+     * Número máximo de candidatos a evaluar para cada propuesta, incluso si el multiplicador sugiere traer más.
+     * Esto ayuda a limitar el tiempo de procesamiento y evitar evaluar demasiados candidatos en casos extremos.
      */
     public int maxCandidatesForTravel = 20;
+
+    /**
+     * Número máximo de candidatos a prefiltrar por distancia antes de calcular tiempos de viaje.
+     */
     private int maxCandidatesPrefilter = 50;
+
+    /**
+     * Número de threads para calcular tiempos de viaje en paralelo.
+     * Ajustar según la capacidad del servidor y la latencia de la API de rutas.
+     */
     private int travelTimeThreads = 10;
 
     /**

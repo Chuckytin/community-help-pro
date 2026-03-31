@@ -21,6 +21,9 @@ public class MatchingEngine {
 
     private final ProposalMatchingConfig proposalMatchingConfig;
 
+    /**
+     * Calcula el ranking de candidatos voluntarios para una entidad dada (HelpRequest o Donation) usando una estrategia de scoring específica.
+     */
     public <T> List<Map.Entry<Volunteer, Double>> rankCandidates(
             T entity,
             List<VolunteerCandidate> candidates,

@@ -9,9 +9,6 @@ import org.locationtech.jts.geom.Point;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-
 /**
  * Servicio de negocio que evalúa si un voluntario puede llegar a tiempo
  * a una donación o solicitud de ayuda antes de su fecha límite.

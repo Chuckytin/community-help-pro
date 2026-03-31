@@ -52,6 +52,10 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     private final ProposalMatchingStateService matchingStateService;
     private final TravelFeasibilityService travelFeasibilityService;
 
+    /**
+     * Crea una nueva solicitud de ayuda.
+     * El usuario autenticado se establece como requester.
+     */
     @Override
     public HelpRequestResponseDto createHelpRequest(UUID requesterId, HelpRequestCreateRequestDto dto) {
 
@@ -67,7 +71,6 @@ public class HelpRequestServiceImpl implements HelpRequestService {
                 .status(HelpRequestStatus.OPEN)
                 .build();
 
-        // Set location desde latitude/longitude si vienen en el DTO
         if (dto.getLatitude() != null && dto.getLongitude() != null) {
             helpRequest.setLocation(dto.getLatitude(), dto.getLongitude());
         }
@@ -82,6 +85,10 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         return helpRequestMapper.toDto(savedHelpRequest);
     }
 
+    /**
+     * Identifica una solicitud por su ID.
+     * Solo para Admin o para requester/volunteer asignados.
+     */
     @Override
     @Transactional(readOnly = true)
     public HelpRequestResponseDto getHelpRequestById(UUID id) {
@@ -125,6 +132,9 @@ public class HelpRequestServiceImpl implements HelpRequestService {
         return helpRequestMapper.toDto(helpRequest);
     }
 
+    /**
+     * Obtiene todas las solicitudes abiertas (OPEN) que no hayan pasado su deadline.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<HelpRequestResponseDto> getOpenHelpRequests(UUID currentUserId, int page, int size) {
