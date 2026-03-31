@@ -15,6 +15,10 @@
 - **WebSocket / STOMP** — mensajería en tiempo real
 - **MapStruct** — mapeo de DTOs
 - **Docker** — contenedores para la base de datos
+- **Thymeleaf** — plantillas HTML para emails transaccionales
+- **Brevo (SMTP)** — envío de emails
+- **OpenRouteService** — cálculo de rutas y tiempos de viaje reales
+- **Spring Cache** — caché de tiempos de viaje para optimizar llamadas a la API
 
 ---
 
@@ -22,7 +26,9 @@
 
 - Publicar **donaciones** con ubicación, caducidad, tipo, cantidad y descripción.
 - Crear **solicitudes de ayuda** (Help Requests) con título, descripción, fecha límite y radio de acción.
-- **Motor de matching automático** que conecta voluntarios cercanos con donaciones y solicitudes compatibles, evaluando distancia, habilidades, rating y carga de trabajo. El radio de búsqueda se amplía progresivamente si no hay respuesta.
+- **Motor de matching automático** que conecta voluntarios cercanos con donaciones y solicitudes compatibles, evaluando tiempo de viaje real, habilidades, rating y carga de trabajo. El radio de búsqueda se amplía progresivamente si no hay respuesta.
+- **Filtro de viabilidad por deadline** — el motor descarta voluntarios que no pueden llegar a tiempo antes de la fecha límite, usando tiempos de viaje reales calculados en paralelo.
+- **Estimación de tiempo de viaje** para el voluntario al consultar una tarea, usando su modo de transporte configurado y mostrando también la opción más rápida disponible.
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
 - **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña.
@@ -36,12 +42,30 @@ El sistema genera proposals automáticas mediante un motor de scoring configurab
 
 | Factor | Peso |
 |---|---|
-| Distancia al voluntario | 50% |
+| Tiempo de viaje real al voluntario | 50% |
 | Coincidencia de habilidades | 35% |
 | Rating del voluntario | 10% |
 | Carga de trabajo activa | 5% |
 
+El factor de distancia utiliza el **tiempo de viaje real** calculado por OpenRouteService según el modo de transporte del voluntario (a pie, en bici o en coche), en lugar de la distancia en línea recta. Esto permite priorizar al voluntario que llega antes, independientemente de la distancia geométrica.
+
+Los tiempos de viaje se calculan **en paralelo** para todos los candidatos y se **cachean** para evitar llamadas repetidas a la API cuando múltiples entidades comparten voluntarios en la misma zona.
+
 Si ningún voluntario acepta una proposal en el tiempo configurado, el sistema reintenta automáticamente ampliando el radio de búsqueda de forma progresiva hasta un máximo configurable. Los parámetros son completamente ajustables por entorno vía `application.properties`.
+
+---
+
+## Modos de transporte
+
+Los voluntarios pueden configurar su modo de transporte habitual en su perfil:
+
+| Modo | Valor |
+|---|---|
+| A pie | `FOOT_WALKING` |
+| Bicicleta | `CYCLING_REGULAR` |
+| Coche | `DRIVING_CAR` |
+
+Al consultar una donación o solicitud de ayuda, la respuesta incluye la estimación de tiempo según el modo del voluntario y cuál sería la opción más rápida disponible.
 
 ---
 
@@ -72,6 +96,7 @@ El plan de pruebas completo con los casos de prueba organizados por módulo est�
 - Java 21
 - Docker
 - Cuenta en [Brevo](https://app.brevo.com) para el envío de emails (plan gratuito suficiente)
+- Cuenta en [OpenRouteService](https://openrouteservice.org) para el cálculo de rutas (plan gratuito suficiente)
 
 ### Variables de entorno
 
@@ -101,7 +126,7 @@ JWT_EXPIRED_IN=3600000
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=your_admin_password
 
-# OpenRoute Service API
+# OpenRoute Service API — https://openrouteservice.org
 OPENROUTE_API_KEY=your_openroute_api_key
 
 # Email (Brevo SMTP — https://app.brevo.com)
@@ -111,12 +136,14 @@ MAIL_USERNAME=your_brevo_smtp_user
 MAIL_PASSWORD=your_brevo_smtp_password
 MAIL_FROM=your_verified_sender@example.com
 
-# Frontend URLs
-URL_FRONTEND=your_frontend_url
-URL_FRONTEND_LOGIN=your_frontend_login_url
+# Frontend URLs (puedes usar placeholders mientras desarrollas)
+URL_FRONTEND=http://localhost:5173
+URL_FRONTEND_LOGIN=http://localhost:5173/login
 ```
 
 > **Nota sobre Brevo:** las claves SMTP de Brevo expiran tras 90 días de inactividad. Si llevas tiempo sin usar el proyecto, genera una nueva clave desde `Settings > SMTP & API` en tu cuenta de Brevo.
+
+> **Nota sobre OpenRouteService:** el plan gratuito permite 2.000 peticiones diarias y 40 por minuto, suficiente para desarrollo. En producción con muchos voluntarios activos considera el plan de pago o implementar un caché más agresivo.
 
 ### Arranque
 
@@ -157,6 +184,19 @@ También puedes consultar el OTP generado directamente en la tabla para probar e
 SELECT email, code, type, expires_at, used FROM otp_codes ORDER BY expires_at DESC;
 ```
 
+### Coordenadas de prueba
+
+Para que el motor de matching funcione correctamente, registra los usuarios de prueba con coordenadas distintas entre sí y distintas a las de las donaciones/solicitudes que crees. Usar las mismas coordenadas para todos produce `distance 0m / travel 0s` en los logs, lo cual es un artefacto de pruebas y no refleja el comportamiento real en producción.
+
+Coordenadas de ejemplo en Gijón:
+
+| Usuario | Latitud | Longitud |
+|---|---|---|
+| Usuario A | 43.5322 | -5.6611 |
+| Usuario B | 43.5330 | -5.6620 |
+| Usuario C | 43.5350 | -5.6650 |
+| Donación / Solicitud | 43.5325 | -5.6615 |
+
 ---
 
 ## Estructura del proyecto
@@ -164,17 +204,17 @@ SELECT email, code, type, expires_at, used FROM otp_codes ORDER BY expires_at DE
 community-help-api/
 ├── auth/           # Autenticación JWT, verificación de email y recuperación de contraseña
 ├── chat/           # Mensajería REST y WebSocket
-├── common/         # Location, excepciones, OpenRoute, persistencia base
-├── config/         # Seguridad, OpenAPI, inicialización
+├── common/         # Location, excepciones, OpenRoute (rutas y tiempos de viaje), persistencia base
+├── config/         # Seguridad, OpenAPI, caché, inicialización
 ├── donation/       # Donaciones y su ciclo de vida
 ├── email/          # Servicio de envío de emails con plantillas Thymeleaf
 ├── helprequest/    # Solicitudes de ayuda y su ciclo de vida
 ├── otp/            # Generación y validación de códigos OTP
-├── proposal/       # Motor de matching, scoring y gestión de proposals
+├── proposal/       # Motor de matching, scoring, filtro de viabilidad y gestión de proposals
 ├── review/         # Reseñas y recálculo de rating
 ├── security/       # Filtros y configuración de Spring Security
 ├── user/           # Gestión de usuarios
-└── volunteer/      # Perfil y habilidades del voluntario
+└── volunteer/      # Perfil, habilidades y modo de transporte del voluntario
 ```
 
 ---
