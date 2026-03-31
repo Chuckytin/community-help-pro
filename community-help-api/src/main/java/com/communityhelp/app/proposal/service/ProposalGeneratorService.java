@@ -1,5 +1,7 @@
 package com.communityhelp.app.proposal.service;
 
+import com.communityhelp.app.common.openroute.model.TransportMode;
+import com.communityhelp.app.common.openroute.service.TravelFeasibilityService;
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.model.HelpRequest;
@@ -22,7 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -48,19 +55,29 @@ public class ProposalGeneratorService {
     private final ProposalRankingService rankingService;
     private final ProposalMatchingConfig proposalMatchingConfig;
     private final MatchingEngine matchingEngine;
+    private final TravelFeasibilityService travelFeasibilityService;
 
     /**
      * Genera proposals para los mejores voluntarios disponibles para una HelpRequest.
-     * - Obtiene voluntarios disponibles dentro del radio máximo configurado.
-     * - Excluye al usuario que creó la solicitud
-     * - Calcula el score de cada voluntario mediante HelpRequestScoreEngine.
-     * - Ordena los voluntarios por score descendente.
-     * - Selecciona los mejores candidatos, limitado por MAX_PROPOSALS_PER_ENTITY
-     * - Filtra voluntarios que:
-     * - - Ya alcanzaron el máximo de proposals activas
-     * - - están en periodo de cooldown
-     * - - ya tienen una proposal para esta entidad
-     * Es el núcleo del motor de matching entre HelpRequest y voluntarios disponibles.
+     * El proceso de matching sigue estos pasos:
+     * 1. Obtiene voluntarios disponibles dentro del radio máximo configurado,
+     * excluyendo al usuario que creó la solicitud.
+     * 2. Calcula el tiempo de viaje estimado de cada voluntario al punto de la ayuda
+     * (utilizando el medio de transporte del voluntario o FOOT_WALKING por defecto).
+     * 3. Si la HelpRequest tiene fecha límite (deadline), filtra los voluntarios que pueden llegar a tiempo
+     * utilizando TravelFeasibilityService#canReachInTime. Los voluntarios sin ubicación
+     * no son descartados en este filtro.
+     * 4. Calcula el score de cada voluntario mediante HelpRequestScoreEngine,
+     * donde el tiempo de viaje es un factor determinante en la puntuación.
+     * 5. Ordena los voluntarios por score descendente (mejor puntuación primero).
+     * 6. Selecciona los mejores candidatos, limitado por MAX_PROPOSALS_PER_ENTITY.
+     * 7. Filtra voluntarios que:
+     * - Ya alcanzaron el máximo de proposals activas
+     * - Están en periodo de cooldown
+     * - Ya tienen una proposal para esta entidad
+     * 8. Crea las proposals para los voluntarios que pasan todos los filtros.
+     * Es el núcleo del motor de matching entre HelpRequest y voluntarios disponibles,
+     * priorizando a aquellos que pueden llegar más rápido al destino.
      */
     public void generateForHelpRequest(HelpRequest helpRequest, int radiusMeters, int retryCount) {
 
@@ -100,20 +117,78 @@ public class ProposalGeneratorService {
 
         List<VolunteerCandidate> candidates =
                 volunteers.stream()
-                        .map(v -> new VolunteerCandidate(
-                                v,
-                                distanceMap.get(v.getId())
-                        ))
+                        .map(v -> new VolunteerCandidate(v, distanceMap.get(v.getId())))
+                        .filter(c -> {
+                            double estimatedSeconds = getEstimatedSeconds(c);
+
+                            // Si hay deadline se filtramos aquí (sin ORS)
+                            if (helpRequest.getDeadline() != null) {
+                                long availableSeconds = ChronoUnit.SECONDS.between(
+                                        LocalDateTime.now(),
+                                        helpRequest.getDeadline()
+                                );
+
+                                return estimatedSeconds < availableSeconds;
+                            }
+
+                            return true;
+                        })
+                        .sorted(Comparator.comparingDouble(VolunteerCandidate::distanceMeters))
+                        .limit(proposalMatchingConfig.getMaxCandidatesPrefilter()) // ej: 50
                         .toList();
 
-        log.info("[matching-helprequest] Volunteers found for HelpRequest {}: {}",
+        List<VolunteerCandidate> candidatesForTravel =
+                candidates.stream()
+                        .limit(proposalMatchingConfig.getMaxCandidatesForTravel()) // ej: 20
+                        .toList();
+
+        log.info("[matching-helprequest] Volunteers found for HelpRequest {}: {} (limited to {} for travel calculation)",
                 helpRequest.getId(),
-                candidates.size());
+                candidates.size(),
+                proposalMatchingConfig.getMaxCandidatesForTravel());
+
+        long afterPreload = System.currentTimeMillis();
+
+        ExecutorService executor =
+                Executors.newFixedThreadPool(proposalMatchingConfig.getTravelTimeThreads());
+
+        Map<UUID, Double> travelTimes = calculateTravelTimesInParallel(candidatesForTravel, helpRequest.getLocation(), executor);
+
+        shutdownExecutorWithTimeout(executor);
+
+        if (helpRequest.getDeadline() != null) {
+            int beforeFilterSize = candidates.size();
+            candidates = candidates.stream()
+                    .filter(c -> {
+                        if (c.volunteer().getUser().getLocation() == null) {
+                            // Si el voluntario no tiene ubicación, lo consideramos viable (no podemos descartarlo)
+                            return true;
+                        }
+                        double travel = travelTimes.getOrDefault(c.volunteer().getId(), 0.0);
+                        long secondsUntilDeadline = ChronoUnit.SECONDS.between(LocalDateTime.now(), helpRequest.getDeadline());
+                        return travel < secondsUntilDeadline;
+                    })
+                    .toList();
+
+            log.info("[matching-helprequest] Candidates after travel time feasibility filter: {} (filtered out {})",
+                    candidates.size(),
+                    beforeFilterSize - candidates.size());
+
+            // Si después del filtro no quedan candidatos, terminamos temprano
+            if (candidates.isEmpty()) {
+                log.warn("[matching-helprequest] No volunteers can reach in time for HelpRequest {} with deadline {}",
+                        helpRequest.getId(),
+                        helpRequest.getDeadline());
+                return;
+            }
+        }
+
+        long afterTravelFilter = System.currentTimeMillis();
 
         Map<UUID, Long> pendingCounts = loadPendingCounts(volunteers);
         Map<UUID, LocalDateTime> lastResponses = loadLastResponses(volunteers);
 
-        long afterPreload = System.currentTimeMillis();
+        long afterCountsLoad = System.currentTimeMillis();
 
         List<Map.Entry<Volunteer, Double>> ranked =
                 matchingEngine.rankCandidates(
@@ -121,7 +196,8 @@ public class ProposalGeneratorService {
                         candidates,
                         helpRequestScoreEngine,
                         pendingCounts,
-                        retryCount
+                        retryCount,
+                        travelTimes
                 );
 
         long afterRanking = System.currentTimeMillis();
@@ -141,7 +217,7 @@ public class ProposalGeneratorService {
         long end = System.currentTimeMillis();
 
         log.debug(
-                "[matching-helprequest] Matching result for HelpRequest {} -> volunteers evaluated: {}, proposals created: {}, took {} ms",
+                "[matching-helprequest] Matching result for HelpRequest {} -> candidates evaluated: {}, proposals created: {}, took {} ms",
                 helpRequest.getId(),
                 candidates.size(),
                 created,
@@ -149,10 +225,12 @@ public class ProposalGeneratorService {
         );
 
         log.debug(
-                "[matching-timing] fetch={}ms preload={}ms ranking={}ms create={}ms total={}ms",
+                "[matching-timing-helprequest] fetch={}ms preload={}ms travel-time-filter={}ms counts-load={}ms ranking={}ms create={}ms total={}ms",
                 (afterFetch - start),
                 (afterPreload - afterFetch),
-                (afterRanking - afterPreload),
+                (afterTravelFilter - afterPreload),
+                (afterCountsLoad - afterTravelFilter),
+                (afterRanking - afterCountsLoad),
                 (end - afterRanking),
                 (end - start)
         );
@@ -167,16 +245,25 @@ public class ProposalGeneratorService {
 
     /**
      * Genera proposals para los mejores voluntarios disponibles para una Donation.
-     * - Obtiene voluntarios disponibles dentro del radio máximo configurado.
-     * - Excluye al usuario que creó la solicitud
-     * - Calcula el score de cada voluntario mediante DonationScoreEngine.
-     * - Ordena los voluntarios por score descendente.
-     * - Selecciona los mejores candidatos, limitado por MAX_PROPOSALS_PER_ENTITY
-     * - Filtra voluntarios que:
-     * - - Ya alcanzaron el máximo de proposals activas
-     * - - están en periodo de cooldown
-     * - - ya tienen una proposal para esta entidad
-     * Es el núcleo del motor de matching entre Donation y voluntarios disponibles.
+     * El proceso de matching sigue estos pasos:
+     * 1. Obtiene voluntarios disponibles dentro del radio máximo configurado,
+     * excluyendo al usuario que creó la donación.
+     * 2. Calcula el tiempo de viaje estimado de cada voluntario al punto de la donación
+     * (utilizando el medio de transporte del voluntario o FOOT_WALKING por defecto).
+     * 3. Si la Donation tiene fecha de expiración (expiryDate), filtra los voluntarios que pueden llegar a tiempo
+     * utilizando TravelFeasibilityService#canReachInTime. Los voluntarios sin ubicación
+     * no son descartados en este filtro.
+     * 4. Calcula el score de cada voluntario mediante DonationScoreEngine,
+     * donde el tiempo de viaje es un factor determinante en la puntuación.
+     * 5. Ordena los voluntarios por score descendente (mejor puntuación primero).
+     * 6. Selecciona los mejores candidatos, limitado por MAX_PROPOSALS_PER_ENTITY.
+     * 7. Filtra voluntarios que:
+     * - Ya alcanzaron el máximo de proposals activas
+     * - Están en periodo de cooldown
+     * - Ya tienen una proposal para esta entidad
+     * 8. Crea las proposals para los voluntarios que pasan todos los filtros.
+     * Es el núcleo del motor de matching entre Donation y voluntarios disponibles,
+     * priorizando a aquellos que pueden llegar más rápido al destino.
      */
     public void generateForDonation(Donation donation, int radiusMeters, int retryCount) {
 
@@ -212,24 +299,89 @@ public class ProposalGeneratorService {
                                 (a, b) -> a
                         ));
 
-        List<Volunteer> volunteers = volunteerRepository.findAllByIdWithUser(distanceMap.keySet());
+        List<Volunteer> volunteers =
+                volunteerRepository.findAllByIdWithUser(distanceMap.keySet());
 
         List<VolunteerCandidate> candidates =
                 volunteers.stream()
-                        .map(v -> new VolunteerCandidate(
-                                v,
-                                distanceMap.get(v.getId())
-                        ))
+                        .map(v -> new VolunteerCandidate(v, distanceMap.get(v.getId())))
+                        .filter(c -> {
+
+                            double estimatedSeconds = getEstimatedSeconds(c);
+
+                            // Si hay expiry → filtramos ya aquí SIN ORS
+                            if (donation.getExpiryDate() != null) {
+                                long availableSeconds = ChronoUnit.SECONDS.between(
+                                        LocalDateTime.now(),
+                                        donation.getExpiryDate()
+                                );
+                                return estimatedSeconds < availableSeconds;
+                            }
+
+                            return true;
+                        })
+                        .sorted(Comparator.comparingDouble(VolunteerCandidate::distanceMeters))
+                        .limit(proposalMatchingConfig.getMaxCandidatesPrefilter())
                         .toList();
 
-        log.info("[matching-donation] Volunteers found for Donation {}: {}",
+        List<VolunteerCandidate> candidatesForTravel =
+                candidates.stream()
+                        .limit(proposalMatchingConfig.getMaxCandidatesForTravel())
+                        .toList();
+
+        log.info("[matching-donation] Volunteers found for Donation {}: {} (limited to {} for travel calculation)",
                 donation.getId(),
-                candidates.size());
+                candidates.size(),
+                proposalMatchingConfig.getMaxCandidatesForTravel());
+
+        long afterPreload = System.currentTimeMillis();
+
+        ExecutorService executor =
+                Executors.newFixedThreadPool(proposalMatchingConfig.getTravelTimeThreads());
+
+        Map<UUID, Double> travelTimes = calculateTravelTimesInParallel(candidatesForTravel, donation.getLocation(), executor);
+
+        shutdownExecutorWithTimeout(executor);
+
+        if (donation.getExpiryDate() != null) {
+
+            int beforeFilterSize = candidates.size();
+
+            candidates = candidates.stream()
+                    .filter(c -> {
+                        if (c.volunteer().getUser().getLocation() == null) {
+                            return true;
+                        }
+
+                        double travel = travelTimes.getOrDefault(c.volunteer().getId(), 0.0);
+
+                        long secondsUntilExpiry = ChronoUnit.SECONDS.between(
+                                LocalDateTime.now(),
+                                donation.getExpiryDate()
+                        );
+
+                        return travel < secondsUntilExpiry;
+                    })
+                    .toList();
+
+            log.info("[matching-donation] Candidates after travel time feasibility filter: {} (filtered out {})",
+                    candidates.size(),
+                    beforeFilterSize - candidates.size());
+
+            if (candidates.isEmpty()) {
+                log.warn("[matching-donation] No volunteers can reach in time for Donation {} with expiry date {}",
+                        donation.getId(),
+                        donation.getExpiryDate());
+                return;
+            }
+        }
+
+        long afterTravelFilter = System.currentTimeMillis();
 
         Map<UUID, Long> pendingCounts = loadPendingCounts(volunteers);
         Map<UUID, LocalDateTime> lastResponses = loadLastResponses(volunteers);
 
-        long afterPreload = System.currentTimeMillis();
+        long afterCountsLoad = System.currentTimeMillis();
 
         List<Map.Entry<Volunteer, Double>> ranked =
                 matchingEngine.rankCandidates(
@@ -237,7 +389,8 @@ public class ProposalGeneratorService {
                         candidates,
                         donationScoreEngine,
                         pendingCounts,
-                        retryCount
+                        retryCount,
+                        travelTimes
                 );
 
         long afterRanking = System.currentTimeMillis();
@@ -257,7 +410,7 @@ public class ProposalGeneratorService {
         long end = System.currentTimeMillis();
 
         log.debug(
-                "[matching-donation] Matching result for Donation {} -> volunteers evaluated: {}, proposals created: {}, took {} ms",
+                "[matching-donation] Matching result for Donation {} -> candidates evaluated: {}, proposals created: {}, took {} ms",
                 donation.getId(),
                 candidates.size(),
                 created,
@@ -265,13 +418,31 @@ public class ProposalGeneratorService {
         );
 
         log.debug(
-                "[matching-timing] fetch={}ms preload={}ms ranking={}ms create={}ms total={}ms",
+                "[matching-timing-donation] fetch={}ms preload={}ms travel-time-filter={}ms counts-load={}ms ranking={}ms create={}ms total={}ms",
                 (afterFetch - start),
                 (afterPreload - afterFetch),
-                (afterRanking - afterPreload),
+                (afterTravelFilter - afterPreload),
+                (afterCountsLoad - afterTravelFilter),
+                (afterRanking - afterCountsLoad),
                 (end - afterRanking),
                 (end - start)
         );
+    }
+
+    private double getEstimatedSeconds(VolunteerCandidate c) {
+        double distance = c.distanceMeters();
+
+        TransportMode mode = c.volunteer().getTransportMode() != null
+                ? c.volunteer().getTransportMode()
+                : TransportMode.FOOT_WALKING;
+
+        double speed = switch (mode) {
+            case FOOT_WALKING -> proposalMatchingConfig.getWalkSpeed();
+            case CYCLING_REGULAR -> proposalMatchingConfig.getBikeSpeed();
+            case DRIVING_CAR -> proposalMatchingConfig.getCarSpeed();
+        };
+
+        return distance / speed;
     }
 
     /**
@@ -432,6 +603,63 @@ public class ProposalGeneratorService {
                         row -> (UUID) row[0],
                         row -> (LocalDateTime) row[1]
                 ));
+    }
+
+    /**
+     * Calcula tiempos de viaje en paralelo para un conjunto de candidatos.
+     * Usa ExecutorService para paralelizar llamadas a OpenRouteService.
+     * - Maneja timeout para evitar bloqueos indefinidos
+     * - Devuelve un mapa de UUID -> tiempo en segundos (0 si error)
+     */
+    private Map<UUID, Double> calculateTravelTimesInParallel(
+            List<VolunteerCandidate> candidates,
+            Object destination,
+            ExecutorService executor) {
+
+        return candidates.stream()
+                .filter(c -> c.volunteer().getUser().getLocation() != null)
+                .collect(Collectors.toMap(
+                        c -> c.volunteer().getId(),
+                        c -> CompletableFuture.supplyAsync(() -> {
+                            try {
+                                return travelFeasibilityService.getEstimatedTravel(
+                                        c.volunteer().getUser().getLocation(),
+                                        (org.locationtech.jts.geom.Point) destination,
+                                        c.volunteer().getTransportMode() != null
+                                                ? c.volunteer().getTransportMode()
+                                                : TransportMode.FOOT_WALKING
+                                ).getDuration();
+                            } catch (Exception e) {
+                                log.warn("[travel-time] Error calculating travel time for volunteer {}: {}",
+                                        c.volunteer().getId(), e.getMessage());
+                                return 0.0;
+                            }
+                        }, executor)
+                        .exceptionally(ex -> {
+                            log.warn("[travel-time] Async exception for volunteer travel time: {}", ex.getMessage());
+                            return 0.0;
+                        })
+                        .join()
+                ));
+    }
+
+    /**
+     * Ejecuta un ExecutorService con timeout garantizado.
+     * - Intenta shutdown normal con 30 segundos
+     * - Si falla, ejecuta shutdownNow()
+     */
+    private void shutdownExecutorWithTimeout(ExecutorService executor) {
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
+                log.warn("[executor] Executor timeout, forcing shutdown");
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            log.warn("[executor] Interrupt during executor shutdown: {}", e.getMessage());
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
 }

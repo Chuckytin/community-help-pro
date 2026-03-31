@@ -26,28 +26,35 @@ public class MatchingEngine {
             List<VolunteerCandidate> candidates,
             ScoreStrategy<T> scoreStrategy,
             Map<UUID, Long> pendingCounts,
-            int retryCount
+            int retryCount,
+            Map<UUID, Double> travelTimes
     ) {
-
         int limit = proposalMatchingConfig.getMaxProposalsPerEntity();
 
         PriorityQueue<Map.Entry<Volunteer, Double>> topCandidates =
                 new PriorityQueue<>(Map.Entry.comparingByValue());
 
         for (VolunteerCandidate candidate : candidates) {
-
             Volunteer volunteer = candidate.volunteer();
             double distance = candidate.distanceMeters();
 
-            MatchingContext context = new MatchingContext(distance, pendingCounts, retryCount);
+            // Obtener tiempo de viaje real usando el modo de transporte del voluntario
+            double travelSeconds = travelTimes.getOrDefault(volunteer.getId(), 0.0);
+
+            // Calcular segundos disponibles (para deadline/expiryDate )
+            long availableSeconds = Long.MAX_VALUE;
+
+            MatchingContext context = new MatchingContext(
+                    distance, travelSeconds, pendingCounts, retryCount, availableSeconds);
 
             double score = scoreStrategy.calculate(entity, volunteer, context);
 
             log.debug(
-                    "[matching-score] volunteer {} | score {} | distance {}m",
+                    "[matching-score] volunteer {} | score {} | distance {}m | travel {}s",
                     volunteer.getId(),
                     String.format("%.3f", score),
-                    Math.round(distance)
+                    Math.round(distance),
+                    Math.round(travelSeconds)
             );
 
             if (score <= 0) continue;
@@ -66,4 +73,6 @@ public class MatchingEngine {
                 .sorted(Map.Entry.<Volunteer, Double>comparingByValue().reversed())
                 .toList();
     }
+
+
 }

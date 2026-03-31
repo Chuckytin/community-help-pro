@@ -21,20 +21,25 @@ public class DonationDistanceScoreStrategy implements ScoreStrategy<Donation> {
      * Calcula la puntuación de distancia entre donación y voluntario.
      */
     @Override
-    public double calculate(
-            Donation donation,
-            Volunteer volunteer,
-            MatchingContext context
-    ) {
+    public double calculate(Donation donation, Volunteer volunteer, MatchingContext context) {
 
         double radiusMeters = volunteer.getRadiusKm() * 1000;
         double distanceMeters = context.distanceMeters();
 
-        if (distanceMeters > radiusMeters) {
-            return 0;
-        }
+        if (distanceMeters > radiusMeters) return 0;
 
-        double normalized = 1 - (distanceMeters / radiusMeters);
+        // Si tenemos tiempo real de viaje, lo usamos para normalizar
+        // Si no (travelSeconds = 0), fallback a distancia en metros
+        double travelSeconds = context.travelSeconds();
+        double normalized;
+
+        if (travelSeconds > 0) {
+            // Normaliza contra 30 minutos (1800s) como tiempo máximo razonable
+            double maxReasonableSeconds = 1800;
+            normalized = Math.max(0, 1 - (travelSeconds / maxReasonableSeconds));
+        } else {
+            normalized = 1 - (distanceMeters / radiusMeters);
+        }
 
         return normalized * proposalMatchingConfig.getMaxDistanceScore();
     }

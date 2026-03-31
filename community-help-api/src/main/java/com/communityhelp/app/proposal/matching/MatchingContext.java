@@ -5,6 +5,8 @@ import java.util.UUID;
 
 public record MatchingContext(
         double distanceMeters,
+        double travelSeconds,
         Map<UUID, Long> pendingCounts,
-        int retryCount
+        int retryCount,
+        long availableSeconds
 ) {}

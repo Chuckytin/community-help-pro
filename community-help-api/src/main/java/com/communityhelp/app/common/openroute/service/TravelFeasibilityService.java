@@ -25,27 +25,15 @@ public class TravelFeasibilityService {
     private final OpenRouteService openRouteService;
 
     /**
-     * Calcula si un voluntario puede llegar al destino antes del deadline.
-     * - Obtiene el tiempo de viaje estimado usando OpenRouteService.
-     * - Compara el tiempo de viaje con el tiempo restante hasta el deadline.
-     * Si la API falla, no bloqueamos — dejamos pasar, asumiendo que el voluntario podría llegar a tiempo.
-     */
-    public boolean canReachInTime(Point from, Point to,
-                                  LocalDateTime deadline, TransportMode mode) {
-        try {
-            TravelTimeResponse travel = openRouteService.getTravelTime(from, to, mode);
-            long secondsUntilDeadline = ChronoUnit.SECONDS.between(LocalDateTime.now(), deadline);
-            return travel.getDuration() < secondsUntilDeadline;
-        } catch (Exception e) {
-            return true;
-        }
-    }
-
-    /**
      * Devuelve el tiempo de viaje estimado entre dos puntos.
      * Útil para mostrar información al voluntario antes de aceptar una tarea.
      * Si la API falla, devuelve un tiempo de viaje de 0, lo que puede interpretarse como "desconocido".
      */
+    @Cacheable(
+            value = "travelTime",
+            key = "T(Math).round(#from.y * 1000) + '_' + T(Math).round(#from.x * 1000) + '_' " +
+                    "+ T(Math).round(#to.y * 1000) + '_' + T(Math).round(#to.x * 1000) + '_' + #mode"
+    )
     public TravelTimeResponse getEstimatedTravel(Point from, Point to, TransportMode mode) {
         try {
             return openRouteService.getTravelTime(from, to, mode);
@@ -58,13 +46,18 @@ public class TravelFeasibilityService {
      * Calcula el tiempo de viaje para todos los modos de transporte disponibles y devuelve el más rápido junto con el modo usado.
      * Si la API falla para todos los modos, devuelve un tiempo de viaje de 0 y modo null.
      */
+    @Cacheable(
+            value = "travelTime",
+            key = "'fastest_' + T(Math).round(#from.y * 1000) + '_' + T(Math).round(#from.x * 1000) + '_' " +
+                    "+ T(Math).round(#to.y * 1000) + '_' + T(Math).round(#to.x * 1000)"
+    )
     public FastestTravelResponse getFastestTravel(Point from, Point to) {
         TransportMode fastestMode = null;
         TravelTimeResponse fastestTravel = null;
 
         for (TransportMode mode : TransportMode.values()) {
             try {
-                TravelTimeResponse travel = openRouteService.getTravelTime(from, to, mode);
+                TravelTimeResponse travel = getEstimatedTravel(from, to, mode);
                 if (fastestTravel == null || travel.getDuration() < fastestTravel.getDuration()) {
                     fastestTravel = travel;
                     fastestMode = mode;

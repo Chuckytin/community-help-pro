@@ -72,6 +72,20 @@ public class ProposalMatchingConfig {
     public int maxCandidatesMultiplier = 6;
 
     /**
+     * Máximo número de candidatos para calcular travel time (para optimizar llamadas API)
+     */
+    public int maxCandidatesForTravel = 20;
+    private int maxCandidatesPrefilter = 50;
+    private int travelTimeThreads = 10;
+
+    /**
+     * Velocidades medias (m/s) por modo de transporte
+     */
+    private double walkSpeed = 1.4;   // ~5 km/h
+    private double bikeSpeed = 4.1;   // ~15 km/h
+    private double carSpeed = 13.9;   // ~50 km/h
+
+    /**
      * Radio de expansión en metros para buscar más voluntarios si no se encuentran suficientes candidatos.
      */
     private int radiusExpansionStep = 10000;
