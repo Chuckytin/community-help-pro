@@ -84,6 +84,10 @@ public class VolunteerServiceImpl implements VolunteerService {
             volunteer.setTransportMode(dto.getTransportMode());
         }
 
+        if (dto.getEmailNotificationsEnabled() != null) {
+            volunteer.setEmailNotificationsEnabled(dto.getEmailNotificationsEnabled());
+        }
+
         Volunteer savedVolunteer = volunteerRepository.save(volunteer);
 
         eventPublisher.publishEvent(

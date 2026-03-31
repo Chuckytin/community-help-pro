@@ -17,5 +17,7 @@ public enum ErrorCode {
     CONFLICT,
     DATABASE_CONSTRAINT,
 
-    INTERNAL_ERROR
+    INTERNAL_ERROR,
+
+    RATE_LIMIT_EXCEEDED
 }

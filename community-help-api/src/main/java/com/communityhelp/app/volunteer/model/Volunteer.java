@@ -61,6 +61,13 @@ public class Volunteer extends Auditable {
     private TransportMode transportMode = TransportMode.FOOT_WALKING;
 
     /**
+     * Notifica al Voluntario por email de las proposals disponibles.
+     */
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean emailNotificationsEnabled = true;
+
+    /**
      * Helper del User que devuelve su identificador.
      * Transient para que no forme parte del estado persistente de la entidad
      * (vive solo en memoria, no en la BBDD)

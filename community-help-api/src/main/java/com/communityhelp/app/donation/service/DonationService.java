@@ -21,6 +21,16 @@ public interface DonationService {
 
     Page<DonationResponseDto> getDonationsAssignedToVolunteer(UUID volunteerId, int page, int size);
 
+    Page<DonationResponseDto> findNearby(
+            UUID currentUserId,
+            double lat,
+            double lon,
+            double radiusMeters,
+            String donationType,
+            int page,
+            int size
+    );
+
     DonationResponseDto updateDonation(UUID id, UUID donorId, DonationUpdateRequestDto dto);
 
     void deleteDonation(UUID id, UUID donorId);

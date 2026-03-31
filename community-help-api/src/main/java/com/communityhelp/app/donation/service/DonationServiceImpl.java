@@ -48,6 +48,9 @@ public class DonationServiceImpl implements DonationService {
     private final ProposalMatchingStateService matchingStateService;
     private final TravelFeasibilityService travelFeasibilityService;
 
+    /**
+     * Crea una nueva donación asociada al donor indicado, con estado inicial AVAILABLE.
+     */
     @Override
     public DonationResponseDto createDonation(UUID donorId, DonationCreateRequestDto dto) {
 
@@ -82,6 +85,9 @@ public class DonationServiceImpl implements DonationService {
 
     }
 
+    /**
+     * Obtiene una donación por su ID, incluyendo estimaciones de viaje si el usuario actual tiene ubicación.
+     */
     @Override
     @Transactional(readOnly = true)
     public DonationResponseDto getDonationById(UUID id, UUID currentUserId) {
@@ -118,6 +124,9 @@ public class DonationServiceImpl implements DonationService {
         return dto;
     }
 
+    /**
+     * Obtiene las donaciones de un usuario sin importar el estado, ordenadas por fecha de creación descendente.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<DonationResponseDto> getMyDonations(UUID donorId, int page, int size) {
@@ -132,6 +141,9 @@ public class DonationServiceImpl implements DonationService {
 
     }
 
+    /**
+     * Obtiene las donaciones de un usuario filtrando por estado.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<DonationResponseDto> getDonationsByStatus(UUID donorId, DonationStatus status, int page, int size) {
@@ -146,6 +158,9 @@ public class DonationServiceImpl implements DonationService {
 
     }
 
+    /**
+     * Obtiene las donaciones asignadas a un voluntario, sin importar el estado.
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<DonationResponseDto> getDonationsAssignedToVolunteer(UUID volunteerId, int page, int size) {
@@ -160,6 +175,54 @@ public class DonationServiceImpl implements DonationService {
 
     }
 
+    /**
+     * Busca donaciones disponibles cercanas con PostGIS, opcionalmente filtrando por tipo de donación.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<DonationResponseDto> findNearby(UUID currentUserId, double lat, double lon,
+                                                double radiusMeters, String donationType,
+                                                int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+
+        Page<Donation> donations = donationRepository.findNearbyAvailable(
+                lat, lon, radiusMeters, donationType, pageable);
+
+        // Obtiene la ubicación del usuario para calcular el tiempo de viaje
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return donations.map(donation -> {
+            autoExpireIfNeeded(donation);
+            DonationResponseDto dto = donationMapper.toDto(donation);
+
+            if (currentUser.getLocation() != null && donation.getLocation() != null) {
+                TransportMode mode = (currentUser.getVolunteer() != null
+                        && currentUser.getVolunteer().getTransportMode() != null)
+                        ? currentUser.getVolunteer().getTransportMode()
+                        : TransportMode.FOOT_WALKING;
+
+                TravelTimeResponse travel = travelFeasibilityService.getEstimatedTravel(
+                        currentUser.getLocation(), donation.getLocation(), mode);
+                dto.setEstimatedTravelSeconds(travel.getDuration());
+                dto.setEstimatedDistanceMeters(travel.getDistance());
+                dto.setUsedTransportMode(mode);
+
+                FastestTravelResponse fastest = travelFeasibilityService.getFastestTravel(
+                        currentUser.getLocation(), donation.getLocation());
+                dto.setFastestTravelSeconds(fastest.getDuration());
+                dto.setFastestDistanceMeters(fastest.getDistance());
+                dto.setFastestTransportMode(fastest.getFastestMode());
+            }
+
+            return dto;
+        });
+    }
+
+    /**
+     * Actualiza una donación existente. Solo se pueden actualizar las donaciones en estado AVAILABLE y solo por el donor propietario.
+     */
     @Override
     public DonationResponseDto updateDonation(UUID id, UUID donorId, DonationUpdateRequestDto dto) {
 

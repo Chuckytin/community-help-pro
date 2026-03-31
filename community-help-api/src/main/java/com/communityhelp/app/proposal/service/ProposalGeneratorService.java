@@ -51,7 +51,7 @@ public class ProposalGeneratorService {
     private final DonationRepository donationRepository;
     private final ProposalService proposalService;
     private final HelpRequestScoreEngine helpRequestScoreEngine;
-    private final DonationScoreEngine  donationScoreEngine;
+    private final DonationScoreEngine donationScoreEngine;
     private final ProposalRankingService rankingService;
     private final ProposalMatchingConfig proposalMatchingConfig;
     private final MatchingEngine matchingEngine;
@@ -607,39 +607,46 @@ public class ProposalGeneratorService {
 
     /**
      * Calcula tiempos de viaje en paralelo para un conjunto de candidatos.
-     * Usa ExecutorService para paralelizar llamadas a OpenRouteService.
-     * - Maneja timeout para evitar bloqueos indefinidos
-     * - Devuelve un mapa de UUID -> tiempo en segundos (0 si error)
+     * Lanza todas las tareas en paralelo primero.
+     * Espera a que todas terminen de verdad en paralelo (sin esperar cada una individualmente).
+     * Recoge los resultados al final.
      */
     private Map<UUID, Double> calculateTravelTimesInParallel(
             List<VolunteerCandidate> candidates,
             Object destination,
             ExecutorService executor) {
 
-        return candidates.stream()
+        Map<UUID, CompletableFuture<Double>> futures = candidates.stream()
                 .filter(c -> c.volunteer().getUser().getLocation() != null)
                 .collect(Collectors.toMap(
                         c -> c.volunteer().getId(),
                         c -> CompletableFuture.supplyAsync(() -> {
-                            try {
-                                return travelFeasibilityService.getEstimatedTravel(
-                                        c.volunteer().getUser().getLocation(),
-                                        (org.locationtech.jts.geom.Point) destination,
-                                        c.volunteer().getTransportMode() != null
-                                                ? c.volunteer().getTransportMode()
-                                                : TransportMode.FOOT_WALKING
-                                ).getDuration();
-                            } catch (Exception e) {
-                                log.warn("[travel-time] Error calculating travel time for volunteer {}: {}",
-                                        c.volunteer().getId(), e.getMessage());
-                                return 0.0;
-                            }
-                        }, executor)
-                        .exceptionally(ex -> {
-                            log.warn("[travel-time] Async exception for volunteer travel time: {}", ex.getMessage());
-                            return 0.0;
-                        })
-                        .join()
+                                    try {
+                                        return travelFeasibilityService.getEstimatedTravel(
+                                                c.volunteer().getUser().getLocation(),
+                                                (org.locationtech.jts.geom.Point) destination,
+                                                c.volunteer().getTransportMode() != null
+                                                        ? c.volunteer().getTransportMode()
+                                                        : TransportMode.FOOT_WALKING
+                                        ).getDuration();
+                                    } catch (Exception e) {
+                                        log.warn("[travel-time] Error calculating travel time for volunteer {}: {}",
+                                                c.volunteer().getId(), e.getMessage());
+                                        return 0.0;
+                                    }
+                                }, executor)
+                                .exceptionally(ex -> {
+                                    log.warn("[travel-time] Async exception: {}", ex.getMessage());
+                                    return 0.0;
+                                })
+                ));
+
+        CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).join();
+
+        return futures.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().join()
                 ));
     }
 

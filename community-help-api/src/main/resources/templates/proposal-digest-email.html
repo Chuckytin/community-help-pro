@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nuevas propuestas - Community Help</title>
+  <style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f7f9fc;
+    }
+    .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+        text-align: center;
+        padding: 20px 0;
+        border-bottom: 1px solid #eaeaea;
+    }
+    .content { padding: 20px; }
+    .proposal-item {
+        padding: 12px;
+        margin: 8px 0;
+        background: #f0f4f8;
+        border-radius: 6px;
+        border-left: 4px solid #667eea;
+    }
+    .badge {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .badge-help { background: #e8f4fd; color: #1a73e8; }
+    .badge-donation { background: #e8f5e9; color: #2e7d32; }
+    .proposal-title {
+        font-weight: 600;
+        color: #1f3864;
+    }
+    .button {
+        display: inline-block;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        text-decoration: none;
+        border-radius: 30px;
+        font-weight: 600;
+        margin: 20px 0;
+    }
+    .footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+        color: #718096;
+        border-top: 1px solid #eaeaea;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h2>
+      Tienes
+      <span th:text="${proposalCount}">N</span>
+      nueva<span th:if="${proposalCount > 1}">s</span>
+      propuesta<span th:if="${proposalCount > 1}">s</span>
+    </h2>
+  </div>
+  <div class="content">
+    <p>Hola <span th:text="${name} ?: 'Voluntario'">Voluntario</span>,</p>
+    <p>El sistema de matching te ha seleccionado para las siguientes tareas:</p>
+
+    <div th:each="proposal : ${proposals}">
+      <div class="proposal-item">
+        <div>
+                    <span class="badge"
+                          th:classappend="${proposal.entityType == 'HELP_REQUEST'} ? 'badge-help' : 'badge-donation'"
+                          th:text="${proposal.entityType == 'HELP_REQUEST'} ? 'Solicitud de ayuda' : 'Donación'">
+                        Tipo
+                    </span>
+        </div>
+        <div class="proposal-title" th:text="${proposal.entityTitle}">Título</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a th:href="${loginUrl}" class="button">Ver mis propuestas</a>
+    </div>
+    <p style="font-size: 12px; color: #718096;">
+      Si no quieres recibir estos emails puedes desactivarlos desde tu perfil de voluntario.
+    </p>
+  </div>
+  <div class="footer">
+    <p>© 2025 Community Help. Todos los derechos reservados.</p>
+  </div>
+</div>
+</body>
+</html>

@@ -5,6 +5,7 @@ import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -30,6 +31,12 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, UUID> {
      */
     @Query("SELECT v FROM Volunteer v JOIN FETCH v.user WHERE v.id IN :ids")
     List<Volunteer> findAllByIdWithUser(Collection<UUID> ids);
+
+    /**
+     * Obtiene un voluntario por su id con join en User para evitar problemas de LazyInitializationException al acceder a los datos del usuario.
+     */
+    @Query("SELECT v FROM Volunteer v JOIN FETCH v.user WHERE v.id = :id")
+    Optional<Volunteer> findByIdWithUser(@Param("id") UUID id);
 
     /**
      * Busca Voluntarios disponibles dentro de un radio de distancia con PostGIS

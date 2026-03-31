@@ -6,6 +6,7 @@ import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.notification.service.NotificationService;
 import com.communityhelp.app.proposal.dto.ProposalResponseDto;
 import com.communityhelp.app.proposal.mapper.ProposalMapper;
 import com.communityhelp.app.proposal.matching.service.ProposalMatchingStateService;
@@ -44,6 +45,7 @@ public class ProposalServiceImpl implements ProposalService {
     private final DonationRepository donationRepository;
     private final ProposalMapper proposalMapper;
     private final ProposalMatchingStateService matchingStateService;
+    private final NotificationService notificationService;
 
     /**
      * Crea una proposal para un voluntario y entidad objetivo.
@@ -107,6 +109,8 @@ public class ProposalServiceImpl implements ProposalService {
 
                 proposalRepository.save(existing);
 
+                notifyVolunteer(volunteerId, targetEntityId, type);
+
                 log.debug("[proposal] Reactivated CANCELLED proposal for volunteer {} entity {}",
                         volunteerId, targetEntityId);
 
@@ -119,6 +123,7 @@ public class ProposalServiceImpl implements ProposalService {
                 volunteerId, targetEntityId, type, score);
 
         if (reactivated > 0) {
+            notifyVolunteer(volunteerId, targetEntityId, type);
             log.debug("[proposal] Reactivated expired proposal for volunteer {} entity {}",
                     volunteerId, targetEntityId);
             return;
@@ -304,6 +309,38 @@ public class ProposalServiceImpl implements ProposalService {
                 matchingStateService.clearState(proposal.getTargetEntityId());
             }
         }
+    }
+
+    /**
+     * Notifica al voluntario por email sobre una nueva proposal disponible para una entidad objetivo.
+     */
+    private void notifyVolunteer(UUID volunteerId, UUID entityId, ProposalType type) {
+        volunteerRepository.findByIdWithUser(volunteerId).ifPresent(volunteer -> {
+            if (volunteer.isEmailNotificationsEnabled()) {
+                String entityTitle = resolveEntityTitle(entityId, type);
+                notificationService.enqueueProposalNotification(
+                        volunteer.getId(),
+                        volunteer.getUser().getEmail(),
+                        volunteer.getName(),
+                        entityTitle,
+                        type.name()
+                );
+            }
+        });
+    }
+
+    /**
+     * Resuelve el título de la entidad objetivo para incluirlo en la notificación.
+     */
+    private String resolveEntityTitle(UUID entityId, ProposalType type) {
+        return switch (type) {
+            case HELP_REQUEST -> helpRequestRepository.findById(entityId)
+                    .map(HelpRequest::getTitle)
+                    .orElse("Solicitud de ayuda");
+            case DONATION -> donationRepository.findById(entityId)
+                    .map(Donation::getTitle)
+                    .orElse("Donación");
+        };
     }
 
 }

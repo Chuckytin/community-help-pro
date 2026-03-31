@@ -24,6 +24,7 @@ public interface VolunteerMapper {
     @Mapping(target = "latitude", expression = "java(volunteer.getUser().getLatitude())")
     @Mapping(target = "longitude", expression = "java(volunteer.getUser().getLongitude())")
     @Mapping(target = "transportMode", source = "transportMode")
+    @Mapping(target = "emailNotificationsEnabled", source = "emailNotificationsEnabled")
     VolunteerResponseDto toDto(Volunteer volunteer);
 
 }

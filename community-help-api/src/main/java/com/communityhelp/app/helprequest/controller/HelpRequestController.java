@@ -4,6 +4,7 @@ import com.communityhelp.app.helprequest.dto.HelpRequestCreateRequestDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
+import com.communityhelp.app.helprequest.model.HelpRequestType;
 import com.communityhelp.app.helprequest.service.HelpRequestService;
 import com.communityhelp.app.security.AppUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -120,6 +121,30 @@ public class HelpRequestController {
     ) {
 
         return ResponseEntity.ok(helpRequestService.getByVolunteer(volunteerId, page, size));
+    }
+
+    @Operation(summary = "Search nearby open help requests",
+            description = "Returns open help requests within the given radius, sorted by distance. " +
+                    "Optionally filter by request type.")
+    @GetMapping("/nearby")
+    public ResponseEntity<Page<HelpRequestResponseDto>> findNearby(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @RequestParam double lat,
+            @RequestParam double lon,
+            @RequestParam(defaultValue = "5000") double radiusMeters,
+            @RequestParam(required = false) HelpRequestType type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return ResponseEntity.ok(
+                helpRequestService.findNearby(
+                        currentUser.getId(),
+                        lat, lon,
+                        radiusMeters,
+                        type != null ? type.name() : null,
+                        page, size
+                )
+        );
     }
 
     @Operation(summary = "Update a help request",

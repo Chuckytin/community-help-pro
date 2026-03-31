@@ -29,6 +29,8 @@ public class VolunteerResponseDto {
     private Set<VolunteerSkill> skills;
     private TransportMode transportMode;
 
+    private boolean emailNotificationsEnabled;
+
     private Double latitude;
     private Double longitude;
     private Double rating;

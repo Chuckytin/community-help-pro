@@ -20,6 +20,7 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
      * Obtiene todas las donaciones de un usuario
      */
     Page<Donation> findByDonor_Id(UUID donorId, Pageable pageable);
+
     List<Donation> findByDonor_Id(UUID id);
 
     /**
@@ -34,9 +35,30 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
     List<Donation> findByVolunteer_Id(UUID id);
 
     /**
-     * Filtra por estado
+     * Obtiene todas las donaciones disponibles cercanas.
      */
-    Page<Donation> findByStatus(DonationStatus status, Pageable pageable);
+    @Query(value = """
+            SELECT d.* FROM donations d
+            WHERE d.status = 'AVAILABLE'
+            AND d.active = true
+            AND (:type IS NULL OR d.donation_type = :type)
+            AND ST_DWithin(
+                d.location::geography,
+                ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
+                :radiusMeters
+            )
+            ORDER BY ST_Distance(
+                d.location::geography,
+                ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
+            )
+            """, nativeQuery = true)
+    Page<Donation> findNearbyAvailable(
+            @Param("lat") double lat,
+            @Param("lon") double lon,
+            @Param("radiusMeters") double radiusMeters,
+            @Param("type") String type,
+            Pageable pageable
+    );
 
     /**
      * Libera las donaciones donde el usuario era volunteer

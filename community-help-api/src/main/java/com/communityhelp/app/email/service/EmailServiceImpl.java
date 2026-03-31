@@ -1,5 +1,6 @@
 package com.communityhelp.app.email.service;
 
+import com.communityhelp.app.notification.model.PendingNotification;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.time.Duration;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -69,6 +71,22 @@ public class EmailServiceImpl implements EmailService {
     }
 
     /**
+     * Envia Email notificando una nueva propuesta relacionada con el usuario.
+     */
+    @Async
+    @Override
+    public void sendProposalDigestEmail(String to, String name, List<PendingNotification> proposals) {
+        Context ctx = new Context();
+        ctx.setVariable("name", name);
+        ctx.setVariable("proposals", proposals);
+        ctx.setVariable("proposalCount", proposals.size());
+        ctx.setVariable("loginUrl", loginUrl);
+        sendHtmlEmail(to, "Tienes " + proposals.size() +
+                " nueva" + (proposals.size() > 1 ? "s propuestas" : " propuesta") +
+                " - Community Help", "proposal-digest-email", ctx);
+    }
+
+    /**
      * Envía un email HTML utilizando Thymeleaf para renderizar la plantilla con el contexto proporcionado.
      */
     private void sendHtmlEmail(String to, String subject, String template, Context ctx) {
@@ -81,9 +99,9 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(html, true);
             mailSender.send(message);
-            log.info("[EmailService] Email '{}' enviado a {}", subject, to);
+            log.info("[EmailService] Email '{}' sent to {}", subject, to);
         } catch (Exception e) {
-            log.error("[EmailService] Error enviando email a {}: {}", to, e.getMessage());
+            log.error("[EmailService] Error sending email to {}: {}", to, e.getMessage());
         }
     }
 

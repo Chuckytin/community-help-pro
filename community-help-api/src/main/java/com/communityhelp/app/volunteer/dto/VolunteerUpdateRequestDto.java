@@ -29,4 +29,6 @@ public class VolunteerUpdateRequestDto {
     private Set<VolunteerSkill> skills;
 
     private TransportMode transportMode;
+
+    private Boolean emailNotificationsEnabled;
 }

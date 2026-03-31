@@ -1,10 +1,7 @@
 package com.communityhelp.app.config;
 
 import com.communityhelp.app.auth.service.AuthenticationService;
-import com.communityhelp.app.security.AppUserDetailsService;
-import com.communityhelp.app.security.CustomAccessDeniedHandler;
-import com.communityhelp.app.security.CustomAuthenticationEntryPoint;
-import com.communityhelp.app.security.JwtAuthenticationFilter;
+import com.communityhelp.app.security.*;
 import com.communityhelp.app.user.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,6 +41,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
+            RateLimitFilter rateLimitFilter,
             CustomAuthenticationEntryPoint authenticationEntryPoint,
             CustomAccessDeniedHandler accessDeniedHandler
     ) throws Exception {
@@ -75,6 +73,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -111,5 +110,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
+
 
 }

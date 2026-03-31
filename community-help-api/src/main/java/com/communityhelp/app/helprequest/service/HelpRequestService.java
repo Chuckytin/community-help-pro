@@ -27,6 +27,16 @@ public interface HelpRequestService {
 
     Page<HelpRequestResponseDto> getByVolunteer(UUID volunteerId, int page, int size);
 
+    Page<HelpRequestResponseDto> findNearby(
+            UUID currentUserId,
+            double lat,
+            double lon,
+            double radiusMeters,
+            String helpRequestType,
+            int page,
+            int size
+    );
+
     HelpRequestResponseDto updateHelpRequest(UUID id, UUID requesterId, HelpRequestUpdateRequestDto dto);
 
     void deleteHelpRequest(UUID id, UUID requesterId);

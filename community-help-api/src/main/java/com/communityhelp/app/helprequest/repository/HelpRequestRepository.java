@@ -1,5 +1,6 @@
 package com.communityhelp.app.helprequest.repository;
 
+import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import org.springframework.data.domain.Page;
@@ -56,6 +57,33 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequest, UUID> 
      * Filtra por tareas activas o aceptadas para un voluntario específico sin importar el estado
      */
     Page<HelpRequest> findByVolunteer_Id(UUID volunteerId, Pageable pageable);
+
+    /**
+     * Obtiene todas las solicitudes abiertas cercanas.
+     */
+    @Query(value = """
+            SELECT hr.* FROM help_requests hr
+            WHERE hr.status = 'OPEN'
+            AND hr.active = true
+            AND (hr.deadline IS NULL OR hr.deadline > NOW())
+            AND (:type IS NULL OR hr.type = :type)
+            AND ST_DWithin(
+                hr.location::geography,
+                ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
+                :radiusMeters
+            )
+            ORDER BY ST_Distance(
+                hr.location::geography,
+                ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography
+            )
+            """, nativeQuery = true)
+    Page<HelpRequest> findNearbyOpen(
+            @Param("lat") double lat,
+            @Param("lon") double lon,
+            @Param("radiusMeters") double radiusMeters,
+            @Param("type") String type,
+            Pageable pageable
+    );
 
     /**
      * Libera todas las helpRequests de un volunteer antes de borrarlo

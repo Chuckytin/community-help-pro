@@ -4,6 +4,7 @@ import com.communityhelp.app.donation.dto.DonationCreateRequestDto;
 import com.communityhelp.app.donation.dto.DonationResponseDto;
 import com.communityhelp.app.donation.dto.DonationUpdateRequestDto;
 import com.communityhelp.app.donation.model.DonationStatus;
+import com.communityhelp.app.donation.model.DonationType;
 import com.communityhelp.app.donation.service.DonationService;
 import com.communityhelp.app.security.AppUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -85,6 +86,30 @@ public class DonationController {
 
         return ResponseEntity.ok(
                 donationService.getDonationsAssignedToVolunteer(currentUser.getId(), page, size)
+        );
+    }
+
+    @Operation(summary = "Search nearby available donations",
+            description = "Returns available donations within the given radius, sorted by distance. " +
+                    "Optionally filter by donation type.")
+    @GetMapping("/nearby")
+    public ResponseEntity<Page<DonationResponseDto>> findNearby(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @RequestParam double lat,
+            @RequestParam double lon,
+            @RequestParam(defaultValue = "5000") double radiusMeters,
+            @RequestParam(required = false) DonationType type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        return ResponseEntity.ok(
+                donationService.findNearby(
+                        currentUser.getId(),
+                        lat, lon,
+                        radiusMeters,
+                        type != null ? type.name() : null,
+                        page, size
+                )
         );
     }
 

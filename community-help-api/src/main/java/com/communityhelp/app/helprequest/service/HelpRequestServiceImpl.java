@@ -230,6 +230,50 @@ public class HelpRequestServiceImpl implements HelpRequestService {
                 .map(helpRequestMapper::toDto);
     }
 
+    /**
+     * Obtiene las solicitudes abiertas cercanas a una ubicación dada.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<HelpRequestResponseDto> findNearby(UUID currentUserId, double lat, double lon,
+                                                   double radiusMeters, String helpRequestType,
+                                                   int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+
+        Page<HelpRequest> helpRequests = helpRequestRepository.findNearbyOpen(
+                lat, lon, radiusMeters, helpRequestType, pageable);
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return helpRequests.map(hr -> {
+            autoExpireIfNeeded(hr);
+            HelpRequestResponseDto dto = helpRequestMapper.toDto(hr);
+
+            if (currentUser.getLocation() != null && hr.getLocation() != null) {
+                TransportMode mode = (currentUser.getVolunteer() != null
+                        && currentUser.getVolunteer().getTransportMode() != null)
+                        ? currentUser.getVolunteer().getTransportMode()
+                        : TransportMode.FOOT_WALKING;
+
+                TravelTimeResponse travel = travelFeasibilityService.getEstimatedTravel(
+                        currentUser.getLocation(), hr.getLocation(), mode);
+                dto.setEstimatedTravelSeconds(travel.getDuration());
+                dto.setEstimatedDistanceMeters(travel.getDistance());
+                dto.setUsedTransportMode(mode);
+
+                FastestTravelResponse fastest = travelFeasibilityService.getFastestTravel(
+                        currentUser.getLocation(), hr.getLocation());
+                dto.setFastestTravelSeconds(fastest.getDuration());
+                dto.setFastestDistanceMeters(fastest.getDistance());
+                dto.setFastestTransportMode(fastest.getFastestMode());
+            }
+
+            return dto;
+        });
+    }
+
     @Override
     public HelpRequestResponseDto updateHelpRequest(UUID id, UUID requesterId, HelpRequestUpdateRequestDto dto) {
 
