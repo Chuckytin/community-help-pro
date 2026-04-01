@@ -19,6 +19,7 @@
 - **Brevo (SMTP)** — envío de emails
 - **OpenRouteService** — cálculo de rutas y tiempos de viaje reales
 - **Spring Cache** — caché de tiempos de viaje para optimizar llamadas a la API
+- **Bucket4j** — rate limiting en endpoints de autenticación
 
 ---
 
@@ -26,12 +27,15 @@
 
 - Publicar **donaciones** con ubicación, caducidad, tipo, cantidad y descripción.
 - Crear **solicitudes de ayuda** (Help Requests) con título, descripción, fecha límite y radio de acción.
+- **Búsqueda por proximidad** de donaciones y solicitudes cercanas, filtrable por tipo y radio en metros.
 - **Motor de matching automático** que conecta voluntarios cercanos con donaciones y solicitudes compatibles, evaluando tiempo de viaje real, habilidades, rating y carga de trabajo. El radio de búsqueda se amplía progresivamente si no hay respuesta.
 - **Filtro de viabilidad por deadline** — el motor descarta voluntarios que no pueden llegar a tiempo antes de la fecha límite, usando tiempos de viaje reales calculados en paralelo.
 - **Estimación de tiempo de viaje** para el voluntario al consultar una tarea, usando su modo de transporte configurado y mostrando también la opción más rápida disponible.
+- **Notificaciones por email a voluntarios** cuando reciben nuevas proposals, agrupadas en un digest periódico para evitar spam. Configurable por voluntario.
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
 - **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña.
+- **Rate limiting** en endpoints de autenticación para proteger contra fuerza bruta y abuso.
 - **API documentada con Swagger / OpenAPI** accesible en `/swagger-ui.html`.
 
 ---
@@ -66,6 +70,21 @@ Los voluntarios pueden configurar su modo de transporte habitual en su perfil:
 | Coche | `DRIVING_CAR` |
 
 Al consultar una donación o solicitud de ayuda, la respuesta incluye la estimación de tiempo según el modo del voluntario y cuál sería la opción más rápida disponible.
+
+---
+
+## Rate limiting
+
+Los siguientes endpoints de autenticación tienen límite de peticiones por IP para proteger contra abuso:
+
+| Endpoint | Límite |
+|---|---|
+| `POST /api/v1/auth/register` | 3 req/min |
+| `POST /api/v1/auth/forgot-password` | 3 req/min |
+| `POST /api/v1/auth/verify-email` | 10 req/min |
+| `POST /api/v1/auth/reset-password` | 5 req/min |
+
+Al superar el límite se devuelve `429 Too Many Requests`.
 
 ---
 
@@ -136,9 +155,9 @@ MAIL_USERNAME=your_brevo_smtp_user
 MAIL_PASSWORD=your_brevo_smtp_password
 MAIL_FROM=your_verified_sender@example.com
 
-# Frontend URLs (puedes usar placeholders mientras desarrollas)
-URL_FRONTEND=http://localhost:5173
-URL_FRONTEND_LOGIN=http://localhost:5173/login
+# Frontend URLs
+URL_FRONTEND=your_frontend_url
+URL_FRONTEND_LOGIN=your_frontend_login_url
 ```
 
 > **Nota sobre Brevo:** las claves SMTP de Brevo expiran tras 90 días de inactividad. Si llevas tiempo sin usar el proyecto, genera una nueva clave desde `Settings > SMTP & API` en tu cuenta de Brevo.
@@ -184,6 +203,25 @@ También puedes consultar el OTP generado directamente en la tabla para probar e
 SELECT email, code, type, expires_at, used FROM otp_codes ORDER BY expires_at DESC;
 ```
 
+### Notificaciones de proposals
+
+El sistema agrupa las notificaciones de nuevas proposals y envía un digest periódico (cada 5 minutos en dev). Si quieres probar el envío inmediatamente, puedes reducir el intervalo temporalmente:
+```properties
+# application.properties
+notification.digest.interval-ms=30000
+```
+
+Para consultar las notificaciones pendientes de enviar:
+```sql
+SELECT volunteer_email, entity_title, entity_type, sent, created_at
+FROM pending_notifications
+ORDER BY created_at DESC;
+```
+
+### Rate limiting
+
+Durante las pruebas con Swagger, si realizas más peticiones de las permitidas en un endpoint de auth recibirás un `429 Too Many Requests`. Espera un minuto para que el bucket se recargue o reinicia la aplicación para limpiar el estado en memoria.
+
 ### Coordenadas de prueba
 
 Para que el motor de matching funcione correctamente, registra los usuarios de prueba con coordenadas distintas entre sí y distintas a las de las donaciones/solicitudes que crees. Usar las mismas coordenadas para todos produce `distance 0m / travel 0s` en los logs, lo cual es un artefacto de pruebas y no refleja el comportamiento real en producción.
@@ -205,16 +243,17 @@ community-help-api/
 ├── auth/           # Autenticación JWT, verificación de email y recuperación de contraseña
 ├── chat/           # Mensajería REST y WebSocket
 ├── common/         # Location, excepciones, OpenRoute (rutas y tiempos de viaje), persistencia base
-├── config/         # Seguridad, OpenAPI, caché, inicialización
-├── donation/       # Donaciones y su ciclo de vida
+├── config/         # Seguridad, OpenAPI, caché, scheduler, inicialización
+├── donation/       # Donaciones, búsqueda por proximidad y ciclo de vida
 ├── email/          # Servicio de envío de emails con plantillas Thymeleaf
-├── helprequest/    # Solicitudes de ayuda y su ciclo de vida
+├── helprequest/    # Solicitudes de ayuda, búsqueda por proximidad y ciclo de vida
+├── notification/   # Digest de notificaciones de proposals para voluntarios
 ├── otp/            # Generación y validación de códigos OTP
 ├── proposal/       # Motor de matching, scoring, filtro de viabilidad y gestión de proposals
 ├── review/         # Reseñas y recálculo de rating
-├── security/       # Filtros y configuración de Spring Security
+├── security/       # Filtros JWT, rate limiting y configuración de Spring Security
 ├── user/           # Gestión de usuarios
-└── volunteer/      # Perfil, habilidades y modo de transporte del voluntario
+└── volunteer/      # Perfil, habilidades, modo de transporte y preferencias de notificación
 ```
 
 ---
