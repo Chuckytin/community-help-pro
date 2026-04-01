@@ -25,26 +25,6 @@ public class NotificationServiceImpl implements NotificationService {
     private final EmailService emailService;
 
     /**
-     * Encola una notificación pendiente para un voluntario.
-     * No envía el email inmediatamente — el scheduler lo agrupará.
-     */
-    public void enqueueProposalNotification(UUID volunteerId, String email,
-                                            String name, String entityTitle,
-                                            String entityType) {
-        notificationRepository.save(PendingNotification.builder()
-                .volunteerId(volunteerId)
-                .volunteerEmail(email)
-                .volunteerName(name)
-                .entityTitle(entityTitle)
-                .entityType(entityType)
-                .createdAt(LocalDateTime.now())
-                .sent(false)
-                .build());
-
-        log.debug("[notification] Queued proposal notification for volunteer {}", volunteerId);
-    }
-
-    /**
      * Cada 5 minutos agrupa las notificaciones pendientes por voluntario
      * y envía un único email de resumen a cada uno.
      */
@@ -80,5 +60,33 @@ public class NotificationServiceImpl implements NotificationService {
                         first.getVolunteerEmail(), e.getMessage());
             }
         });
+    }
+
+    /**
+     * Encola una notificación pendiente para un voluntario, pero solo si no se ha enviado ya una para esta entidad.
+     * No encola si ya se envió una notificación para esta entidad a este voluntario, para evitar duplicados.
+     */
+    public void enqueueProposalNotification(UUID volunteerId, String email,
+                                            String name, String entityTitle,
+                                            String entityType, UUID entityId) {
+
+        if (notificationRepository.existsByVolunteerIdAndEntityIdAndSentTrue(volunteerId, entityId)) {
+            log.debug("[notification] Skipping duplicate notification for volunteer {} entity {}",
+                    volunteerId, entityId);
+            return;
+        }
+
+        notificationRepository.save(PendingNotification.builder()
+                .volunteerId(volunteerId)
+                .volunteerEmail(email)
+                .volunteerName(name)
+                .entityTitle(entityTitle)
+                .entityType(entityType)
+                .entityId(entityId)
+                .createdAt(LocalDateTime.now())
+                .sent(false)
+                .build());
+
+        log.debug("[notification] Queued proposal notification for volunteer {} entity {}", volunteerId, entityId);
     }
 }

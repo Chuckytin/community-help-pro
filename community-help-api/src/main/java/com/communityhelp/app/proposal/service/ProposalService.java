@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface ProposalService {
 
-    void createProposal(UUID volunteerId, UUID targetEntityId, ProposalType type, double score);
+    void createProposal(UUID volunteerId, UUID targetEntityId, ProposalType type, double score, boolean fromRetry);
 
     Page<ProposalResponseDto> getProposalsByVolunteer(UUID volunteerId, int page, int size);
 

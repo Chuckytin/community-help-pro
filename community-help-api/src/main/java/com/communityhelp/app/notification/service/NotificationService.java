@@ -4,10 +4,10 @@ import java.util.UUID;
 
 public interface NotificationService {
 
+    void sendDigests();
+
     void enqueueProposalNotification(UUID volunteerId, String email,
                                      String name, String entityTitle,
-                                     String entityType);
-
-    void sendDigests();
+                                     String entityType, UUID entityId);
 
 }

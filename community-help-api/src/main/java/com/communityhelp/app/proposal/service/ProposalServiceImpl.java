@@ -52,7 +52,7 @@ public class ProposalServiceImpl implements ProposalService {
      * Inicializa score y estado.
      */
     @Override
-    public void createProposal(UUID volunteerId, UUID targetEntityId, ProposalType type, double score) {
+    public void createProposal(UUID volunteerId, UUID targetEntityId, ProposalType type, double score, boolean fromRetry) {
 
         Volunteer volunteer = volunteerRepository.findById(volunteerId)
                 .orElseThrow(() -> new EntityNotFoundException("Volunteer not found"));
@@ -109,7 +109,9 @@ public class ProposalServiceImpl implements ProposalService {
 
                 proposalRepository.save(existing);
 
-                notifyVolunteer(volunteerId, targetEntityId, type);
+                if (!fromRetry) {
+                    notifyVolunteer(volunteerId, targetEntityId, type);
+                }
 
                 log.debug("[proposal] Reactivated CANCELLED proposal for volunteer {} entity {}",
                         volunteerId, targetEntityId);
@@ -123,9 +125,10 @@ public class ProposalServiceImpl implements ProposalService {
                 volunteerId, targetEntityId, type, score);
 
         if (reactivated > 0) {
-            notifyVolunteer(volunteerId, targetEntityId, type);
-            log.debug("[proposal] Reactivated expired proposal for volunteer {} entity {}",
-                    volunteerId, targetEntityId);
+            if (!fromRetry) {
+                notifyVolunteer(volunteerId, targetEntityId, type);
+            }
+            log.debug("[proposal] Reactivated expired proposal...");
             return;
         }
 
@@ -140,6 +143,10 @@ public class ProposalServiceImpl implements ProposalService {
                 .build();
 
         Proposal saved = proposalRepository.save(proposal);
+
+        if (!fromRetry) {
+            notifyVolunteer(volunteerId, targetEntityId, type);
+        }
 
         log.debug("[proposal] Created new proposal id={} for volunteer {} entity {}",
                 saved.getId(), volunteerId, targetEntityId);
@@ -315,18 +322,27 @@ public class ProposalServiceImpl implements ProposalService {
      * Notifica al voluntario por email sobre una nueva proposal disponible para una entidad objetivo.
      */
     private void notifyVolunteer(UUID volunteerId, UUID entityId, ProposalType type) {
-        volunteerRepository.findByIdWithUser(volunteerId).ifPresent(volunteer -> {
-            if (volunteer.isEmailNotificationsEnabled()) {
-                String entityTitle = resolveEntityTitle(entityId, type);
-                notificationService.enqueueProposalNotification(
-                        volunteer.getId(),
-                        volunteer.getUser().getEmail(),
-                        volunteer.getName(),
-                        entityTitle,
-                        type.name()
-                );
-            }
-        });
+        volunteerRepository.findByIdWithUser(volunteerId).ifPresentOrElse(
+                volunteer -> {
+                    if (volunteer.isEmailNotificationsEnabled()) {
+                        String entityTitle = resolveEntityTitle(entityId, type);
+                        notificationService.enqueueProposalNotification(
+                                volunteer.getId(),
+                                volunteer.getUser().getEmail(),
+                                volunteer.getName(),
+                                entityTitle,
+                                type.name(),
+                                entityId
+                        );
+                        log.debug("[proposal-notification] Enqueued notification for volunteer {} (email: {})",
+                                volunteerId, volunteer.getUser().getEmail());
+                    } else {
+                        log.debug("[proposal-notification] SKIPPED - Email notifications disabled for volunteer {}",
+                                volunteerId);
+                    }
+                },
+                () -> log.warn("[proposal-notification] Volunteer {} not found for notification", volunteerId)
+        );
     }
 
     /**

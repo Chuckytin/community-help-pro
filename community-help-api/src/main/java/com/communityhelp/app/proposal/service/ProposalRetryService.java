@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -34,7 +33,7 @@ public class ProposalRetryService {
      * Reintenta matching para entidades con proposals pendientes
      * que superaron el tiempo de espera cada 10 minutos.
      */
-    @Scheduled(fixedDelay = 600000)
+    @Scheduled(fixedDelayString = "${proposal.retry-delay.interval-ms}")
     public void retryUnansweredProposals() {
 
         LocalDateTime threshold = LocalDateTime.now()
@@ -65,7 +64,8 @@ public class ProposalRetryService {
             generatorService.generateForHelpRequest(
                     generatorService.getHelpRequestById(id),
                     state.getCurrentRadiusMeters(),
-                    state.getRetryCount()
+                    state.getRetryCount(),
+                    true
             );
         });
 
@@ -76,7 +76,8 @@ public class ProposalRetryService {
             generatorService.generateForDonation(
                     generatorService.getDonationById(id),
                     state.getCurrentRadiusMeters(),
-                    state.getRetryCount()
+                    state.getRetryCount(),
+                    true
             );
         });
 

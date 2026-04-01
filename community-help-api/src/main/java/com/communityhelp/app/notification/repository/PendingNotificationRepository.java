@@ -7,4 +7,9 @@ import java.util.UUID;
 
 public interface PendingNotificationRepository extends JpaRepository<PendingNotification, UUID> {
     List<PendingNotification> findBySentFalse();
+
+    /**
+     * Comprueba si ya existe notificación enviada para este voluntario y entidad
+     */
+    boolean existsByVolunteerIdAndEntityIdAndSentTrue(UUID volunteerId, UUID entityId);
 }

@@ -37,6 +37,9 @@ public class PendingNotification {
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
+    private UUID entityId;
+
+    @Column(nullable = false)
     private boolean sent = false;
 
 }

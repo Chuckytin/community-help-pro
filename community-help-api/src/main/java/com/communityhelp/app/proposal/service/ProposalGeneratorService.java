@@ -79,7 +79,7 @@ public class ProposalGeneratorService {
      * Es el núcleo del motor de matching entre HelpRequest y voluntarios disponibles,
      * priorizando a aquellos que pueden llegar más rápido al destino.
      */
-    public void generateForHelpRequest(HelpRequest helpRequest, int radiusMeters, int retryCount) {
+    public void generateForHelpRequest(HelpRequest helpRequest, int radiusMeters, int retryCount, boolean fromRetry) {
 
         long start = System.currentTimeMillis();
 
@@ -211,7 +211,8 @@ public class ProposalGeneratorService {
                 ProposalType.HELP_REQUEST,
                 pendingCounts,
                 lastResponses,
-                existingProposals
+                existingProposals,
+                fromRetry
         );
 
         long end = System.currentTimeMillis();
@@ -240,7 +241,7 @@ public class ProposalGeneratorService {
      * Overload para el primer disparo desde el listener
      */
     public void generateForHelpRequest(HelpRequest helpRequest) {
-        generateForHelpRequest(helpRequest, proposalMatchingConfig.getMaxRadiusDistance(), 0);
+        generateForHelpRequest(helpRequest, proposalMatchingConfig.getMaxRadiusDistance(), 0, true);
     }
 
     /**
@@ -265,7 +266,7 @@ public class ProposalGeneratorService {
      * Es el núcleo del motor de matching entre Donation y voluntarios disponibles,
      * priorizando a aquellos que pueden llegar más rápido al destino.
      */
-    public void generateForDonation(Donation donation, int radiusMeters, int retryCount) {
+    public void generateForDonation(Donation donation, int radiusMeters, int retryCount, boolean fromRetry) {
 
         long start = System.currentTimeMillis();
 
@@ -404,7 +405,8 @@ public class ProposalGeneratorService {
                 ProposalType.DONATION,
                 pendingCounts,
                 lastResponses,
-                existingProposals
+                existingProposals,
+                fromRetry
         );
 
         long end = System.currentTimeMillis();
@@ -449,7 +451,7 @@ public class ProposalGeneratorService {
      * Overload para el primer disparo desde el listener
      */
     public void generateForDonation(Donation donation) {
-        generateForDonation(donation, proposalMatchingConfig.getMaxRadiusDistance(), 0);
+        generateForDonation(donation, proposalMatchingConfig.getMaxRadiusDistance(), 0, true);
     }
 
     /**
@@ -482,7 +484,8 @@ public class ProposalGeneratorService {
             ProposalType type,
             Map<UUID, Long> pendingCounts,
             Map<UUID, LocalDateTime> lastResponses,
-            Set<UUID> existingProposals
+            Set<UUID> existingProposals,
+            boolean fromRetry
     ) {
 
         Set<UUID> affectedVolunteers = new HashSet<>();
@@ -518,7 +521,8 @@ public class ProposalGeneratorService {
                     volunteer.getId(),
                     entityId,
                     type,
-                    score
+                    score,
+                    fromRetry
             );
 
             affectedVolunteers.add(volunteer.getId());
