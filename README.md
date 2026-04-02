@@ -25,8 +25,8 @@
 
 ## Funcionalidades principales
 
-- Publicar **donaciones** con ubicación, caducidad, tipo, cantidad y descripción.
-- Crear **solicitudes de ayuda** (Help Requests) con título, descripción, fecha límite y radio de acción.
+- Publicar **donaciones** con ubicación, caducidad, tipo, cantidad y descripción. No se permite duplicar el título de una donación activa.
+- Crear **solicitudes de ayuda** (Help Requests) con título, descripción, fecha límite y radio de acción. No se permite duplicar el título de una solicitud abierta.
 - **Búsqueda por proximidad** de donaciones y solicitudes cercanas, filtrable por tipo y radio en metros.
 - **Motor de matching automático** que conecta voluntarios cercanos con donaciones y solicitudes compatibles, evaluando tiempo de viaje real, habilidades, rating y carga de trabajo. El radio de búsqueda se amplía progresivamente si no hay respuesta.
 - **Filtro de viabilidad por deadline** — el motor descarta voluntarios que no pueden llegar a tiempo antes de la fecha límite, usando tiempos de viaje reales calculados en paralelo.
@@ -34,8 +34,9 @@
 - **Notificaciones por email a voluntarios** cuando reciben nuevas proposals, agrupadas en un digest periódico para evitar spam. Configurable por voluntario.
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
-- **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña.
+- **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña. Las cuentas no verificadas se eliminan automáticamente pasadas 24 horas.
 - **Rate limiting** en endpoints de autenticación para proteger contra fuerza bruta y abuso.
+- **Limpieza automática de datos** — cuentas sin verificar y notificaciones enviadas antiguas se purgan periódicamente para mantener la base de datos sana.
 - **API documentada con Swagger / OpenAPI** accesible en `/swagger-ui.html`.
 
 ---
@@ -203,6 +204,8 @@ También puedes consultar el OTP generado directamente en la tabla para probar e
 SELECT email, code, type, expires_at, used FROM otp_codes ORDER BY expires_at DESC;
 ```
 
+> Las cuentas no verificadas se eliminan automáticamente a las 3:00 AM si llevan más de 24 horas sin verificar.
+
 ### Notificaciones de proposals
 
 El sistema agrupa las notificaciones de nuevas proposals y envía un digest periódico (cada 5 minutos en dev). Si quieres probar el envío inmediatamente, puedes reducir el intervalo temporalmente:
@@ -217,6 +220,12 @@ SELECT volunteer_email, entity_title, entity_type, sent, created_at
 FROM pending_notifications
 ORDER BY created_at DESC;
 ```
+
+> Las notificaciones ya enviadas se purgan automáticamente a las 3:30 AM tras 30 días de retención (7 días en dev). Esto evita que la tabla crezca indefinidamente sin perder la capacidad de deduplicación.
+
+### Idempotencia de donaciones y solicitudes
+
+El sistema bloquea la creación de una donación o solicitud de ayuda si el usuario ya tiene una activa con el mismo título. Si intentas crear un duplicado recibirás un `400 Bad Request` con el mensaje de error correspondiente.
 
 ### Rate limiting
 
@@ -243,16 +252,16 @@ community-help-api/
 ├── auth/           # Autenticación JWT, verificación de email y recuperación de contraseña
 ├── chat/           # Mensajería REST y WebSocket
 ├── common/         # Location, excepciones, OpenRoute (rutas y tiempos de viaje), persistencia base
-├── config/         # Seguridad, OpenAPI, caché, scheduler, inicialización
-├── donation/       # Donaciones, búsqueda por proximidad y ciclo de vida
+├── config/         # Seguridad, OpenAPI, caché, scheduler, inicialización y limpieza periódica
+├── donation/       # Donaciones, búsqueda por proximidad, validación de duplicados y ciclo de vida
 ├── email/          # Servicio de envío de emails con plantillas Thymeleaf
-├── helprequest/    # Solicitudes de ayuda, búsqueda por proximidad y ciclo de vida
-├── notification/   # Digest de notificaciones de proposals para voluntarios
+├── helprequest/    # Solicitudes de ayuda, búsqueda por proximidad, validación de duplicados y ciclo de vida
+├── notification/   # Digest de notificaciones de proposals para voluntarios y limpieza de registros
 ├── otp/            # Generación y validación de códigos OTP
 ├── proposal/       # Motor de matching, scoring, filtro de viabilidad y gestión de proposals
 ├── review/         # Reseñas y recálculo de rating
 ├── security/       # Filtros JWT, rate limiting y configuración de Spring Security
-├── user/           # Gestión de usuarios
+├── user/           # Gestión de usuarios y limpieza de cuentas no verificadas
 └── volunteer/      # Perfil, habilidades, modo de transporte y preferencias de notificación
 ```
 
@@ -260,7 +269,7 @@ community-help-api/
 
 ## Perfiles
 
-| Perfil | Uso | Radio inicial | Retry |
-|---|---|---|---|
-| `dev` | Local | 5 km | 10 min |
-| `prod` | Producción | 10 km | 30 min |
+| Perfil | Uso | Radio inicial | Retry | Retención notificaciones |
+|---|---|---|---|---|
+| `dev` | Local | 5 km | 10 min | 7 días |
+| `prod` | Producción | 10 km | 30 min | 30 días |
