@@ -2,6 +2,8 @@ package com.communityhelp.app.helprequest.service;
 
 import com.communityhelp.app.chat.conversation.model.ConversationType;
 import com.communityhelp.app.chat.conversation.service.ConversationService;
+import com.communityhelp.app.common.exceptions.BusinessException;
+import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.common.openroute.dto.FastestTravelResponse;
 import com.communityhelp.app.common.openroute.dto.TravelTimeResponse;
 import com.communityhelp.app.common.openroute.model.TransportMode;
@@ -54,7 +56,10 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
     /**
      * Crea una nueva solicitud de ayuda.
-     * El usuario autenticado se establece como requester.
+     * El usuario autenticado se establece como requester de la solicitud.
+     * Si se proporciona latitud y longitud, se guarda la ubicación de la solicitud.
+     * Valida que el requester no tenga otra solicitud abierta con el mismo título para evitar duplicados.
+     * Dispara un evento para generar automáticamente proposals después de crear la solicitud.
      */
     @Override
     public HelpRequestResponseDto createHelpRequest(UUID requesterId, HelpRequestCreateRequestDto dto) {
@@ -73,6 +78,14 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
         if (dto.getLatitude() != null && dto.getLongitude() != null) {
             helpRequest.setLocation(dto.getLatitude(), dto.getLongitude());
+        }
+
+        if (helpRequestRepository.existsByRequester_IdAndTitleIgnoreCaseAndStatus(
+                requesterId, dto.getTitle(), HelpRequestStatus.OPEN)) {
+            throw new BusinessException(
+                    ErrorCode.HELP_REQUEST_DUPLICATE_TITLE,
+                    "You already have an active help request with this title."
+            );
         }
 
         HelpRequest savedHelpRequest = helpRequestRepository.save(helpRequest);

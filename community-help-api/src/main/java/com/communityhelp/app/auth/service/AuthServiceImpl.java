@@ -3,29 +3,43 @@ package com.communityhelp.app.auth.service;
 import com.communityhelp.app.auth.dto.AuthResponse;
 import com.communityhelp.app.auth.dto.ResetPasswordRequestDto;
 import com.communityhelp.app.auth.dto.VerifyEmailRequestDto;
+import com.communityhelp.app.common.exceptions.BusinessException;
 import com.communityhelp.app.common.exceptions.EmailNotVerifiedException;
+import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.email.service.EmailService;
 import com.communityhelp.app.otp.entity.OtpType;
+import com.communityhelp.app.otp.repository.OtpRepository;
 import com.communityhelp.app.otp.service.OtpService;
 import com.communityhelp.app.user.dto.LoginRequestDto;
 import com.communityhelp.app.user.dto.UserCreateRequestDto;
 import com.communityhelp.app.user.dto.UserResponseDto;
+import com.communityhelp.app.user.model.User;
+import com.communityhelp.app.user.repository.UserRepository;
 import com.communityhelp.app.user.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationService authenticationService;
     private final UserService userService;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final OtpRepository otpRepository;
 
     /**
      * Autentica al usuario con email y contraseña.
@@ -81,7 +95,10 @@ public class AuthServiceImpl implements AuthService {
             if (!existingUser.isActive()) {
                 createdUser = userService.reactivateUser(existingUser.getId(), dto);
             } else {
-                throw new IllegalStateException("Email already in use");
+                throw new BusinessException(
+                        ErrorCode.EMAIL_ALREADY_EXISTS,
+                        "This email is already registered."
+                );
             }
         } else {
             createdUser = userService.createUser(dto);
@@ -141,6 +158,36 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Invalid or expired reset code");
         }
         userService.updatePassword(dto.getEmail(), dto.getNewPassword());
+    }
+
+    /**
+     * Caducidad de usuarios no verificados:
+     * - Se ejecuta diariamente a las 3 AM.
+     * - Busca usuarios con email no verificado y fecha de creación anterior a 24 horas.
+     * - Elimina esos usuarios y los OTPs asociados para liberar recursos y mantener la base
+     */
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void cleanupUnverifiedUsers() {
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+
+        List<User> unverified = userRepository
+                .findByEmailVerifiedFalseAndCreatedAtBefore(cutoff);
+
+        if (unverified.isEmpty()) {
+            log.debug("[cleanup] No unverified users to delete");
+            return;
+        }
+
+        List<UUID> ids = unverified.stream().map(User::getId).toList();
+
+        // Elimina OTPs asociados primero
+        otpRepository.deleteByEmailIn(
+                unverified.stream().map(User::getEmail).toList()
+        );
+
+        userRepository.deleteAll(unverified);
+        log.info("[cleanup] Deleted {} unverified users older than 24h", unverified.size());
     }
 
 }

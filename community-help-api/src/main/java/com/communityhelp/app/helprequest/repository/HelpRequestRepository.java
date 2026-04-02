@@ -99,7 +99,18 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequest, UUID> 
     @Query("UPDATE HelpRequest h SET h.status = 'CANCELLED', h.cancelReason = :reason WHERE h.requester.id = :userId")
     void releaseHelpRequestsAsRequester(@Param("userId") UUID userId, @Param("reason") String reason);
 
+    /**
+     * Obtiene todas las solicitudes activas (no canceladas ni completadas) para mostrar en el feed general. Esto se puede usar
+     * para evitar mostrar solicitudes que ya no están disponibles o relevantes.
+     */
     @Query("SELECT h FROM HelpRequest h WHERE h.active = true")
     List<HelpRequest> findAllActive();
+
+    /**
+     * Comprueba si ya existe una solicitud con el mismo título (ignorando mayúsculas) para el mismo solicitante y estado. Esto se puede usar
+     * para evitar que un usuario cree múltiples solicitudes idénticas.
+     */
+    boolean existsByRequester_IdAndTitleIgnoreCaseAndStatus(UUID requesterId, String title, HelpRequestStatus status);
+
 }
 

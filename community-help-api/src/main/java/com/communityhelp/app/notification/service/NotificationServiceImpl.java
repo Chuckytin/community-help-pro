@@ -25,8 +25,15 @@ public class NotificationServiceImpl implements NotificationService {
     private final EmailService emailService;
 
     /**
-     * Cada 5 minutos agrupa las notificaciones pendientes por voluntario
-     * y envía un único email de resumen a cada uno.
+     * Se encarga de enviar resúmenes periódicos a los voluntarios con las notificaciones pendientes.
+     * Se ejecuta cada X minutos, donde X se configura con la propiedad "notification.digest.interval-ms".
+     * El proceso es el siguiente:
+     * 1. Obtiene todas las notificaciones pendientes (sent = false) de la base de datos.
+     * 2. Si no hay notificaciones pendientes, termina sin hacer nada.
+     * 3. Agrupa las notificaciones por ID de voluntario para enviar un resumen único a cada uno.
+     * 4. Para cada voluntario, envía un email con el resumen de sus notificaciones pendientes.
+     * Si ocurre un error al enviar el email, lo registra pero continúa con los demás voluntarios.
+     * 5. Si el email se envió correctamente, marca las notificaciones como enviadas (sent = true) para no incluirlas en futuros resúmenes.
      */
     @Scheduled(fixedDelayString = "${notification.digest.interval-ms}")
     public void sendDigests() {

@@ -15,4 +15,6 @@ public interface AuthService {
     void verifyEmail(VerifyEmailRequestDto dto);
     void forgotPassword(String email);
     void resetPassword(ResetPasswordRequestDto dto);
+
+    void cleanupUnverifiedUsers();
 }

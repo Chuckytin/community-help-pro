@@ -31,7 +31,7 @@ public class ProposalRetryService {
 
     /**
      * Reintenta matching para entidades con proposals pendientes
-     * que superaron el tiempo de espera cada 10 minutos.
+     * que superaron el tiempo de espera cada X minutos.
      */
     @Scheduled(fixedDelayString = "${proposal.retry-delay.interval-ms}")
     public void retryUnansweredProposals() {

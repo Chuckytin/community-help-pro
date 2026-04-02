@@ -74,6 +74,16 @@ public interface DonationRepository extends JpaRepository<Donation, UUID> {
     @Query("UPDATE Donation d SET d.status = 'CANCELLED', d.cancelReason = :reason WHERE d.donor.id = :userId")
     void releaseDonationsAsDonor(@Param("userId") UUID userId, @Param("reason") String reason);
 
+    /**
+     * Obtiene todas las donaciones activas (no eliminadas) para mostrar en el feed general. Esto se puede usar para filtrar las donaciones
+     * que ya han sido marcadas como inactivas o eliminadas,
+     */
     @Query("SELECT d FROM Donation d WHERE d.active = true")
     List<Donation> findAllActive();
+
+    /**
+     * Comprueba si ya existe una donación con el mismo título (ignorando mayúsculas) para un mismo donante y estado. Esto se puede usar para evitar que un usuario cree dos donaciones
+     * con el mismo título y estado, lo cual podría ser confuso.
+     */
+    boolean existsByDonor_IdAndTitleIgnoreCaseAndStatus(UUID donorId, String title, DonationStatus status);
 }

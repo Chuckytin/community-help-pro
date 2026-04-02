@@ -2,6 +2,8 @@ package com.communityhelp.app.donation.service;
 
 import com.communityhelp.app.chat.conversation.model.ConversationType;
 import com.communityhelp.app.chat.conversation.service.ConversationService;
+import com.communityhelp.app.common.exceptions.BusinessException;
+import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.common.openroute.dto.FastestTravelResponse;
 import com.communityhelp.app.common.openroute.dto.TravelTimeResponse;
 import com.communityhelp.app.common.openroute.model.TransportMode;
@@ -50,6 +52,11 @@ public class DonationServiceImpl implements DonationService {
 
     /**
      * Crea una nueva donación asociada al donor indicado, con estado inicial AVAILABLE.
+     * - Si el DTO incluye latitud y longitud, se guarda la ubicación geográfica de la donación.
+     * - Si el donor ya tiene una donación activa con el mismo título, lanza una excepción para evitar duplicados.
+     * - Dispara un evento de creación de donación para que otros componentes puedan reaccionar.
+     * - Devuelve los datos de la donación creada en la respuesta.
+     * Nota: La lógica de expiración automática se maneja al leer la donación, no al crearla, para evitar procesos en background adicionales.
      */
     @Override
     public DonationResponseDto createDonation(UUID donorId, DonationCreateRequestDto dto) {
@@ -72,6 +79,14 @@ public class DonationServiceImpl implements DonationService {
         // Set location desde latitude/longitude si vienen en el DTO
         if (dto.getLatitude() != null && dto.getLongitude() != null) {
             donation.setLocation(dto.getLatitude(), dto.getLongitude());
+        }
+
+        if (donationRepository.existsByDonor_IdAndTitleIgnoreCaseAndStatus(
+                donorId, dto.getTitle(), DonationStatus.AVAILABLE)) {
+            throw new BusinessException(
+                    ErrorCode.DONATION_DUPLICATE_TITLE,
+                    "You already have an active donation with this title."
+            );
         }
 
         Donation savedDonation = donationRepository.save(donation);

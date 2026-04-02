@@ -1,5 +1,7 @@
 package com.communityhelp.app.user.service;
 
+import com.communityhelp.app.common.exceptions.BusinessException;
+import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.model.HelpRequest;
@@ -38,7 +40,10 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserResponseDto createUser(UserCreateRequestDto dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalStateException("Email already in use!");
+            throw new BusinessException(
+                    ErrorCode.EMAIL_ALREADY_EXISTS,
+                    "This email is already registered."
+            );
         }
 
         User user = userMapper.toEntity(dto);

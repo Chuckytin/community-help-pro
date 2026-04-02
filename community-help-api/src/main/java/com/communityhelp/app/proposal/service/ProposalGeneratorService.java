@@ -121,7 +121,7 @@ public class ProposalGeneratorService {
                         .filter(c -> {
                             double estimatedSeconds = getEstimatedSeconds(c);
 
-                            // Si hay deadline se filtramos aquí (sin ORS)
+                            // Si hay deadline se filtra aquí (sin ORS)
                             if (helpRequest.getDeadline() != null) {
                                 long availableSeconds = ChronoUnit.SECONDS.between(
                                         LocalDateTime.now(),
@@ -134,12 +134,12 @@ public class ProposalGeneratorService {
                             return true;
                         })
                         .sorted(Comparator.comparingDouble(VolunteerCandidate::distanceMeters))
-                        .limit(proposalMatchingConfig.getMaxCandidatesPrefilter()) // ej: 50
+                        .limit(proposalMatchingConfig.getMaxCandidatesPrefilter())
                         .toList();
 
         List<VolunteerCandidate> candidatesForTravel =
                 candidates.stream()
-                        .limit(proposalMatchingConfig.getMaxCandidatesForTravel()) // ej: 20
+                        .limit(proposalMatchingConfig.getMaxCandidatesForTravel())
                         .toList();
 
         log.info("[matching-helprequest] Volunteers found for HelpRequest {}: {} (limited to {} for travel calculation)",
@@ -161,7 +161,7 @@ public class ProposalGeneratorService {
             candidates = candidates.stream()
                     .filter(c -> {
                         if (c.volunteer().getUser().getLocation() == null) {
-                            // Si el voluntario no tiene ubicación, lo consideramos viable (no podemos descartarlo)
+                            // Si el voluntario no tiene ubicación, lo considera viable (no puede descartarlo)
                             return true;
                         }
                         double travel = travelTimes.getOrDefault(c.volunteer().getId(), 0.0);
@@ -174,7 +174,7 @@ public class ProposalGeneratorService {
                     candidates.size(),
                     beforeFilterSize - candidates.size());
 
-            // Si después del filtro no quedan candidatos, terminamos temprano
+            // Si después del filtro no quedan candidatos, se termina el proceso aquí para evitar hacer cálculos innecesarios
             if (candidates.isEmpty()) {
                 log.warn("[matching-helprequest] No volunteers can reach in time for HelpRequest {} with deadline {}",
                         helpRequest.getId(),
@@ -310,7 +310,7 @@ public class ProposalGeneratorService {
 
                             double estimatedSeconds = getEstimatedSeconds(c);
 
-                            // Si hay expiry → filtramos ya aquí SIN ORS
+                            // Si hay expiry, se filtra aquí (sin ORS)
                             if (donation.getExpiryDate() != null) {
                                 long availableSeconds = ChronoUnit.SECONDS.between(
                                         LocalDateTime.now(),

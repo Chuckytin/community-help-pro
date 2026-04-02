@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,5 +35,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     void updateRating(@Param("userId") UUID userId,
                       @Param("rating") Float rating);
 
+    /**
+     * Encuentra usuarios que no han verificado su email y fueron creados antes de una fecha dada.
+     */
+    List<User> findByEmailVerifiedFalseAndCreatedAtBefore(LocalDateTime cutoff);
 
 }

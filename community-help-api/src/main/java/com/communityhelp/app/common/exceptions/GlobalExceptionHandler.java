@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_REQUEST, "Invalid request parameters");
+        return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_REQUEST, ex.getMessage());
     }
 
     /**
@@ -141,7 +141,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiErrorResponse>handleEntityNotException(EntityNotFoundException ex) {
         log.warn("Entity not found: {}", ex.getMessage());
-        return buildResponse(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, "Resource not found");
+        return buildResponse(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, ex.getMessage());
     }
 
     /**
@@ -150,7 +150,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalStateException(IllegalStateException ex) {
         log.warn("Business rule violation: {}", ex.getMessage());
-        return buildResponse(HttpStatus.CONFLICT, ErrorCode.CONFLICT, "Conflict occurred");
+        return buildResponse(HttpStatus.CONFLICT, ErrorCode.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiErrorResponse> handleBusinessException(BusinessException ex) {
+        log.warn("Business error: {}", ex.getMessage());
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                ex.getErrorCode(),
+                ex.getMessage()
+        );
     }
 
     /**
