@@ -167,15 +167,19 @@ URL_FRONTEND_LOGIN=your_frontend_login_url
 
 ### Arranque
 
-1. Levanta la base de datos:
+1. Levanta la base de datos y Adminer:
 ```bash
-docker compose up -d db
+docker compose up -d db adminer
 ```
 
 2. Arranca la aplicación:
 ```bash
 ./mvnw spring-boot:run
 ```
+
+Adminer estará disponible en `http://localhost:8888`. Selecciona **PostgreSQL**, servidor `db`, y usa las credenciales de tu `.env`.
+
+> El servicio `app` del docker-compose está pendiente de configurar para el despliegue en producción. De momento la aplicación se arranca manualmente en local.
 
 La base de datos se inicializa automáticamente con PostGIS y el índice espacial:
 ```sql
