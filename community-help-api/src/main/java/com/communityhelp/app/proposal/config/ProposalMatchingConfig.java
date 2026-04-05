@@ -105,5 +105,4 @@ public class ProposalMatchingConfig {
      */
     private int maxExpandedRadius = 50000;
 
-    private ProposalMatchingConfig() {}
 }

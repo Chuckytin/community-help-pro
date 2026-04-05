@@ -40,6 +40,7 @@ public class PendingNotification {
     private UUID entityId;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean sent = false;
 
 }

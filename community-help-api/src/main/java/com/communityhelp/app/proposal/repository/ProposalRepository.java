@@ -157,7 +157,8 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
     @Modifying
     @Query("""
             UPDATE Proposal p
-            SET p.status = 'EXPIRED'
+            SET p.status = 'EXPIRED',
+                p.active = false
             WHERE p.type = :type
               AND p.status = 'PENDING'
               AND p.createdAt < :threshold
@@ -171,6 +172,7 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
     @Query("""
             UPDATE Proposal p
             SET p.status = 'PENDING',
+                p.active = true,
                 p.score = :score,
                 p.respondedAt = NULL
             WHERE p.volunteer.id = :volunteerId

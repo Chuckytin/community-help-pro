@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./docker-config/postgres-init.sql:/docker-entrypoint-initdb.d/init-postgis.sql
 
   # Adminer
@@ -25,25 +25,33 @@ services:
 
   # TODO zookeper
   # TODO kafka
-#  app:
-#    build: .
-#    container_name: community-help-api
-#    restart: always
-#    depends_on:
-#      - db
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      SPRING_PROFILES_ACTIVE: prod
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-#      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-#      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-#      JWT_SECRET: ${JWT_SECRET}
-#      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
-#      JWT_EXPIRED_IN: ${JWT_EXPIRED_IN}
-#      ADMIN_EMAIL: ${ADMIN_EMAIL}
-#      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-#      OPENROUTE_API_KEY: ${OPENROUTE_API_KEY}
+  app:
+    build: .
+    container_name: community-help-api
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      #SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+      JWT_EXPIRED_IN: ${JWT_EXPIRED_IN}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      OPENROUTE_API_KEY: ${OPENROUTE_API_KEY}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      URL_FRONTEND: ${URL_FRONTEND}
+      URL_FRONTEND_LOGIN: ${URL_FRONTEND_LOGIN}
 
 volumes:
   postgres_data:

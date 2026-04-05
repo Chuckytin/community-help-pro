@@ -101,21 +101,19 @@ public class ProposalServiceImpl implements ProposalService {
 
             // Si estaba CANCELLED, permitir regeneración
             if (existing.getStatus() == ProposalStatus.CANCELLED) {
-
                 existing.setStatus(ProposalStatus.PENDING);
                 existing.setActive(true);
                 existing.setScore(score);
                 existing.touch();
-
                 proposalRepository.save(existing);
 
+                // Solo notifica si NO es reintento
                 if (!fromRetry) {
                     notifyVolunteer(volunteerId, targetEntityId, type);
                 }
 
                 log.debug("[proposal] Reactivated CANCELLED proposal for volunteer {} entity {}",
                         volunteerId, targetEntityId);
-
                 return;
             }
         }
@@ -125,6 +123,7 @@ public class ProposalServiceImpl implements ProposalService {
                 volunteerId, targetEntityId, type, score);
 
         if (reactivated > 0) {
+            // Solo notifica si NO es reintento
             if (!fromRetry) {
                 notifyVolunteer(volunteerId, targetEntityId, type);
             }
@@ -144,9 +143,11 @@ public class ProposalServiceImpl implements ProposalService {
 
         Proposal saved = proposalRepository.save(proposal);
 
+        // Solo notifica si NO es reintento
         if (!fromRetry) {
             notifyVolunteer(volunteerId, targetEntityId, type);
         }
+
 
         log.debug("[proposal] Created new proposal id={} for volunteer {} entity {}",
                 saved.getId(), volunteerId, targetEntityId);

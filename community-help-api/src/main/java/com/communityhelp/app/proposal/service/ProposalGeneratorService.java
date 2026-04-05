@@ -241,7 +241,7 @@ public class ProposalGeneratorService {
      * Overload para el primer disparo desde el listener
      */
     public void generateForHelpRequest(HelpRequest helpRequest) {
-        generateForHelpRequest(helpRequest, proposalMatchingConfig.getMaxRadiusDistance(), 0, true);
+        generateForHelpRequest(helpRequest, proposalMatchingConfig.getMaxRadiusDistance(), 0, false);
     }
 
     /**
@@ -451,7 +451,7 @@ public class ProposalGeneratorService {
      * Overload para el primer disparo desde el listener
      */
     public void generateForDonation(Donation donation) {
-        generateForDonation(donation, proposalMatchingConfig.getMaxRadiusDistance(), 0, true);
+        generateForDonation(donation, proposalMatchingConfig.getMaxRadiusDistance(), 0, false);
     }
 
     /**

@@ -42,6 +42,7 @@ public class AdminDataInitializer {
                         .email(adminEmail)
                         .passwordHash(passwordEncoder.encode(adminPassword))
                         .role(Role.ADMIN)
+                        .emailVerified(true)
                         .build();
                 userRepository.save(admin);
                 log.info("[admin-init] Admin created");
