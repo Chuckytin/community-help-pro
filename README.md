@@ -144,17 +144,15 @@ Copia `.env.example` y rellena tus valores:
 cp .env.example .env
 ```
 
-El archivo `.env` debe estar en la raíz de `community-help-api/`. Spring lo carga automáticamente en el perfil `dev` — no es necesario configurar nada en el IDE.
+El archivo `.env` debe estar en la raíz de `community-help-pro/`. Spring lo carga automáticamente en el perfil `dev` — no es necesario configurar nada en el IDE.
 ```env
-# PostgreSQL (Docker)
+# PostgreSQL
 POSTGRES_DB=community_help_db
 POSTGRES_USER=your_postgres_user
 POSTGRES_PASSWORD=your_postgres_password
 
-# Spring datasource (app)
-SPRING_DATASOURCE_DB=community_help_db
-SPRING_DATASOURCE_USERNAME=your_postgres_user
-SPRING_DATASOURCE_PASSWORD=your_postgres_password
+# API Port
+API_PORT=your_port
 
 # JWT
 JWT_SECRET=your_jwt_secret_minimum_32_characters_long
