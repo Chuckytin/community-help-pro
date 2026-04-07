@@ -90,8 +90,6 @@ Al superar el límite se devuelve `429 Too Many Requests`.
 
 ---
 
----
-
 ## Migraciones de base de datos (Flyway)
 
 El proyecto utiliza **Flyway** para gestionar las migraciones de la base de datos de forma versionada y reproducible.
