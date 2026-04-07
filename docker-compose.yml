@@ -1,0 +1,55 @@
+services:
+  # PostgreSQL + PostGIS
+  db:
+    image: postgis/postgis:18-3.6
+    container_name: community-help-db
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./community-help-api/src/main/resources/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Adminer
+  adminer:
+    image: adminer:latest
+    container_name: community-help-adminer
+    restart: always
+    ports:
+      - "8888:8080"
+    depends_on:
+      - db
+
+  # TODO zookeper
+  # TODO kafka
+
+  #Backend API
+  api:
+    build:
+      context: ./community-help-api
+      dockerfile: Dockerfile
+    container_name: community-help-api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT}:8080"
+    env_file:
+      - ./.env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+#      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+
+volumes:
+  postgres_data:

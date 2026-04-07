@@ -1,7 +1,7 @@
 package com.communityhelp.app.otp.service;
 
-import com.communityhelp.app.otp.entity.OtpCode;
-import com.communityhelp.app.otp.entity.OtpType;
+import com.communityhelp.app.otp.model.OtpCode;
+import com.communityhelp.app.otp.model.OtpType;
 import com.communityhelp.app.otp.repository.OtpRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

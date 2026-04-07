@@ -1,7 +1,7 @@
 package com.communityhelp.app.otp.repository;
 
-import com.communityhelp.app.otp.entity.OtpCode;
-import com.communityhelp.app.otp.entity.OtpType;
+import com.communityhelp.app.otp.model.OtpCode;
+import com.communityhelp.app.otp.model.OtpType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

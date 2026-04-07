@@ -1,4 +1,4 @@
-package com.communityhelp.app.otp.entity;
+package com.communityhelp.app.otp.model;
 
 import jakarta.persistence.*;
 import lombok.*;

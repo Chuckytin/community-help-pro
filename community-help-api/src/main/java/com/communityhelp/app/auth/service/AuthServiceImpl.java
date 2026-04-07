@@ -7,7 +7,7 @@ import com.communityhelp.app.common.exceptions.BusinessException;
 import com.communityhelp.app.common.exceptions.EmailNotVerifiedException;
 import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.email.service.EmailService;
-import com.communityhelp.app.otp.entity.OtpType;
+import com.communityhelp.app.otp.model.OtpType;
 import com.communityhelp.app.otp.repository.OtpRepository;
 import com.communityhelp.app.otp.service.OtpService;
 import com.communityhelp.app.user.dto.LoginRequestDto;

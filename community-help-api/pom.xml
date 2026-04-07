@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.communityhelp</groupId>
 	<artifactId>community-help-api</artifactId>
-	<version>0.25.2</version>
+	<version>0.26.0</version>
 	<name>community-help-api</name>
 	<description>Backend API for Community Help platform</description>
 	<url/>
@@ -157,6 +157,11 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+		<!-- Spring Boot Flyway starter -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
 		<!-- Thymeleaf -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -200,14 +205,18 @@
 			<resource>
 				<directory>src/main/resources</directory>
 				<filtering>false</filtering>
+				<excludes>
+					<exclude>banner.txt</exclude>
+					<exclude>application.properties</exclude>
+				</excludes>
 			</resource>
 			<resource>
 				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
 				<includes>
 					<include>banner.txt</include>
 					<include>application.properties</include>
 				</includes>
-				<filtering>true</filtering>
 			</resource>
 		</resources>
 		<plugins>
