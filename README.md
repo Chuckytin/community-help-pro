@@ -10,6 +10,7 @@
 
 - **Java 21** + **Spring Boot 4**
 - **PostgreSQL 18** + **PostGIS** — geolocalización y búsquedas por proximidad
+- **Flyway** — migraciones versionadas de base de datos
 - **Hibernate Spatial** — integración JPA con tipos geométricos
 - **Spring Security** + **JWT** — autenticación stateless
 - **WebSocket / STOMP** — mensajería en tiempo real
@@ -86,6 +87,26 @@ Los siguientes endpoints de autenticación tienen límite de peticiones por IP p
 | `POST /api/v1/auth/reset-password` | 5 req/min |
 
 Al superar el límite se devuelve `429 Too Many Requests`.
+
+---
+
+---
+
+## Migraciones de base de datos (Flyway)
+
+El proyecto utiliza **Flyway** para gestionar las migraciones de la base de datos de forma versionada y reproducible.
+
+### Convención de nombres
+
+- Formato: `V{version}__{description}.sql`
+- La versión debe ser secuencial (ej: `V1`, `V2`, `V10`)
+
+### Verificar estado de migraciones
+
+```sql
+-- Consultar el historial de migraciones aplicadas
+SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC;
+```
 
 ---
 
