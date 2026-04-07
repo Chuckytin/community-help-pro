@@ -105,7 +105,7 @@ El proyecto utiliza **Flyway** para gestionar las migraciones de la base de dato
 
 ```sql
 -- Consultar el historial de migraciones aplicadas
-SELECT * FROM flyway_schema_history ORDER BY installed_rank DESC;
+SELECT * FROM flyway_schema_history;
 ```
 
 ---
