@@ -1,6 +1,7 @@
 package com.communityhelp.app.security;
 
 import com.communityhelp.app.auth.service.AuthenticationService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,10 +66,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 request.setAttribute("userId", appUser.getId());
             }
 
-        } catch (Exception e) {
+        } catch (ExpiredJwtException e) {
+            log.warn("[security][JwtAuthenticationFilter] Expired JWT: {}", e.getMessage());
             SecurityContextHolder.clearContext();
-            log.warn("[security][JwtAuthenticationFilter] Invalid JWT token: {}", e.getMessage());
-            throw new RuntimeException("Invalid JWT token", e);
+            sendUnauthorized(response, "Token expired");
+            return;
+        } catch (Exception e) {
+            log.warn("[security][JwtAuthenticationFilter] Invalid JWT: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            sendUnauthorized(response, "Invalid Token");
+            return;
         }
 
         filterChain.doFilter(request, response);
@@ -83,6 +90,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    /**
+     * Envía una respuesta 401 Unauthorized con un mensaje de error en formato JSON.
+     */
+    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(
+                "{\"error\": \"UNAUTHORIZED\", \"message\": \"" + message + "\"}"
+        );
     }
 
 }

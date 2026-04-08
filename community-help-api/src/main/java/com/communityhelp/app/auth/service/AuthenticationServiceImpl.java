@@ -1,5 +1,6 @@
 package com.communityhelp.app.auth.service;
 
+import com.communityhelp.app.security.AppUserDetails;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
@@ -50,10 +51,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     /**
      * Genera un token JWT para un usuario autenticado.
+     * - Incluye el email como subject y otros claims como userId y role.
+     * - Firma el token con HMAC SHA-256 usando la clave secreta.
+     * - Establece la fecha de emisión y expiración del token.
      */
     @Override
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+
+        if (userDetails instanceof AppUserDetails appUser) {
+            claims.put("userId", appUser.getId().toString());
+            claims.put("role", appUser.getRole().name());
+        }
 
         return Jwts.builder()
                 .claims(claims)
