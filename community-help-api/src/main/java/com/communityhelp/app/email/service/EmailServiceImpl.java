@@ -29,7 +29,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.properties.mail.smtp.from}")
     private String fromEmail;
 
-    @Value("${app.frontend.url.login}")
+    @Value("${url.frontend.login}")
     private String loginUrl;
 
     /**
