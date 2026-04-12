@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+
+/* ── Variables globales para Tailwind v4 ── */
+:root {
+    --bg: #ffffff;
+    --border: #e5e7eb;
+    --text: #6b7280;
+    --text-h: #111827;
+    --accent: #3b82f6;
+    --accent-bg: #eff6ff;
+    --accent-border: #93c5fd;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+    --social-bg: #f3f4f6;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #1f2937;
+        --border: #374151;
+        --text: #9ca3af;
+        --text-h: #f9fafb;
+        --accent: #3b82f6;
+        --accent-bg: #1e3a8a;
+        --accent-border: #60a5fa;
+        --social-bg: #374151;
+    }
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Outfit', sans-serif;
+}
+
+@keyframes moveBubble {
+    0%, 100% {
+        transform: translateY(0) translateX(0) scale(1);
+    }
+    50% {
+        transform: translateY(-80px) translateX(40px) scale(0.9);
+    }
+}
+
+/* ── Burbujas decorativas ── */
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+}
+.bubble-top-right {
+    top: -10%; right: -10%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0.9;
+    animation: moveBubble 15s infinite ease-in-out;
+}
+.bubble-bottom-left {
+    bottom: -15%; left: -15%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0.8;
+    animation: moveBubble 12s infinite ease-in-out;
+}
+
+/* ── Logo flotante ── */
+.logo-link {
+    position: absolute;
+    top: 30px; left: 40px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: transform 0.3s ease;
+}
+.logo-link:hover { transform: scale(1.05); }
+.logo-text-white {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* ── Cards de auth ── */
+.auth-card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 450px;
+    padding: 2.5rem;
+    background-color: rgba(255, 255, 255, 0.97);
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ── Inputs ── */
+.auth-input {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    transition: all 0.3s ease;
+}
+.auth-input:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+.otp-input {
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    font-size: 1.4rem !important;
+    font-weight: 600;
+    color: #667eea;
+    height: 60px;
+    transition: all 0.3s ease;
+}
+.otp-input:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* ── Botón principal ── */
+.auth-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+.auth-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+.auth-btn:disabled { opacity: 0.7; }
+
+/* ── Textos y links ── */
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+.text-muted-custom { color: #4a5568; }
+.link-purple {
+    color: #667eea;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: underline;
+}
+.link-purple:hover { color: #764ba2; }
