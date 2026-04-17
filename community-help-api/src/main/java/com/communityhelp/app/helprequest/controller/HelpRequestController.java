@@ -66,6 +66,18 @@ public class HelpRequestController {
         );
     }
 
+    @Operation(summary = "Get a help request by ID",
+            description = "Accessible if the user is the requester, the assigned volunteer, or the request is OPEN")
+    @GetMapping("/{id}")
+    public ResponseEntity<HelpRequestResponseDto> getHelpRequestByIdForUser(
+            @AuthenticationPrincipal AppUserDetails currentUser,
+            @PathVariable UUID id) {
+
+        return ResponseEntity.ok(
+                helpRequestService.getHelpRequestByIdForUser(id, currentUser.getId())
+        );
+    }
+
     @Operation(summary = "Get all open help requests",
             description = "Public marketplace - shows available requests")
     @GetMapping

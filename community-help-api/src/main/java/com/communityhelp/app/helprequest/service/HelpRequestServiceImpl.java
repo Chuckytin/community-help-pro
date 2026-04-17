@@ -146,6 +146,53 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     }
 
     /**
+     * Obtiene una solicitud por su ID y valida que el usuario autenticado sea:
+     * - el requester de la solicitud, o
+     * - el volunteer asignado a la solicitud, o
+     * - la solicitud esté abierta (OPEN)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public HelpRequestResponseDto getHelpRequestByIdForUser(UUID id, UUID currentUserId) {
+        HelpRequest hr = getById(id);
+
+        boolean isRequester = hr.getRequesterId().equals(currentUserId);
+        boolean isVolunteer = hr.getVolunteer() != null
+                && hr.getVolunteer().getUserId().equals(currentUserId);
+        boolean isOpen = hr.getStatus() == HelpRequestStatus.OPEN;
+
+        if (!isRequester && !isVolunteer && !isOpen) {
+            throw new AccessDeniedException("Not allowed to view this request");
+        }
+
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        HelpRequestResponseDto dto = helpRequestMapper.toDto(hr);
+
+        if (currentUser.getLocation() != null && hr.getLocation() != null) {
+            TransportMode mode = (currentUser.getVolunteer() != null
+                    && currentUser.getVolunteer().getTransportMode() != null)
+                    ? currentUser.getVolunteer().getTransportMode()
+                    : TransportMode.FOOT_WALKING;
+
+            TravelTimeResponse travel = travelFeasibilityService.getEstimatedTravel(
+                    currentUser.getLocation(), hr.getLocation(), mode);
+            dto.setEstimatedTravelSeconds(travel.getDuration());
+            dto.setEstimatedDistanceMeters(travel.getDistance());
+            dto.setUsedTransportMode(mode);
+
+            FastestTravelResponse fastest = travelFeasibilityService.getFastestTravel(
+                    currentUser.getLocation(), hr.getLocation());
+            dto.setFastestTravelSeconds(fastest.getDuration());
+            dto.setFastestDistanceMeters(fastest.getDistance());
+            dto.setFastestTransportMode(fastest.getFastestMode());
+        }
+
+        return dto;
+    }
+
+    /**
      * Obtiene todas las solicitudes abiertas (OPEN) que no hayan pasado su deadline.
      */
     @Override

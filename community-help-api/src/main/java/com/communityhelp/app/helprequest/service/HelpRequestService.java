@@ -19,6 +19,8 @@ public interface HelpRequestService {
 
     HelpRequestResponseDto getMyHelpRequestById(UUID requesterId, UUID requestId);
 
+    HelpRequestResponseDto getHelpRequestByIdForUser(UUID id, UUID currentUserId);
+
     Page<HelpRequestResponseDto> getOpenHelpRequests(UUID currentUserId, int page, int size);
 
     Page<HelpRequestResponseDto> getAssignedToVolunteer(UUID volunteerId, int page, int size, HelpRequestStatus status);
