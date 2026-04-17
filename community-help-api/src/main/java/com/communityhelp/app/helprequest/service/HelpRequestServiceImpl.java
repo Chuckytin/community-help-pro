@@ -429,8 +429,8 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             throw new IllegalStateException("Only ACCEPTED requests can be completed");
         }
 
-        if (!helpRequest.getVolunteer().getUserId().equals(volunteerUserId)) {
-            throw new IllegalStateException("Only assigned volunteer can complete this request");
+        if (!helpRequest.getRequesterId().equals(helpRequestId)) {
+            throw new IllegalStateException("Only the requester can complete this request");
         }
 
         helpRequest.complete();

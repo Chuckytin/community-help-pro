@@ -72,7 +72,6 @@ public class HelpRequestController {
     public ResponseEntity<HelpRequestResponseDto> getHelpRequestByIdForUser(
             @AuthenticationPrincipal AppUserDetails currentUser,
             @PathVariable UUID id) {
-
         return ResponseEntity.ok(
                 helpRequestService.getHelpRequestByIdForUser(id, currentUser.getId())
         );
