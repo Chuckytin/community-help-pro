@@ -421,7 +421,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
     }
 
     @Override
-    public HelpRequestResponseDto completeHelpRequest(UUID helpRequestId, UUID volunteerUserId) {
+    public HelpRequestResponseDto completeHelpRequest(UUID helpRequestId, UUID requesterId) {
 
         HelpRequest helpRequest = getById(helpRequestId);
 
@@ -429,7 +429,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
             throw new IllegalStateException("Only ACCEPTED requests can be completed");
         }
 
-        if (!helpRequest.getRequesterId().equals(helpRequestId)) {
+        if (!helpRequest.getRequesterId().equals(requesterId)) {
             throw new IllegalStateException("Only the requester can complete this request");
         }
 
