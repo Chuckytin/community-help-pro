@@ -8,19 +8,30 @@
 
 ## Tecnologías
 
+### Backend
 - **Java 21** + **Spring Boot 4**
 - **PostgreSQL 18** + **PostGIS** — geolocalización y búsquedas por proximidad
 - **Flyway** — migraciones versionadas de base de datos
 - **Hibernate Spatial** — integración JPA con tipos geométricos
 - **Spring Security** + **JWT** — autenticación stateless
+- **OAuth2 / Google Login** — autenticación social con Google
 - **WebSocket / STOMP** — mensajería en tiempo real
 - **MapStruct** — mapeo de DTOs
-- **Docker** — contenedores para la base de datos
+- **Docker** — contenedores para despliegue
 - **Thymeleaf** — plantillas HTML para emails transaccionales
 - **Brevo (SMTP)** — envío de emails
 - **OpenRouteService** — cálculo de rutas y tiempos de viaje reales
 - **Spring Cache** — caché de tiempos de viaje para optimizar llamadas a la API
 - **Bucket4j** — rate limiting en endpoints de autenticación
+
+### Frontend
+- **React 18** + **TypeScript** + **Vite**
+- **Bootstrap 5** — estilos y componentes UI
+- **React Router v6** — enrutamiento
+- **Axios** — cliente HTTP
+- **React Leaflet** — mapas interactivos con OpenStreetMap
+- **@stomp/stompjs** — cliente WebSocket STOMP para el chat en tiempo real
+- **React Toastify** — notificaciones
 
 ---
 
@@ -36,6 +47,7 @@
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
 - **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña. Las cuentas no verificadas se eliminan automáticamente pasadas 24 horas.
+- **Login con Google** — OAuth2 integrado en backend y frontend.
 - **Rate limiting** en endpoints de autenticación para proteger contra fuerza bruta y abuso.
 - **Limpieza automática de datos** — cuentas sin verificar y notificaciones enviadas antiguas se purgan periódicamente para mantener la base de datos sana.
 - **API documentada con Swagger / OpenAPI** accesible en `/swagger-ui.html`.
@@ -118,13 +130,13 @@ http://localhost:8080/swagger-ui.html
 Para probar los endpoints autenticados:
 
 1. Regístrate con `POST /api/v1/auth/register`
-2. Verifica tu email con `POST /api/v1/auth/verify-email` (revisa tu bandeja de entrada)
+2. Verifica tu email con `POST /api/v1/auth/verify-email`
 3. Obtén tu token con `POST /api/v1/auth/login`
-4. Haz clic en **Authorize** (icono de candado) e introduce `Bearer <token>`
+4. Haz clic en **Authorize** e introduce `Bearer <token>`
 
 La especificación OpenAPI en JSON está disponible en `/v3/api-docs`.
 
-El plan de pruebas completo con los casos de prueba organizados por módulo está disponible en [Google Sheets](https://docs.google.com/spreadsheets/d/1We3w7b18pmL2A87966vYyekEPzlfY47H3h4I0qm116g/edit?usp=sharing).
+El plan de pruebas completo está disponible en [Google Sheets](https://docs.google.com/spreadsheets/d/1We3w7b18pmL2A87966vYyekEPzlfY47H3h4I0qm116g/edit?usp=sharing).
 
 ---
 
@@ -133,9 +145,11 @@ El plan de pruebas completo con los casos de prueba organizados por módulo est�
 ### Requisitos
 
 - Java 21
+- Node.js 20+
 - Docker
-- Cuenta en [Brevo](https://app.brevo.com) para el envío de emails (plan gratuito suficiente)
-- Cuenta en [OpenRouteService](https://openrouteservice.org) para el cálculo de rutas (plan gratuito suficiente)
+- Cuenta en [Brevo](https://app.brevo.com) para el envío de emails
+- Cuenta en [OpenRouteService](https://openrouteservice.org) para el cálculo de rutas
+- Credenciales OAuth2 de Google en [Google Cloud Console](https://console.cloud.google.com)
 
 ### Variables de entorno
 
@@ -144,7 +158,8 @@ Copia `.env.example` y rellena tus valores:
 cp .env.example .env
 ```
 
-El archivo `.env` debe estar en la raíz de `community-help-pro/`. Spring lo carga automáticamente en el perfil `dev` — no es necesario configurar nada en el IDE.
+El archivo `.env` debe estar en la raíz de `community-help-pro/`.
+
 ```env
 # PostgreSQL
 POSTGRES_DB=community_help_db
@@ -152,7 +167,7 @@ POSTGRES_USER=your_postgres_user
 POSTGRES_PASSWORD=your_postgres_password
 
 # API Port
-API_PORT=your_port
+API_PORT=8080
 
 # JWT
 JWT_SECRET=your_jwt_secret_minimum_32_characters_long
@@ -163,47 +178,54 @@ JWT_EXPIRED_IN=3600000
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=your_admin_password
 
-# OpenRoute Service API — https://openrouteservice.org
+# OpenRoute Service API
 OPENROUTE_API_KEY=your_openroute_api_key
 
-# Email (Brevo SMTP — https://app.brevo.com)
+# Email (Brevo SMTP)
 MAIL_HOST=smtp-relay.brevo.com
 MAIL_PORT=587
 MAIL_USERNAME=your_brevo_smtp_user
 MAIL_PASSWORD=your_brevo_smtp_password
 MAIL_FROM=your_verified_sender@example.com
 
+# Google OAuth2
+OAUTH2_CLIENT_ID=your_google_client_id
+OAUTH2_CLIENT_SECRET=your_google_client_secret
+OAUTH2_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google
+
 # Frontend URLs
-URL_FRONTEND=your_frontend_url
-URL_FRONTEND_LOGIN=your_frontend_login_url
+URL_FRONTEND=http://localhost:5173
+URL_FRONTEND_LOGIN=http://localhost:5173/login
+URL_FRONTEND_OAUTH2_SUCCESS=http://localhost:5173/oauth2/callback
 ```
 
-> **Nota sobre Brevo:** las claves SMTP de Brevo expiran tras 90 días de inactividad. Si llevas tiempo sin usar el proyecto, genera una nueva clave desde `Settings > SMTP & API` en tu cuenta de Brevo.
+> **Nota sobre Brevo:** las claves SMTP expiran tras 90 días de inactividad. Genera una nueva desde `Settings > SMTP & API`.
 
-> **Nota sobre OpenRouteService:** el plan gratuito permite 2.000 peticiones diarias y 40 por minuto, suficiente para desarrollo. En producción con muchos voluntarios activos considera el plan de pago o implementar un caché más agresivo.
+> **Nota sobre OAuth2:** registra `http://localhost:8080/login/oauth2/code/google` como URI de redirección autorizada en Google Cloud Console.
 
-### Arranque
+> **Nota sobre OpenRouteService:** el plan gratuito permite 2.000 peticiones diarias, suficiente para desarrollo.
 
-1. Levanta la base de datos y Adminer:
+### Arranque del backend
+
 ```bash
+# Levanta PostgreSQL y Adminer
 docker compose up -d db adminer
-```
 
-2. Arranca la aplicación:
-```bash
+# Arranca la API
 ./mvnw spring-boot:run
 ```
 
-Adminer estará disponible en `http://localhost:8888`. Selecciona **PostgreSQL**, servidor `db`, y usa las credenciales de tu `.env`.
+Adminer estará disponible en `http://localhost:8888` — selecciona PostgreSQL, servidor `db`.
 
-> El servicio `app` del docker-compose está pendiente de configurar para el despliegue en producción. De momento la aplicación se arranca manualmente en local.
+### Arranque del frontend
 
-La base de datos se inicializa automáticamente con PostGIS y el índice espacial:
-```sql
--- docker-config/postgres-init.sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE INDEX IF NOT EXISTS idx_users_location_gist ON users USING GIST(location);
+```bash
+cd community-help-web
+npm install
+npm run dev
 ```
+
+El frontend estará disponible en `http://localhost:5173`.
 
 ---
 
@@ -211,52 +233,37 @@ CREATE INDEX IF NOT EXISTS idx_users_location_gist ON users USING GIST(location)
 
 ### Verificación de email
 
-Al registrarse, el sistema envía un OTP al email del usuario. Si durante las pruebas usas emails inventados o no tienes acceso al buzón, puedes verificar las cuentas manualmente:
 ```sql
 -- Verificar todos los usuarios de una vez
 UPDATE users SET email_verified = true;
 
--- O verificar un usuario concreto
+-- O uno concreto
 UPDATE users SET email_verified = true WHERE email = 'usuario@ejemplo.com';
 ```
 
-También puedes consultar el OTP generado directamente en la tabla para probar el flujo completo sin necesitar el email:
+También puedes consultar el OTP directamente:
 ```sql
 SELECT email, code, type, expires_at, used FROM otp_codes ORDER BY expires_at DESC;
 ```
 
-> Las cuentas no verificadas se eliminan automáticamente a las 3:00 AM si llevan más de 24 horas sin verificar.
+> Las cuentas no verificadas se eliminan a las 3:00 AM si llevan más de 24 horas sin verificar.
 
 ### Notificaciones de proposals
 
-El sistema agrupa las notificaciones de nuevas proposals y envía un digest periódico (cada 5 minutos en dev). Si quieres probar el envío inmediatamente, puedes reducir el intervalo temporalmente:
+El digest se envía cada 5 minutos en dev. Para probar inmediatamente:
 ```properties
-# application.properties
 notification.digest.interval-ms=30000
 ```
 
-Para consultar las notificaciones pendientes de enviar:
 ```sql
 SELECT volunteer_email, entity_title, entity_type, sent, created_at
 FROM pending_notifications
 ORDER BY created_at DESC;
 ```
 
-> Las notificaciones ya enviadas se purgan automáticamente a las 3:30 AM tras 30 días de retención (7 días en dev). Esto evita que la tabla crezca indefinidamente sin perder la capacidad de deduplicación.
-
-### Idempotencia de donaciones y solicitudes
-
-El sistema bloquea la creación de una donación o solicitud de ayuda si el usuario ya tiene una activa con el mismo título. Si intentas crear un duplicado recibirás un `400 Bad Request` con el mensaje de error correspondiente.
-
-### Rate limiting
-
-Durante las pruebas con Swagger, si realizas más peticiones de las permitidas en un endpoint de auth recibirás un `429 Too Many Requests`. Espera un minuto para que el bucket se recargue o reinicia la aplicación para limpiar el estado en memoria.
-
 ### Coordenadas de prueba
 
-Para que el motor de matching funcione correctamente, registra los usuarios de prueba con coordenadas distintas entre sí y distintas a las de las donaciones/solicitudes que crees. Usar las mismas coordenadas para todos produce `distance 0m / travel 0s` en los logs, lo cual es un artefacto de pruebas y no refleja el comportamiento real en producción.
-
-Coordenadas de ejemplo en Gijón:
+Para que el motor de matching funcione correctamente, usa coordenadas distintas para cada usuario de prueba.
 
 | Usuario | Latitud | Longitud |
 |---|---|---|
@@ -269,21 +276,31 @@ Coordenadas de ejemplo en Gijón:
 
 ## Estructura del proyecto
 ```
-community-help-api/
-├── auth/           # Autenticación JWT, verificación de email y recuperación de contraseña
-├── chat/           # Mensajería REST y WebSocket
-├── common/         # Location, excepciones, OpenRoute (rutas y tiempos de viaje), persistencia base
-├── config/         # Seguridad, OpenAPI, caché, scheduler, inicialización y limpieza periódica
-├── donation/       # Donaciones, búsqueda por proximidad, validación de duplicados y ciclo de vida
-├── email/          # Servicio de envío de emails con plantillas Thymeleaf
-├── helprequest/    # Solicitudes de ayuda, búsqueda por proximidad, validación de duplicados y ciclo de vida
-├── notification/   # Digest de notificaciones de proposals para voluntarios y limpieza de registros
-├── otp/            # Generación y validación de códigos OTP
-├── proposal/       # Motor de matching, scoring, filtro de viabilidad y gestión de proposals
-├── review/         # Reseñas y recálculo de rating
-├── security/       # Filtros JWT, rate limiting y configuración de Spring Security
-├── user/           # Gestión de usuarios y limpieza de cuentas no verificadas
-└── volunteer/      # Perfil, habilidades, modo de transporte y preferencias de notificación
+community-help-pro/
+├── community-help-api/          # Backend Spring Boot
+│   └── src/main/java/com/communityhelp/app/
+│       ├── auth/                # JWT, OAuth2, verificación email, recuperación contraseña
+│       ├── chat/                # Mensajería REST y WebSocket/STOMP
+│       ├── common/              # Location, excepciones, OpenRoute, persistencia base
+│       ├── config/              # Seguridad, CORS, WebSocket, caché, scheduler
+│       ├── donation/            # Donaciones, matching, ciclo de vida
+│       ├── email/               # Emails con plantillas Thymeleaf
+│       ├── helprequest/         # Solicitudes de ayuda, matching, ciclo de vida
+│       ├── notification/        # Digest de proposals, limpieza
+│       ├── otp/                 # Códigos OTP
+│       ├── proposal/            # Motor de matching y scoring
+│       ├── review/              # Reseñas y rating
+│       ├── security/            # Filtros JWT, rate limiting
+│       ├── user/                # Gestión de usuarios
+│       └── volunteer/           # Perfil, habilidades, transporte
+│
+└── community-help-web/          # Frontend React + TypeScript
+└── src/
+├── components/          # Menubar, mapas, OTP input
+├── context/             # Estado global (auth, token, usuario)
+├── hooks/               # useAppContext, useGeolocation, useChat
+├── pages/               # Auth, Home, solicitudes, donaciones, chat, perfil
+└── types/               # Interfaces TypeScript del dominio
 ```
 
 ---
