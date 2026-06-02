@@ -63,9 +63,9 @@ public class ChatWebSocketController {
 
         Authentication authentication = (Authentication) Objects.requireNonNull(headerAccessor.getSessionAttributes()).get("user");
 
-        AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
+        //AppUserDetails userDetails = (AppUserDetails) authentication.getPrincipal();
 
-        UUID senderId = Objects.requireNonNull(userDetails).getId();
+        UUID senderId = extractUserId(authentication);
 
         MessageResponseDto saved = conversationService.sendMessage(
                 dto.getConversationId(),
@@ -99,6 +99,20 @@ public class ChatWebSocketController {
                 "/topic/conversations/" + dto.getConversationId() + "/typing",
                 userId
         );
+    }
+
+    /**
+     * Extrae el UUID del usuario sea cual sea el tipo de autenticación.
+     * - JWT: principal es AppUserDetails
+     * - OAuth2: principal es OAuth2User, el UUID está en los atributos del token JWT
+     *  que el interceptor guardó como UsernamePasswordAuthenticationToken
+     */
+    private UUID extractUserId(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof AppUserDetails appUser) {
+            return appUser.getId();
+        }
+        throw new IllegalStateException("Cannot extract userId from authentication: "
+                + authentication.getClass().getSimpleName());
     }
 
 }

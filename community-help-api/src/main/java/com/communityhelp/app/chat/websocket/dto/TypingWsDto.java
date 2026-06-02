@@ -14,6 +14,6 @@ import java.util.UUID;
 public class TypingWsDto {
 
     private UUID conversationId;
-    private boolean typing;
+    private Boolean typing;
 
 }

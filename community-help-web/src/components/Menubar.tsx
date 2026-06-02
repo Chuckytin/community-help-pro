@@ -102,6 +102,21 @@ const Menubar = () => {
                                 </div>
                             )}
 
+                            <div className="dropdown-item py-1 px-2 small" style={{ cursor: "pointer" }}
+                                onClick={() => { navigate("/profile"); setDropdownOpen(false); }}>
+                                👤 Mi perfil
+                            </div>
+
+                            <div className="dropdown-item py-1 px-2 small" style={{ cursor: "pointer" }}
+                                onClick={() => { navigate("/profile/volunteer"); setDropdownOpen(false); }}>
+                                🙋 Perfil de voluntario
+                            </div>
+
+                            <div className="dropdown-item py-1 px-2 small" style={{ cursor: "pointer" }}
+                                onClick={() => { navigate("/chat"); setDropdownOpen(false); }}>
+                                💬 Mis conversaciones
+                            </div>
+
                             <div
                                 className="dropdown-item py-1 px-2 text-danger small"
                                 style={{ cursor: "pointer" }}

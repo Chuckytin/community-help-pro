@@ -3,7 +3,7 @@ services:
   db:
     image: postgis/postgis:18-3.6
     container_name: community-help-db
-    restart: always
+#    restart: always
     ports:
       - "5432:5432"
     env_file:
@@ -21,7 +21,7 @@ services:
   adminer:
     image: adminer:latest
     container_name: community-help-adminer
-    restart: always
+#    restart: always
     ports:
       - "8888:8080"
     depends_on:
@@ -36,7 +36,7 @@ services:
       context: ./community-help-api
       dockerfile: Dockerfile
     container_name: community-help-api
-    restart: always
+#    restart: always
     depends_on:
       db:
         condition: service_healthy
