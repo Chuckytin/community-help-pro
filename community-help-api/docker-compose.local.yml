@@ -1,0 +1,30 @@
+# solo BD, para correr la app desde IntelliJ
+services:
+  db:
+    image: postgis/postgis:18-3.6
+    container_name: community-help-db-local
+    environment:
+      POSTGRES_DB: community_help_db
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data-local:/var/lib/postgresql
+      - ./src/main/resources/db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d community_help_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:latest
+    container_name: community-help-adminer-local
+    ports:
+      - "8888:8080"
+    depends_on:
+      - db
+
+volumes:
+  postgres-data-local:

@@ -72,7 +72,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-//                                "/chat-test.html",
+                                "/chat-test.html",
                                 "/error",
                                 "/favicon.ico",
                                 "/oauth2/**",
@@ -129,7 +129,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 
 
 }

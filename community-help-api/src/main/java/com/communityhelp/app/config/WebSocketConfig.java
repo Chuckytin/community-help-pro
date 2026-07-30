@@ -22,7 +22,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketAuthInterceptor authInterceptor;
 
-    @Value("${url.frontend}")
+    @Value("${url.frontend.base}")
     private String frontendUrl;
 
     /**

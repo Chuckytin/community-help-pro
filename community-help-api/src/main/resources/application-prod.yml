@@ -1,0 +1,74 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=${DB_SSL_MODE}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 15000
+      leak-detection-threshold: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    com.communityhelp.app: INFO
+
+matching:
+  run-on-startup: false
+
+proposal:
+  matching:
+    max-active-proposals: 5
+    proposal-cooldown-minutes: 20
+    retry-delay-minutes: 30
+    max-proposals-per-entity: 5
+    max-radius-distance: 10000
+    max-distance-score: 30
+    max-weight-distance: 0.5
+    max-weight-skills: 0.35
+    max-weight-rating: 0.10
+    max-weight-load: 0.05
+    max-candidates-multiplier: 6
+    radius-expansion-step: 10000
+    max-expanded-radius: 50000
+  retry-delay:
+    interval-ms: 1800000
+
+notification:
+  digest:
+    interval-ms: 86400000
+  cleanup:
+    retention-days: 30

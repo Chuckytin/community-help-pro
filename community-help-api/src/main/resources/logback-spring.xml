@@ -45,7 +45,7 @@
         </encoder>
     </appender>
 
-    <springProfile name="dev">
+    <springProfile name="dev | local">
 
         <!-- Logs de la aplicación -->
         <logger name="com.communityhelp.app" level="DEBUG"/>
@@ -86,7 +86,7 @@
     </springProfile>
 
     <springProfile name="!dev &amp; !prod &amp; !test">
-        
+
         <logger name="com.communityhelp.app" level="INFO"/>
         <logger name="org.hibernate.SQL" level="WARN"/>
 

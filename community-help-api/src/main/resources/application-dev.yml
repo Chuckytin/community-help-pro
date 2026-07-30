@@ -1,0 +1,101 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?reWriteBatchedInserts=true
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: false
+    out-of-order: false
+
+  security:
+    oauth2:
+      client:
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?prompt=consent&access_type=offline
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    tags-sorter: alpha
+    operations-sorter: alpha
+    try-it-out-enabled: true
+  api-docs:
+    enabled: true
+
+api:
+  docs:
+    title: Community Help API Documentation
+    description: API documentation for the Community Help application.
+    version: 1.0.0
+    contact:
+      name: Angel Torcal Catalan
+      email: angeltorcalcatalan@gmail.com
+      url: https://github.com/Chuckytin
+    license:
+      name: Apache 2.0
+      url: http://www.apache.org/licenses/LICENSE-2.0
+    servers:
+      url: http://localhost:8080
+      description: API server for development environment
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: community-help-api
+      environment: dev
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.flywaydb: DEBUG
+    org.springframework.jdbc: DEBUG
+    com.communityhelp.app: DEBUG
+
+matching:
+  run-on-startup: false
+
+proposal:
+  matching:
+    max-active-proposals: 5
+    proposal-cooldown-minutes: 15
+    retry-delay-minutes: 2
+    max-proposals-per-entity: 5
+    max-radius-distance: 5000
+    max-distance-score: 30
+    max-weight-distance: 0.5
+    max-weight-skills: 0.35
+    max-weight-rating: 0.10
+    max-weight-load: 0.05
+    max-candidates-multiplier: 4
+    radius-expansion-step: 5000
+    max-expanded-radius: 30000
+  retry-delay:
+    interval-ms: 120000
+
+notification:
+  digest:
+    interval-ms: 300000
+  cleanup:
+    retention-days: 7
