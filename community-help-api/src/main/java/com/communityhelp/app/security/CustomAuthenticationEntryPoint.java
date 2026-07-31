@@ -1,8 +1,11 @@
 package com.communityhelp.app.security;
 
+import com.communityhelp.app.common.exceptions.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
@@ -14,21 +17,21 @@ import java.io.IOException;
  * - Se configura en SecurityConfig para que se use en caso de autenticación fallida.
  */
 @Component
+@RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements org.springframework.security.web.AuthenticationEntryPoint {
+
+    private final SecurityResponseWriter securityResponseWriter;
 
     @Override
     public void commence(@NonNull HttpServletRequest request,
-                         HttpServletResponse response,
+                         @NonNull HttpServletResponse response,
                          @NonNull AuthenticationException authException) throws IOException {
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-
-        response.getWriter().write("""
-                    {
-                      "status": 401,
-                      "message": "Authentication required"
-                    }
-                """);
+        securityResponseWriter.writeSecurityError(
+                response,
+                HttpStatus.UNAUTHORIZED,
+                ErrorCode.AUTHENTICATION_REQUIRED,
+                "Authentication required"
+        );
     }
 }

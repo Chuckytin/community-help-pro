@@ -1,7 +1,8 @@
 package com.communityhelp.app.config;
 
+import com.communityhelp.app.auth.oauth2.OAuth2FailureHandler;
 import com.communityhelp.app.auth.oauth2.OAuth2SuccessHandler;
-import com.communityhelp.app.auth.service.AuthenticationService;
+import com.communityhelp.app.auth.service.JwtService;
 import com.communityhelp.app.security.*;
 import com.communityhelp.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,20 +37,20 @@ public class SecurityConfig {
     private final CorsConfigurationSource corsConfigurationSource;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
+    private static final String[] SWAGGER = {
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**"
+    };
+
     /**
      * Configuración de la cadena de filtros HTTP.
-     * - Permite login público
-     * - Requiere autenticación para otros endpoints privados
-     * - WebSocker requiere autenticación JWT
-     * - Desactiva CSRF
-     * - Configura CORS con la configuración definida en CorsConfig
-     * - Agrega el filtro de limitación de tasa antes del filtro de autenticación para proteger contra ataques de fuerza bruta
-     * - Agrega el filtro JWT antes del filtro de autenticación para validar el token en cada request
-     * - Configura el manejo de excepciones para devolver respuestas adecuadas en caso de autenticación fallida o acceso denegado
-     * - Configura la política de creación de sesiones para que Spring Security no cree sesiones innecesarias (usamos JWT)
-     * - Configura la autenticación OAuth2 para que use el OAuth2SuccessHandler personalizado que genera el JWT después de la autenticación con Google
-     * - Configura las reglas de autorización para permitir el acceso público a ciertos endpoints (login, Swagger) y requerir autenticación para otros (API, WebSocket)
-     * - Cualquier request que no coincida con las reglas anteriores requerirá autenticación.
+     * - Desactiva CSRF y configura CORS según CorsConfig
+     * - Sesiones sin estado (IF_REQUIRED, ya que OAuth2 necesita sesión temporal durante el intercambio con Google)
+     * - Filtros: rate limiting y validación JWT, ambos antes de UsernamePasswordAuthenticationFilter
+     * - Login público (auth, Swagger); WebSocket y el resto de endpoints requieren autenticación
+     * - OAuth2 con Google: OAuth2SuccessHandler genera el JWT tras login correcto, OAuth2FailureHandler redirige al frontend si falla
+     * - Excepciones gestionadas con CustomAuthenticationEntryPoint y CustomAccessDeniedHandler
      */
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -57,7 +58,8 @@ public class SecurityConfig {
             JwtAuthenticationFilter jwtAuthenticationFilter,
             RateLimitFilter rateLimitFilter,
             CustomAuthenticationEntryPoint authenticationEntryPoint,
-            CustomAccessDeniedHandler accessDeniedHandler
+            CustomAccessDeniedHandler accessDeniedHandler,
+            OAuth2FailureHandler oAuth2FailureHandler
     ) throws Exception {
 
         http
@@ -79,18 +81,16 @@ public class SecurityConfig {
                                 "/login/oauth2/**"
                         ).permitAll()
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs"
+                                SWAGGER
                         ).permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/api/v1/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                         .requestMatchers("/ws/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2SuccessHandler)
+                        .failureHandler(oAuth2FailureHandler)
                 )
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -102,8 +102,14 @@ public class SecurityConfig {
      * Bean del filtro JWT.
      */
     @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(AuthenticationService authenticationService) {
-        return new JwtAuthenticationFilter(authenticationService);
+    public JwtAuthenticationFilter jwtAuthenticationFilter(
+            JwtService jwtService,
+            SecurityResponseWriter securityResponseWriter
+    ) {
+        return new JwtAuthenticationFilter(
+                jwtService,
+                securityResponseWriter
+        );
     }
 
     /**
@@ -129,6 +135,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 
 }

@@ -1,6 +1,6 @@
 package com.communityhelp.app.auth.oauth2;
 
-import com.communityhelp.app.auth.service.AuthenticationService;
+import com.communityhelp.app.auth.service.JwtService;
 import com.communityhelp.app.user.model.Role;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
@@ -30,7 +30,7 @@ import java.io.IOException;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
-    private final AuthenticationService authenticationService;
+    private final JwtService jwtService;
 
     /**
      * @Lazy rompe el ciclo de dependencias:
@@ -40,10 +40,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
      */
     public OAuth2SuccessHandler(
             UserRepository userRepository,
-            @Lazy AuthenticationService authenticationService
+            @Lazy JwtService jwtService
     ) {
         this.userRepository = userRepository;
-        this.authenticationService = authenticationService;
+        this.jwtService = jwtService;
     }
 
     @Value("${url.frontend.oauth2-success}")
@@ -77,7 +77,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         org.springframework.security.core.userdetails.UserDetails userDetails =
                 new com.communityhelp.app.security.AppUserDetails(user);
-        String token = authenticationService.generateToken(userDetails);
+        String token = jwtService.generateToken(userDetails);
 
         log.info("[OAuth2] JWT generado para usuario: {}", email);
 

@@ -1,4 +1,7 @@
-package com.communityhelp.app.common.exceptions;
+package com.communityhelp.app.user.exception;
+
+import com.communityhelp.app.common.exceptions.BusinessException;
+import com.communityhelp.app.common.exceptions.ErrorCode;
 
 public class DuplicateEmailException extends BusinessException {
     public DuplicateEmailException() {

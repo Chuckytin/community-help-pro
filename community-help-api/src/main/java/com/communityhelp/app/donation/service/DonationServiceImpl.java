@@ -2,8 +2,6 @@ package com.communityhelp.app.donation.service;
 
 import com.communityhelp.app.chat.conversation.model.ConversationType;
 import com.communityhelp.app.chat.conversation.service.ConversationService;
-import com.communityhelp.app.common.exceptions.BusinessException;
-import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.common.openroute.dto.FastestTravelResponse;
 import com.communityhelp.app.common.openroute.dto.TravelTimeResponse;
 import com.communityhelp.app.common.openroute.model.TransportMode;
@@ -13,6 +11,7 @@ import com.communityhelp.app.donation.dto.DonationResponseDto;
 import com.communityhelp.app.donation.dto.DonationUpdateRequestDto;
 import com.communityhelp.app.donation.event.DonationCreatedEvent;
 import com.communityhelp.app.donation.event.DonationUpdatedEvent;
+import com.communityhelp.app.donation.exception.DuplicateDonationException;
 import com.communityhelp.app.donation.mapper.DonationMapper;
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.model.DonationStatus;
@@ -83,10 +82,7 @@ public class DonationServiceImpl implements DonationService {
 
         if (donationRepository.existsByDonor_IdAndTitleIgnoreCaseAndStatus(
                 donorId, dto.getTitle(), DonationStatus.AVAILABLE)) {
-            throw new BusinessException(
-                    ErrorCode.DONATION_DUPLICATE_TITLE,
-                    "You already have an active donation with this title."
-            );
+            throw new DuplicateDonationException();
         }
 
         Donation savedDonation = donationRepository.save(donation);

@@ -1,4 +1,7 @@
-package com.communityhelp.app.common.exceptions;
+package com.communityhelp.app.donation.exception;
+
+import com.communityhelp.app.common.exceptions.BusinessException;
+import com.communityhelp.app.common.exceptions.ErrorCode;
 
 public class DuplicateDonationException extends BusinessException {
     public DuplicateDonationException() {

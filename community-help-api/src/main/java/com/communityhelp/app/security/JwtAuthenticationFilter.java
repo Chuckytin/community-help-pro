@@ -1,7 +1,9 @@
 package com.communityhelp.app.security;
 
-import com.communityhelp.app.auth.service.AuthenticationService;
+import com.communityhelp.app.auth.service.JwtService;
+import com.communityhelp.app.common.exceptions.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,9 +11,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -27,7 +31,8 @@ import java.io.IOException;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final AuthenticationService authenticationService;
+    private final JwtService jwtService;
+    private final SecurityResponseWriter securityResponseWriter;
 
     /**
      * Procesa cada request HTTP para comprobar si incluye un token JWT válido.
@@ -38,9 +43,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Si el token es inválido o expirado, propaga la excepción.
      */
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain)
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = extractToken(request);
@@ -50,35 +56,60 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        try {
-            UserDetails userDetails = authenticationService.validateToken(token);
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            UsernamePasswordAuthenticationToken authenticationToken =
+        try {
+
+            UserDetails userDetails = jwtService.validateToken(token);
+
+            UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
                     );
 
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            authentication.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
             if (userDetails instanceof AppUserDetails appUser) {
                 request.setAttribute("userId", appUser.getId());
             }
 
-        } catch (ExpiredJwtException e) {
-            log.warn("[security][JwtAuthenticationFilter] Expired JWT: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
-            sendUnauthorized(response, "Token expired");
-            return;
-        } catch (Exception e) {
-            log.warn("[security][JwtAuthenticationFilter] Invalid JWT: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
-            sendUnauthorized(response, "Invalid Token");
-            return;
-        }
+            filterChain.doFilter(request, response);
 
-        filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException e) {
+
+            log.warn("[security] Expired JWT");
+
+            SecurityContextHolder.clearContext();
+
+            securityResponseWriter.writeSecurityError(
+                    response,
+                    HttpStatus.UNAUTHORIZED,
+                    ErrorCode.JWT_EXPIRED,
+                    "Token expired"
+            );
+
+        } catch (JwtException e) {
+
+            log.warn("[security] Invalid JWT");
+
+            SecurityContextHolder.clearContext();
+
+            securityResponseWriter.writeSecurityError(
+                    response,
+                    HttpStatus.UNAUTHORIZED,
+                    ErrorCode.INVALID_TOKEN,
+                    "Invalid token"
+            );
+        }
     }
 
     /**
@@ -90,18 +121,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
-    }
-
-    /**
-     * Envía una respuesta 401 Unauthorized con un mensaje de error en formato JSON.
-     */
-    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(
-                "{\"error\": \"UNAUTHORIZED\", \"message\": \"" + message + "\"}"
-        );
     }
 
 }

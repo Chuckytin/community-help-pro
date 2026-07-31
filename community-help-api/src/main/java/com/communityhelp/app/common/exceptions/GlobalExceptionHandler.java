@@ -1,5 +1,6 @@
 package com.communityhelp.app.common.exceptions;
 
+import com.communityhelp.app.user.exception.EmailNotVerifiedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -83,7 +84,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex) {
         log.warn("Malformed JSON request: {}", ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.MALFORMED_JSON,"Malformed JSON request");
+        return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.MALFORMED_JSON, "Malformed JSON request");
     }
 
     /**
@@ -91,7 +92,7 @@ public class GlobalExceptionHandler {
      * y devuelve error 401 si las credenciales incluidas no son correctas.
      */
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiErrorResponse>handleBadCredentialException(BadCredentialsException ex) {
+    public ResponseEntity<ApiErrorResponse> handleBadCredentialException(BadCredentialsException ex) {
         return buildResponse(HttpStatus.UNAUTHORIZED, ErrorCode.INVALID_CREDENTIALS, "Invalid credentials");
 
     }
@@ -139,7 +140,7 @@ public class GlobalExceptionHandler {
      * y devuelve error 404 si la entidad no se encuentra.
      */
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse>handleEntityNotException(EntityNotFoundException ex) {
+    public ResponseEntity<ApiErrorResponse> handleEntityNotException(EntityNotFoundException ex) {
         log.warn("Entity not found: {}", ex.getMessage());
         return buildResponse(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, ex.getMessage());
     }

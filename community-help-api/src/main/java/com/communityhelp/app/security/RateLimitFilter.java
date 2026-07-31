@@ -1,14 +1,15 @@
 package com.communityhelp.app.security;
 
-import com.communityhelp.app.common.exceptions.ApiErrorResponse;
 import com.communityhelp.app.common.exceptions.ErrorCode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
@@ -17,9 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Filtro de rate limiting para endpoints de autenticación sensibles.
@@ -28,7 +27,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
+
+    private final SecurityResponseWriter securityResponseWriter;
 
     /**
      * Endpoints protegidos y sus límites:
@@ -47,11 +49,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
     /**
      * Caché de buckets por IP + endpoint para aplicar el rate limiting.
      */
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Cache<String, Bucket> buckets =
+            Caffeine.newBuilder()
+                    .expireAfterAccess(Duration.ofMinutes(30))
+                    .maximumSize(100_000)
+                    .build();
 
     /**
      * Intercepta las peticiones a los endpoints configurados y aplica el rate limiting
+     * Solo aplica a POST en los endpoints configurados
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -62,7 +68,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         String method = request.getMethod();
 
-        // Solo aplica a POST en los endpoints configurados
         if (!"POST".equals(method) || !RATE_LIMITED_PATHS.containsKey(path)) {
             filterChain.doFilter(request, response);
             return;
@@ -72,29 +77,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String bucketKey = ip + ":" + path;
         int limit = RATE_LIMITED_PATHS.get(path);
 
-        Bucket bucket = buckets.computeIfAbsent(bucketKey, k -> createBucket(limit));
+        Bucket bucket = buckets.get(bucketKey, k -> createBucket(limit));
 
         if (bucket.tryConsume(1)) {
             filterChain.doFilter(request, response);
         } else {
             log.warn("[rate-limit] IP {} exceeded limit on {}", ip, path);
 
-            // ⏳ Tiempo estimado para el próximo token (simple: 60s)
             int retryAfterSeconds = 60;
             response.setHeader("Retry-After", String.valueOf(retryAfterSeconds));
 
-            ApiErrorResponse error = ApiErrorResponse.builder()
-                    .status(HttpStatus.TOO_MANY_REQUESTS.value())
-                    .code(ErrorCode.RATE_LIMIT_EXCEEDED.name())
-                    .message("Too many requests. Please try again later.")
-                    .errors(Collections.emptyList())
-                    .build();
-
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setContentType("application/json");
-            response.getWriter().write(objectMapper.writeValueAsString(error));
+            securityResponseWriter.writeSecurityError(
+                    response,
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    ErrorCode.RATE_LIMIT_EXCEEDED,
+                    "Too many requests. Please try again later."
+            );
         }
-        }
+    }
 
     /**
      * Crea un bucket con el límite de peticiones por minuto indicado.

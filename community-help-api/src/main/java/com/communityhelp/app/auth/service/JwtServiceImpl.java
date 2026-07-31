@@ -25,7 +25,7 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
-public class AuthenticationServiceImpl implements AuthenticationService {
+public class JwtServiceImpl implements JwtService {
 
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;

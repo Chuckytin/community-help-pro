@@ -3,9 +3,6 @@ package com.communityhelp.app.auth.service;
 import com.communityhelp.app.auth.dto.AuthResponse;
 import com.communityhelp.app.auth.dto.ResetPasswordRequestDto;
 import com.communityhelp.app.auth.dto.VerifyEmailRequestDto;
-import com.communityhelp.app.common.exceptions.BusinessException;
-import com.communityhelp.app.common.exceptions.EmailNotVerifiedException;
-import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.email.service.EmailService;
 import com.communityhelp.app.otp.model.OtpType;
 import com.communityhelp.app.otp.repository.OtpRepository;
@@ -13,6 +10,8 @@ import com.communityhelp.app.otp.service.OtpService;
 import com.communityhelp.app.user.dto.LoginRequestDto;
 import com.communityhelp.app.user.dto.UserCreateRequestDto;
 import com.communityhelp.app.user.dto.UserResponseDto;
+import com.communityhelp.app.user.exception.DuplicateEmailException;
+import com.communityhelp.app.user.exception.EmailNotVerifiedException;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
 import com.communityhelp.app.user.service.UserService;
@@ -27,14 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    private final AuthenticationService authenticationService;
+    private final JwtService jwtService;
     private final UserService userService;
     private final OtpService otpService;
     private final EmailService emailService;
@@ -52,12 +50,12 @@ public class AuthServiceImpl implements AuthService {
         UserDetails userDetails;
 
         try {
-            userDetails = authenticationService.authenticate(dto.getEmail(), dto.getPassword());
+            userDetails = jwtService.authenticate(dto.getEmail(), dto.getPassword());
         } catch (Exception e) {
             throw new BadCredentialsException("Invalid email or password");
         }
 
-        String token = authenticationService.generateToken(userDetails);
+        String token = jwtService.generateToken(userDetails);
 
         UserResponseDto userResponseDto = userService.getUserByEmail(dto.getEmail());
 
@@ -67,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
 
         return AuthResponse.builder()
                 .token(token)
-                .expiredIn(authenticationService.getJwtExpiryMs())
+                .expiredIn(jwtService.getJwtExpiryMs())
                 .user(userResponseDto)
                 .build();
     }
@@ -95,24 +93,21 @@ public class AuthServiceImpl implements AuthService {
             if (!existingUser.isActive()) {
                 createdUser = userService.reactivateUser(existingUser.getId(), dto);
             } else {
-                throw new BusinessException(
-                        ErrorCode.EMAIL_ALREADY_EXISTS,
-                        "This email is already registered."
-                );
+                throw new DuplicateEmailException();
             }
         } else {
             createdUser = userService.createUser(dto);
         }
 
-        UserDetails userDetails = authenticationService.authenticate(dto.getEmail(), dto.getPassword());
-        String token = authenticationService.generateToken(userDetails);
+        UserDetails userDetails = jwtService.authenticate(dto.getEmail(), dto.getPassword());
+        String token = jwtService.generateToken(userDetails);
 
         String otp = otpService.generateAndSave(createdUser.getEmail(), OtpType.VERIFY_EMAIL);
         emailService.sendVerificationEmail(createdUser.getEmail(), createdUser.getName(), otp);
 
         return AuthResponse.builder()
                 .token(token)
-                .expiredIn(authenticationService.getJwtExpiryMs())
+                .expiredIn(jwtService.getJwtExpiryMs())
                 .user(createdUser)
                 .build();
     }
@@ -178,15 +173,15 @@ public class AuthServiceImpl implements AuthService {
             log.debug("[cleanup] No unverified users to delete");
             return;
         }
+        
+        List<String> emails = unverified.stream()
+                .map(User::getEmail)
+                .toList();
 
-        List<UUID> ids = unverified.stream().map(User::getId).toList();
-
-        // Elimina OTPs asociados primero
-        otpRepository.deleteByEmailIn(
-                unverified.stream().map(User::getEmail).toList()
-        );
+        otpRepository.deleteByEmailIn(emails);
 
         userRepository.deleteAll(unverified);
+
         log.info("[cleanup] Deleted {} unverified users older than 24h", unverified.size());
     }
 

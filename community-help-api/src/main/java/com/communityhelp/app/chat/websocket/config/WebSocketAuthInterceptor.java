@@ -1,6 +1,6 @@
 package com.communityhelp.app.chat.websocket.config;
 
-import com.communityhelp.app.auth.service.AuthenticationService;
+import com.communityhelp.app.auth.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.server.ServerHttpRequest;
@@ -26,7 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
-    private final AuthenticationService authenticationService;
+    private final JwtService jwtService;
 
     @Override
     public boolean beforeHandshake(@NonNull ServerHttpRequest request,
@@ -40,7 +40,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
             if (token != null) {
                 try {
-                    UserDetails userDetails = authenticationService.validateToken(token);
+                    UserDetails userDetails = jwtService.validateToken(token);
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(

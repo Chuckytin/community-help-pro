@@ -2,8 +2,6 @@ package com.communityhelp.app.helprequest.service;
 
 import com.communityhelp.app.chat.conversation.model.ConversationType;
 import com.communityhelp.app.chat.conversation.service.ConversationService;
-import com.communityhelp.app.common.exceptions.BusinessException;
-import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.common.openroute.dto.FastestTravelResponse;
 import com.communityhelp.app.common.openroute.dto.TravelTimeResponse;
 import com.communityhelp.app.common.openroute.model.TransportMode;
@@ -13,6 +11,7 @@ import com.communityhelp.app.helprequest.dto.HelpRequestResponseDto;
 import com.communityhelp.app.helprequest.dto.HelpRequestUpdateRequestDto;
 import com.communityhelp.app.helprequest.event.HelpRequestCreatedEvent;
 import com.communityhelp.app.helprequest.event.HelpRequestUpdatedEvent;
+import com.communityhelp.app.helprequest.exception.DuplicateHelpRequestException;
 import com.communityhelp.app.helprequest.mapper.HelpRequestMapper;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.model.HelpRequestStatus;
@@ -25,6 +24,7 @@ import com.communityhelp.app.volunteer.model.Volunteer;
 import com.communityhelp.app.volunteer.repository.VolunteerRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +34,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -82,10 +81,7 @@ public class HelpRequestServiceImpl implements HelpRequestService {
 
         if (helpRequestRepository.existsByRequester_IdAndTitleIgnoreCaseAndStatus(
                 requesterId, dto.getTitle(), HelpRequestStatus.OPEN)) {
-            throw new BusinessException(
-                    ErrorCode.HELP_REQUEST_DUPLICATE_TITLE,
-                    "You already have an active help request with this title."
-            );
+            throw new DuplicateHelpRequestException();
         }
 
         HelpRequest savedHelpRequest = helpRequestRepository.save(helpRequest);

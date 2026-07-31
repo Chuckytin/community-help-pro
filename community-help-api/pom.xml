@@ -12,7 +12,7 @@
 
     <groupId>com.communityhelp</groupId>
     <artifactId>community-help-api</artifactId>
-    <version>0.29.0</version>
+    <version>0.30.0</version>
     <name>community-help-api</name>
     <description>Backend API for Community Help platform</description>
 
@@ -114,6 +114,12 @@
             <version>8.10.1</version>
         </dependency>
 
+        <!-- RateLimitFilter -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.2.4</version>
+        </dependency>
 
         <!-- ==================== INFRAESTRUCTURA ==================== -->
 

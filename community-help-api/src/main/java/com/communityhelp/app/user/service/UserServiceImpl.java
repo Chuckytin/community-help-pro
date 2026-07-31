@@ -1,13 +1,14 @@
 package com.communityhelp.app.user.service;
 
-import com.communityhelp.app.common.exceptions.BusinessException;
-import com.communityhelp.app.common.exceptions.ErrorCode;
 import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
 import com.communityhelp.app.proposal.repository.ProposalRepository;
-import com.communityhelp.app.user.dto.*;
+import com.communityhelp.app.user.dto.UserCreateRequestDto;
+import com.communityhelp.app.user.dto.UserResponseDto;
+import com.communityhelp.app.user.dto.UserUpdateRequestDto;
+import com.communityhelp.app.user.exception.DuplicateEmailException;
 import com.communityhelp.app.user.mapper.UserMapper;
 import com.communityhelp.app.user.model.Role;
 import com.communityhelp.app.user.model.User;
@@ -28,7 +29,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final HelpRequestRepository helpRequestRepository;
@@ -40,10 +41,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserResponseDto createUser(UserCreateRequestDto dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new BusinessException(
-                    ErrorCode.EMAIL_ALREADY_EXISTS,
-                    "This email is already registered."
-            );
+            throw new DuplicateEmailException();
         }
 
         User user = userMapper.toEntity(dto);
