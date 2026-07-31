@@ -1,14 +1,15 @@
-# Community Help
+# Community Help API
 
 **🚧 Proyecto en desarrollo 🚧**
 
 **Community Help** es una plataforma local de solidaridad vecinal que conecta a personas que quieren **donar bienes** (alimentos, ropa, medicamentos, muebles, etc.) con quienes los necesitan, y también permite **solicitar ayuda puntual** (compra, transporte, recogida, compañía, etc.) a voluntarios cercanos.
 
+Este repositorio contiene el **backend** (API REST). El frontend (React + TypeScript) vive en un proyecto hermano, `community-help-web`, actualmente en desarrollo y fuera del alcance de este README.
+
 ---
 
 ## Tecnologías
 
-### Backend
 - **Java 21** + **Spring Boot 4**
 - **PostgreSQL 18** + **PostGIS** — geolocalización y búsquedas por proximidad
 - **Flyway** — migraciones versionadas de base de datos
@@ -17,21 +18,12 @@
 - **OAuth2 / Google Login** — autenticación social con Google
 - **WebSocket / STOMP** — mensajería en tiempo real
 - **MapStruct** — mapeo de DTOs
-- **Docker** — contenedores para despliegue
+- **Docker** + **Docker Compose** + **Makefile** — entornos `local`, `dev` y `prod`
 - **Thymeleaf** — plantillas HTML para emails transaccionales
 - **Brevo (SMTP)** — envío de emails
 - **OpenRouteService** — cálculo de rutas y tiempos de viaje reales
 - **Spring Cache** — caché de tiempos de viaje para optimizar llamadas a la API
 - **Bucket4j** — rate limiting en endpoints de autenticación
-
-### Frontend
-- **React 18** + **TypeScript** + **Vite**
-- **Bootstrap 5** — estilos y componentes UI
-- **React Router v6** — enrutamiento
-- **Axios** — cliente HTTP
-- **React Leaflet** — mapas interactivos con OpenStreetMap
-- **@stomp/stompjs** — cliente WebSocket STOMP para el chat en tiempo real
-- **React Toastify** — notificaciones
 
 ---
 
@@ -47,7 +39,7 @@
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
 - **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña. Las cuentas no verificadas se eliminan automáticamente pasadas 24 horas.
-- **Login con Google** — OAuth2 integrado en backend y frontend.
+- **Login con Google** — OAuth2 integrado en el backend.
 - **Rate limiting** en endpoints de autenticación para proteger contra fuerza bruta y abuso.
 - **Limpieza automática de datos** — cuentas sin verificar y notificaciones enviadas antiguas se purgan periódicamente para mantener la base de datos sana.
 - **API documentada con Swagger / OpenAPI** accesible en `/swagger-ui.html`.
@@ -69,7 +61,7 @@ El factor de distancia utiliza el **tiempo de viaje real** calculado por OpenRou
 
 Los tiempos de viaje se calculan **en paralelo** para todos los candidatos y se **cachean** para evitar llamadas repetidas a la API cuando múltiples entidades comparten voluntarios en la misma zona.
 
-Si ningún voluntario acepta una proposal en el tiempo configurado, el sistema reintenta automáticamente ampliando el radio de búsqueda de forma progresiva hasta un máximo configurable. Los parámetros son completamente ajustables por entorno vía `application.properties`.
+Si ningún voluntario acepta una proposal en el tiempo configurado, el sistema reintenta automáticamente ampliando el radio de búsqueda de forma progresiva hasta un máximo configurable. Los parámetros son completamente ajustables por entorno vía `application-{profile}.yml`.
 
 ---
 
@@ -104,7 +96,7 @@ Al superar el límite se devuelve `429 Too Many Requests`.
 
 ## Migraciones de base de datos (Flyway)
 
-El proyecto utiliza **Flyway** para gestionar las migraciones de la base de datos de forma versionada y reproducible.
+El proyecto utiliza **Flyway** para gestionar las migraciones de la base de datos de forma versionada y reproducible. Está activo en el perfil `prod`; en `local` y `dev` el esquema se genera vía Hibernate (`ddl-auto`).
 
 ### Convención de nombres
 
@@ -122,7 +114,7 @@ SELECT * FROM flyway_schema_history;
 
 ## API
 
-La documentación interactiva de la API está disponible en:
+La documentación interactiva de la API está disponible en (perfiles `local`/`dev`):
 ```
 http://localhost:8080/swagger-ui.html
 ```
@@ -145,32 +137,37 @@ El plan de pruebas completo está disponible en [Google Sheets](https://docs.goo
 ### Requisitos
 
 - Java 21
-- Node.js 20+
-- Docker
+- Docker + Docker Compose
+- `make` — en Windows: `choco install make`
 - Cuenta en [Brevo](https://app.brevo.com) para el envío de emails
 - Cuenta en [OpenRouteService](https://openrouteservice.org) para el cálculo de rutas
 - Credenciales OAuth2 de Google en [Google Cloud Console](https://console.cloud.google.com)
 
 ### Variables de entorno
 
-Copia `.env.example` y rellena tus valores:
+El proyecto usa dos archivos de entorno según el perfil: `.env.dev` (usado también en `local`) y `.env.prod`, ninguno de los dos versionado en git.
+
 ```bash
-cp .env.example .env
+cp .env.dev.example .env.dev
+cp .env.prod.example .env.prod
 ```
 
-El archivo `.env` debe estar en la raíz de `community-help-pro/`.
+Ambos archivos deben estar en la raíz de `community-help-api/`, junto al `pom.xml`.
 
+`.env.dev.example`:
 ```env
 # PostgreSQL
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
 POSTGRES_DB=community_help_db
 POSTGRES_USER=your_postgres_user
 POSTGRES_PASSWORD=your_postgres_password
 
-# API Port
+# API
 API_PORT=8080
 
 # JWT
-JWT_SECRET=your_jwt_secret_minimum_32_characters_long
+JWT_SECRET=devSuperSecretKeyForJWT1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ
 JWT_EXPIRATION_MS=3600000
 JWT_EXPIRED_IN=3600000
 
@@ -178,7 +175,7 @@ JWT_EXPIRED_IN=3600000
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=your_admin_password
 
-# OpenRoute Service API
+# OpenRouteService
 OPENROUTE_API_KEY=your_openroute_api_key
 
 # Email (Brevo SMTP)
@@ -189,9 +186,9 @@ MAIL_PASSWORD=your_brevo_smtp_password
 MAIL_FROM=your_verified_sender@example.com
 
 # Google OAuth2
+OAUTH2_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google
 OAUTH2_CLIENT_ID=your_google_client_id
 OAUTH2_CLIENT_SECRET=your_google_client_secret
-OAUTH2_REDIRECT_URI=http://localhost:8080/login/oauth2/code/google
 
 # Frontend URLs
 URL_FRONTEND=http://localhost:5173
@@ -199,33 +196,89 @@ URL_FRONTEND_LOGIN=http://localhost:5173/login
 URL_FRONTEND_OAUTH2_SUCCESS=http://localhost:5173/oauth2/callback
 ```
 
+`.env.prod.example` sigue la misma estructura, añadiendo `DB_SSL_MODE=disable` y apuntando las URLs de frontend/OAuth2 al dominio real. Ver el archivo para el detalle completo.
+
 > **Nota sobre Brevo:** las claves SMTP expiran tras 90 días de inactividad. Genera una nueva desde `Settings > SMTP & API`.
 
-> **Nota sobre OAuth2:** registra `http://localhost:8080/login/oauth2/code/google` como URI de redirección autorizada en Google Cloud Console.
+> **Nota sobre OAuth2:** registra `http://localhost:8080/login/oauth2/code/google` (o el dominio de prod correspondiente) como URI de redirección autorizada en Google Cloud Console.
 
 > **Nota sobre OpenRouteService:** el plan gratuito permite 2.000 peticiones diarias, suficiente para desarrollo.
 
-### Arranque del backend
+### Arranque con Docker + Makefile
+
+El proyecto usa tres flujos de trabajo, cada uno con su propio `docker-compose` y perfil de Spring:
+
+| Entorno | Uso | `docker-compose` | Perfil Spring |
+|---|---|---|---|
+| `local` | Solo levanta la BD, la API corre desde el IDE (IntelliJ) | `docker-compose.local.yml` | `local` |
+| `dev` | API + BD dockerizadas, hot-reload con Maven | `docker-compose.yml` + `docker-compose.dev.yml` | `dev` |
+| `prod` | API + BD dockerizadas, build multi-stage optimizado | `docker-compose.yml` + `docker-compose.prod.yml` | `prod` |
 
 ```bash
-# Levanta PostgreSQL y Adminer
-docker compose up -d db adminer
+# LOCAL — solo levanta PostgreSQL + Adminer, la API se arranca desde el IDE
+make local-db
 
-# Arranca la API
-./mvnw spring-boot:run
+# DEV — levanta API + BD con build (usar al empezar o tras cambios en código)
+make dev
+
+# PROD — levanta API + BD con build multi-stage
+make prod
 ```
 
-Adminer estará disponible en `http://localhost:8888` — selecciona PostgreSQL, servidor `db`.
+Para la mayoría de casos en desarrollo, basta con `make dev-down` + `make dev`.
 
-### Arranque del frontend
+Adminer estará disponible en `http://localhost:8888` (perfiles `local` y `dev`) — selecciona PostgreSQL, servidor `db`.
+
+### Comandos disponibles (`Makefile`)
+
+**Local (solo BD, API desde el IDE)**
+
+| Comando | Descripción |
+|---|---|
+| `make local-db` | Levanta solo la base de datos |
+| `make local-db-stop` | Para los contenedores conservando estado |
+| `make local-db-clean` | Reset total — borra volúmenes y base de datos |
+
+**Desarrollo**
+
+| Comando | Descripción |
+|---|---|
+| `make dev` | Levanta dev con build |
+| `make dev-up` | Levanta dev sin rebuild |
+| `make dev-restart` | Fuerza recreación sin hacer down |
+| `make dev-stop` | Para contenedores conservando estado |
+| `make dev-down` | Elimina contenedores sin borrar datos |
+| `make dev-clean` | Reset total — borra volúmenes y base de datos |
+
+**Producción**
+
+| Comando | Descripción |
+|---|---|
+| `make prod` | Levanta prod con build |
+| `make prod-up` | Levanta prod sin rebuild |
+| `make prod-down` | Para prod conservando datos |
+| `make prod-clean` | Reset total prod — borra volúmenes y base de datos |
+
+**Utilidades**
+
+| Comando | Descripción |
+|---|---|
+| `make status` | Estado de todos los contenedores activos |
+| `make logs-api` | Logs en tiempo real del contenedor de la API |
+| `make logs-db` | Logs en tiempo real de Postgres |
+| `make logs-adminer` | Logs en tiempo real de Adminer |
+| `make shell-api` | Shell del contenedor de la API |
+| `make shell-db` | Shell del contenedor Postgres |
+
+### Arranque sin Docker (Maven directo)
 
 ```bash
-cd community-help-web
-npm install
-npm run dev
-```
+# Copia y rellena las variables de entorno si vas a usar el perfil dev
+cp .env.dev.example .env.dev
 
-El frontend estará disponible en `http://localhost:5173`.
+# Arranca con el perfil local (BD ya levantada con `make local-db`)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
 
 ---
 
@@ -250,9 +303,11 @@ SELECT email, code, type, expires_at, used FROM otp_codes ORDER BY expires_at DE
 
 ### Notificaciones de proposals
 
-El digest se envía cada 5 minutos en dev. Para probar inmediatamente:
-```properties
-notification.digest.interval-ms=30000
+El digest se envía cada 5 minutos en `dev`/`local`. Para probar inmediatamente, edita el perfil correspondiente:
+```yaml
+notification:
+  digest:
+    interval-ms: 30000
 ```
 
 ```sql
@@ -275,39 +330,44 @@ Para que el motor de matching funcione correctamente, usa coordenadas distintas 
 ---
 
 ## Estructura del proyecto
+
 ```
-community-help-pro/
-├── community-help-api/          # Backend Spring Boot
-│   └── src/main/java/com/communityhelp/app/
-│       ├── auth/                # JWT, OAuth2, verificación email, recuperación contraseña
-│       ├── chat/                # Mensajería REST y WebSocket/STOMP
-│       ├── common/              # Location, excepciones, OpenRoute, persistencia base
-│       ├── config/              # Seguridad, CORS, WebSocket, caché, scheduler
-│       ├── donation/            # Donaciones, matching, ciclo de vida
-│       ├── email/               # Emails con plantillas Thymeleaf
-│       ├── helprequest/         # Solicitudes de ayuda, matching, ciclo de vida
-│       ├── notification/        # Digest de proposals, limpieza
-│       ├── otp/                 # Códigos OTP
-│       ├── proposal/            # Motor de matching y scoring
-│       ├── review/              # Reseñas y rating
-│       ├── security/            # Filtros JWT, rate limiting
-│       ├── user/                # Gestión de usuarios
-│       └── volunteer/           # Perfil, habilidades, transporte
-│
-└── community-help-web/          # Frontend React + TypeScript
-└── src/
-├── components/          # Menubar, mapas, OTP input
-├── context/             # Estado global (auth, token, usuario)
-├── hooks/               # useAppContext, useGeolocation, useChat
-├── pages/               # Auth, Home, solicitudes, donaciones, chat, perfil
-└── types/               # Interfaces TypeScript del dominio
+community-help-api/
+├── .env.dev.example
+├── .env.prod.example
+├── .gitignore
+├── .dockerignore
+├── docker-compose.yml
+├── docker-compose.local.yml
+├── docker-compose.dev.yml
+├── docker-compose.prod.yml
+├── Dockerfile.dev
+├── Dockerfile.prod
+├── Makefile
+├── pom.xml
+└── src/main/java/com/communityhelp/app/
+    ├── auth/                # JWT, OAuth2, verificación email, recuperación contraseña
+    ├── chat/                # Mensajería REST y WebSocket/STOMP
+    ├── common/               # Location, excepciones, OpenRoute, persistencia base
+    ├── config/               # Seguridad, CORS, WebSocket, caché, scheduler
+    ├── donation/             # Donaciones, matching, ciclo de vida
+    ├── email/                # Emails con plantillas Thymeleaf
+    ├── helprequest/          # Solicitudes de ayuda, matching, ciclo de vida
+    ├── notification/         # Digest de proposals, limpieza
+    ├── otp/                  # Códigos OTP
+    ├── proposal/             # Motor de matching y scoring
+    ├── review/               # Reseñas y rating
+    ├── security/             # Filtros JWT, rate limiting
+    ├── user/                 # Gestión de usuarios
+    └── volunteer/            # Perfil, habilidades, transporte
 ```
 
 ---
 
 ## Perfiles
 
-| Perfil | Uso | Radio inicial | Retry | Retención notificaciones |
-|---|---|---|---|---|
-| `dev` | Local | 5 km | 10 min | 7 días |
-| `prod` | Producción | 10 km | 30 min | 30 días |
+| Perfil | Uso | BD | Radio inicial | Retry | Retención notificaciones |
+|---|---|---|---|---|---|
+| `local` | Desarrollo desde el IDE, solo BD en Docker | Local (root/password) | 5 km | 2 min | 7 días |
+| `dev` | Desarrollo con API + BD dockerizadas | Docker (`.env.dev`) | 5 km | 2 min | 7 días |
+| `prod` | Producción | Docker (`.env.prod`) | 10 km | 30 min | 30 días |
