@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_volunteer_skills_volunteer ON volunteer_skills(volunteer_id);
