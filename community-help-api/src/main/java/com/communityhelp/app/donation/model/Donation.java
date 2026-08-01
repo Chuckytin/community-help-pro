@@ -1,7 +1,6 @@
 package com.communityhelp.app.donation.model;
 
 import com.communityhelp.app.common.persistence.AuditableLocatable;
-import com.communityhelp.app.helprequest.model.HelpRequestStatus;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.volunteer.model.Volunteer;
 import jakarta.persistence.*;
@@ -66,7 +65,6 @@ public class Donation extends AuditableLocatable {
     @Column(name = "cancel_reason")
     private String cancelReason;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -182,7 +180,7 @@ public class Donation extends AuditableLocatable {
         this.volunteer = null;
         this.reservedAt = null;
         this.confirmedAt = null;
-        this.pickedUpAt =  null;
+        this.pickedUpAt = null;
 
         this.completedAt = LocalDateTime.now();
     }

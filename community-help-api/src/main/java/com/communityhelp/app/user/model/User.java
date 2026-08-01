@@ -5,7 +5,6 @@ import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.volunteer.model.Volunteer;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SQLDelete;
 
 import java.time.LocalDateTime;
@@ -19,7 +18,6 @@ import java.util.UUID;
         @Index(name = "idx_users_location", columnList = "location")
 })
 @SQLDelete(sql = "UPDATE users SET active = false, deleted_at = now() WHERE id = ?")
-@FilterDef(name = "activeFilter", defaultCondition = "active = true")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

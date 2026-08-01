@@ -12,7 +12,7 @@
 
     <groupId>com.communityhelp</groupId>
     <artifactId>community-help-api</artifactId>
-    <version>0.30.0</version>
+    <version>0.31.0</version>
     <name>community-help-api</name>
     <description>Backend API for Community Help platform</description>
 
@@ -161,11 +161,6 @@
 
 
         <!-- ==================== SERIALIZACIÓN ==================== -->
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.json</groupId>

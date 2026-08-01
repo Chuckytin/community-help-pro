@@ -1,0 +1,29 @@
+[
+  {
+    "requesterEmail": "carlos.ruiz@example.com",
+    "title": "Ayuda para compra semanal",
+    "description": "No puedo salir de casa, necesito ayuda con la compra",
+    "type": "SHOPPING",
+    "deadlineDaysFromNow": 3,
+    "latitude": 43.5340,
+    "longitude": -5.6630
+  },
+  {
+    "requesterEmail": "marina.lopez@example.com",
+    "title": "Acompañamiento a cita médica",
+    "description": "Necesito compañía para ir al centro de salud el jueves",
+    "type": "MEDICAL",
+    "deadlineDaysFromNow": 5,
+    "latitude": 43.5318,
+    "longitude": -5.6602
+  },
+  {
+    "requesterEmail": "elena.vidal@example.com",
+    "title": "Transporte de muebles pequeños",
+    "description": "Necesito ayuda para mover una estantería a otro piso",
+    "type": "TRANSPORT",
+    "deadlineDaysFromNow": 7,
+    "latitude": 43.5355,
+    "longitude": -5.6640
+  }
+]

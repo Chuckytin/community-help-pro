@@ -16,12 +16,14 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     /**
-     * Obtiene un usuario por su email (para login/autenticación).
+     * Obtiene un usuario ACTIVO por su email (login/autenticación).
+     * Excluye explícitamente usuarios soft-deleted.
      */
-    Optional<User> findByEmail(String email);
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.active = true")
+    Optional<User> findByEmail(@Param("email") String email);
 
     /**
-     * Método para incluir usuarios inactivos (soft delete)
+     * Incluye usuarios inactivos — usado en flujos de reactivación (registro y OAuth2).
      */
     @Query("SELECT u FROM User u WHERE u.email = :email")
     Optional<User> findByEmailIncludeInactive(@Param("email") String email);

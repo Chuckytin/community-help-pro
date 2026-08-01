@@ -1,0 +1,35 @@
+[
+  {
+    "donorEmail": "carlos.ruiz@example.com",
+    "title": "Bolsas de arroz y legumbres",
+    "description": "5kg de arroz y 3kg de garbanzos, sin abrir",
+    "donationType": "FOOD",
+    "foodType": "OTHER",
+    "quantity": 8,
+    "unit": "kg",
+    "latitude": 43.5325,
+    "longitude": -5.6615
+  },
+  {
+    "donorEmail": "marina.lopez@example.com",
+    "title": "Ropa de invierno talla M",
+    "description": "Abrigos y jerséis en buen estado",
+    "donationType": "CLOTHING",
+    "foodType": null,
+    "quantity": 12,
+    "unit": "prendas",
+    "latitude": 43.5333,
+    "longitude": -5.6605
+  },
+  {
+    "donorEmail": "elena.vidal@example.com",
+    "title": "Fruta fresca de temporada",
+    "description": "Manzanas y peras recién recogidas",
+    "donationType": "FOOD",
+    "foodType": "FRUIT",
+    "quantity": 6,
+    "unit": "kg",
+    "latitude": 43.5341,
+    "longitude": -5.6598
+  }
+]

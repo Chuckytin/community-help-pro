@@ -37,8 +37,7 @@ public class Message {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sender_id", nullable = false)
     private User sender;
-
-    @Lob
+    
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 

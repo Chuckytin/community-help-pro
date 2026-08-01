@@ -1,0 +1,46 @@
+[
+  {
+    "name": "Marina López",
+    "email": "marina.lopez@example.com",
+    "password": "password123",
+    "latitude": 43.5322,
+    "longitude": -5.6611,
+    "volunteer": {
+      "available": true,
+      "radiusKm": 5.0,
+      "transportMode": "FOOT_WALKING",
+      "emailNotificationsEnabled": true,
+      "skills": [
+        "TRANSPORT",
+        "COMPANIONSHIP",
+        "SHOPPING"
+      ]
+    }
+  },
+  {
+    "name": "Carlos Ruiz",
+    "email": "carlos.ruiz@example.com",
+    "password": "password123",
+    "latitude": 43.5330,
+    "longitude": -5.6620,
+    "volunteer": null
+  },
+  {
+    "name": "Elena Vidal",
+    "email": "elena.vidal@example.com",
+    "password": "password123",
+    "latitude": 43.5350,
+    "longitude": -5.6650,
+    "volunteer": {
+      "available": true,
+      "radiusKm": 8.0,
+      "transportMode": "CYCLING_REGULAR",
+      "emailNotificationsEnabled": true,
+      "skills": [
+        "MEDICAL_ASSISTANCE",
+        "FIRST_AID",
+        "ELDERLY_CARE"
+      ]
+    }
+  }
+]

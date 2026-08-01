@@ -1,6 +1,7 @@
 package com.communityhelp.app.auth.oauth2;
 
 import com.communityhelp.app.auth.service.JwtService;
+import com.communityhelp.app.security.AppUserDetails;
 import com.communityhelp.app.user.model.Role;
 import com.communityhelp.app.user.model.User;
 import com.communityhelp.app.user.repository.UserRepository;
@@ -11,6 +12,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -59,7 +61,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     @Override
     public void onAuthenticationSuccess(
             @NonNull HttpServletRequest request,
-            HttpServletResponse response,
+            @NonNull HttpServletResponse response,
             Authentication authentication
     ) throws IOException {
 
@@ -72,17 +74,35 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.info("[OAuth2] Login con Google: email={}", email);
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIncludeInactive(email)
                 .orElseGet(() -> createOAuth2User(email, name, emailVerified));
 
-        org.springframework.security.core.userdetails.UserDetails userDetails =
-                new com.communityhelp.app.security.AppUserDetails(user);
+        if (!user.isActive()) {
+            user = reactivateOAuth2User(user, name, emailVerified);
+        }
+
+        UserDetails userDetails = new AppUserDetails(user);
         String token = jwtService.generateToken(userDetails);
 
         log.info("[OAuth2] JWT generado para usuario: {}", email);
 
         String redirectUrl = frontendOAuth2SuccessUrl + "?token=" + token;
         response.sendRedirect(redirectUrl);
+    }
+
+    /**
+     * Reactiva una cuenta previamente eliminada (soft delete) que vuelve
+     * a autenticarse vía Google.
+     */
+    private User reactivateOAuth2User(User user, String name, Boolean emailVerified) {
+        log.info("[OAuth2] Reactivando usuario existente desde Google: email={}", user.getEmail());
+
+        user.setName(name);
+        user.setEmailVerified(emailVerified != null && emailVerified);
+        user.setActive(true);
+        user.setDeletedAt(null);
+
+        return userRepository.save(user);
     }
 
     /**

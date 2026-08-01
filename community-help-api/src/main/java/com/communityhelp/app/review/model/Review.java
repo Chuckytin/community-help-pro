@@ -75,7 +75,6 @@ public class Review extends Auditable {
     @Column(nullable = false)
     private Integer rating;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String comment;
 
