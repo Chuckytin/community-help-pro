@@ -380,26 +380,27 @@ community-help-api/
 ├── Makefile
 ├── pom.xml
 └── src/main/
-├── resources/
-│ ├── db/migration/ # V1-V4, migraciones Flyway
-│ └── seed/ # users.json, donations.json, helprequests.json
-└── java/com/communityhelp/app/
-├── auth/ # JWT (JwtService), OAuth2 (success/failure handlers),
-│ # verificación email, recuperación contraseña
-├── chat/ # Mensajería REST y WebSocket/STOMP
-├── common/ # Location, excepciones base, OpenRoute, persistencia base
-├── config/ # Seguridad, CORS, WebSocket, caché, scheduler
-│ └── seed/ # UserSeeder, DonationSeeder, HelpRequestSeeder
-├── donation/ # Donaciones, matching, ciclo de vida, excepciones propias
-├── email/ # Emails con plantillas Thymeleaf
-├── helprequest/ # Solicitudes de ayuda, matching, ciclo de vida, excepciones propias
-├── notification/ # Digest de proposals, limpieza
-├── otp/ # Códigos OTP
-├── proposal/ # Motor de matching y scoring
-├── review/ # Reseñas y rating
-├── security/ # Filtros JWT, rate limiting
-├── user/ # Gestión de usuarios, excepciones propias (email duplicado, no verificado)
-└── volunteer/ # Perfil, habilidades, transporte
+    ├── resources/
+    │   ├── db/migration/         # V1-V4, migraciones Flyway
+    │   └── seed/                 # users.json, donations.json, helprequests.json
+    │
+    └── java/com/communityhelp/app/
+        ├── auth/                 # JWT (JwtService), OAuth2 (success/failure handlers),
+        │                         # verificación email, recuperación contraseña
+        ├── chat/                 # Mensajería REST y WebSocket/STOMP
+        ├── common/                # Location, excepciones base, OpenRoute, persistencia base
+        ├── config/                # Seguridad, CORS, WebSocket, caché, scheduler
+        │   └── seed/               # UserSeeder, DonationSeeder, HelpRequestSeeder
+        ├── donation/              # Donaciones, matching, ciclo de vida, excepciones propias
+        ├── email/                 # Emails con plantillas Thymeleaf
+        ├── helprequest/           # Solicitudes de ayuda, matching, ciclo de vida, excepciones propias
+        ├── notification/          # Digest de proposals, limpieza
+        ├── otp/                   # Códigos OTP
+        ├── proposal/              # Motor de matching y scoring
+        ├── review/                # Reseñas y rating
+        ├── security/              # Filtros JWT, rate limiting
+        ├── user/                  # Gestión de usuarios, excepciones propias (email duplicado, no verificado)
+        └── volunteer/             # Perfil, habilidades, transporte
 ```
 
 ---
