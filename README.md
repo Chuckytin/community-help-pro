@@ -39,10 +39,12 @@ Este repositorio contiene el **backend** (API REST). El frontend (React + TypeSc
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
 - **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña. Las cuentas no verificadas se eliminan automáticamente pasadas 24 horas.
-- **Login con Google** — OAuth2 integrado en el backend.
+- **Login con Google (OAuth2)** — con reactivación automática de cuentas dadas de baja (soft delete) que vuelven a autenticarse, y redirección al frontend tanto en éxito como en fallo del flujo.
 - **Rate limiting** en endpoints de autenticación para proteger contra fuerza bruta y abuso.
 - **Limpieza automática de datos** — cuentas sin verificar y notificaciones enviadas antiguas se purgan periódicamente para mantener la base de datos sana.
+- **Soft delete de usuarios** — las cuentas eliminadas por el propio usuario quedan marcadas como inactivas (`active = false`) y excluidas de login y búsquedas, sin perder el histórico de donaciones, solicitudes y reviews asociado.
 - **API documentada con Swagger / OpenAPI** accesible en `/swagger-ui.html`.
+- **Datos de prueba (seed)** — usuarios, voluntarios, donaciones y solicitudes de ejemplo, cargados automáticamente en `local`/`dev`, disparando el motor de matching real desde el primer arranque.
 
 ---
 
@@ -62,6 +64,8 @@ El factor de distancia utiliza el **tiempo de viaje real** calculado por OpenRou
 Los tiempos de viaje se calculan **en paralelo** para todos los candidatos y se **cachean** para evitar llamadas repetidas a la API cuando múltiples entidades comparten voluntarios en la misma zona.
 
 Si ningún voluntario acepta una proposal en el tiempo configurado, el sistema reintenta automáticamente ampliando el radio de búsqueda de forma progresiva hasta un máximo configurable. Los parámetros son completamente ajustables por entorno vía `application-{profile}.yml`.
+
+El motor se dispara de forma reactiva mediante eventos de dominio (`DonationCreatedEvent`, `HelpRequestCreatedEvent`, `VolunteerUpdatedEvent`, etc.), procesados de forma asíncrona tras el commit de la transacción correspondiente — tanto en el flujo normal de la API como en los seeders de datos de prueba.
 
 ---
 
@@ -103,6 +107,15 @@ El proyecto utiliza **Flyway** para gestionar las migraciones de la base de dato
 - Formato: `V{version}__{description}.sql`
 - La versión debe ser secuencial (ej: `V1`, `V2`, `V10`)
 
+### Migraciones actuales
+
+| Versión | Descripción |
+|---|---|
+| `V1` | Esquema inicial |
+| `V2` | Extensión PostGIS + índices espaciales y de consulta frecuente |
+| `V3` | Permite `password_hash` nulo para usuarios OAuth2 |
+| `V4` | Índice sobre `volunteer_skills.volunteer_id` |
+
 ### Verificar estado de migraciones
 
 ```sql
@@ -115,6 +128,7 @@ SELECT * FROM flyway_schema_history;
 ## API
 
 La documentación interactiva de la API está disponible en (perfiles `local`/`dev`):
+
 ```
 http://localhost:8080/swagger-ui.html
 ```
@@ -125,6 +139,8 @@ Para probar los endpoints autenticados:
 2. Verifica tu email con `POST /api/v1/auth/verify-email`
 3. Obtén tu token con `POST /api/v1/auth/login`
 4. Haz clic en **Authorize** e introduce `Bearer <token>`
+
+También puedes iniciar sesión con Google en `/oauth2/authorization/google`; el backend redirige al frontend con el JWT como query param en caso de éxito, o con un parámetro de error en caso de fallo.
 
 La especificación OpenAPI en JSON está disponible en `/v3/api-docs`.
 
@@ -282,6 +298,24 @@ cp .env.dev.example .env.dev
 
 ---
 
+## Datos de prueba (seed)
+
+En los perfiles `local` y `dev`, al arrancar la aplicación se cargan automáticamente datos de ejemplo desde `src/main/resources/seed/`:
+
+| Seeder | Origen | Contenido |
+|---|---|---|
+| `UserSeeder` | `seed/users.json` | Usuarios de ejemplo, algunos con perfil de voluntario (skills, radio, modo de transporte) |
+| `DonationSeeder` | `seed/donations.json` | Donaciones asociadas a los usuarios sembrados |
+| `HelpRequestSeeder` | `seed/helprequests.json` | Solicitudes de ayuda asociadas a los usuarios sembrados |
+
+Cada seeder es idempotente (no duplica datos si ya existen) y se ejecuta en orden (`AdminSeeder` → `UserSeeder` → `DonationSeeder` → `HelpRequestSeeder`). Todos los usuarios de seed se crean con `emailVerified = true` y `active = true`, listos para iniciar sesión sin pasar por el flujo OTP.
+
+`DonationSeeder` y `HelpRequestSeeder` publican los mismos eventos de dominio que el flujo normal de la API (`DonationCreatedEvent`, `HelpRequestCreatedEvent`), por lo que el motor de matching genera proposals reales automáticamente unos segundos después del arranque.
+
+Las contraseñas de los usuarios de seed están en texto plano dentro de los propios JSON (p. ej. `password123`), pensadas únicamente para entornos `local`/`dev`.
+
+---
+
 ## Pruebas y desarrollo
 
 ### Verificación de email
@@ -318,7 +352,7 @@ ORDER BY created_at DESC;
 
 ### Coordenadas de prueba
 
-Para que el motor de matching funcione correctamente, usa coordenadas distintas para cada usuario de prueba.
+Para que el motor de matching funcione correctamente, usa coordenadas distintas para cada usuario de prueba. Los usuarios del seed ya siguen este criterio; si añades usuarios manualmente, usa como referencia:
 
 | Usuario | Latitud | Longitud |
 |---|---|---|
@@ -345,29 +379,36 @@ community-help-api/
 ├── Dockerfile.prod
 ├── Makefile
 ├── pom.xml
-└── src/main/java/com/communityhelp/app/
-    ├── auth/                # JWT, OAuth2, verificación email, recuperación contraseña
-    ├── chat/                # Mensajería REST y WebSocket/STOMP
-    ├── common/               # Location, excepciones, OpenRoute, persistencia base
-    ├── config/               # Seguridad, CORS, WebSocket, caché, scheduler
-    ├── donation/             # Donaciones, matching, ciclo de vida
-    ├── email/                # Emails con plantillas Thymeleaf
-    ├── helprequest/          # Solicitudes de ayuda, matching, ciclo de vida
-    ├── notification/         # Digest de proposals, limpieza
-    ├── otp/                  # Códigos OTP
-    ├── proposal/             # Motor de matching y scoring
-    ├── review/               # Reseñas y rating
-    ├── security/             # Filtros JWT, rate limiting
-    ├── user/                 # Gestión de usuarios
-    └── volunteer/            # Perfil, habilidades, transporte
+└── src/main/
+    ├── resources/
+    │   ├── db/migration/         # V1-V4, migraciones Flyway
+    │   └── seed/                 # users.json, donations.json, helprequests.json
+    │
+    └── java/com/communityhelp/app/
+        ├── auth/                 # JWT (JwtService), OAuth2 (success/failure handlers),
+        │                         # verificación email, recuperación contraseña
+        ├── chat/                 # Mensajería REST y WebSocket/STOMP
+        ├── common/                # Location, excepciones base, OpenRoute, persistencia base
+        ├── config/                # Seguridad, CORS, WebSocket, caché, scheduler
+        │   └── seed/               # UserSeeder, DonationSeeder, HelpRequestSeeder
+        ├── donation/              # Donaciones, matching, ciclo de vida, excepciones propias
+        ├── email/                 # Emails con plantillas Thymeleaf
+        ├── helprequest/           # Solicitudes de ayuda, matching, ciclo de vida, excepciones propias
+        ├── notification/          # Digest de proposals, limpieza
+        ├── otp/                   # Códigos OTP
+        ├── proposal/              # Motor de matching y scoring
+        ├── review/                # Reseñas y rating
+        ├── security/              # Filtros JWT, rate limiting
+        ├── user/                  # Gestión de usuarios, excepciones propias (email duplicado, no verificado)
+        └── volunteer/             # Perfil, habilidades, transporte
 ```
 
 ---
 
 ## Perfiles
 
-| Perfil | Uso | BD | Radio inicial | Retry | Retención notificaciones |
-|---|---|---|---|---|---|
-| `local` | Desarrollo desde el IDE, solo BD en Docker | Local (root/password) | 5 km | 2 min | 7 días |
-| `dev` | Desarrollo con API + BD dockerizadas | Docker (`.env.dev`) | 5 km | 2 min | 7 días |
-| `prod` | Producción | Docker (`.env.prod`) | 10 km | 30 min | 30 días |
+| Perfil | Uso | BD | Radio inicial | Retry | Retención notificaciones | Seed |
+|---|---|---|---|---|---|---|
+| `local` | Desarrollo desde el IDE, solo BD en Docker | Local (root/password) | 5 km | 2 min | 7 días | Sí |
+| `dev` | Desarrollo con API + BD dockerizadas | Docker (`.env.dev`) | 5 km | 2 min | 7 días | Sí |
+| `prod` | Producción | Docker (`.env.prod`) | 10 km | 30 min | 30 días | No |
