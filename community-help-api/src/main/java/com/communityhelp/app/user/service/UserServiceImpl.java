@@ -4,6 +4,7 @@ import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.proposal.model.ProposalCancelReason;
 import com.communityhelp.app.proposal.repository.ProposalRepository;
 import com.communityhelp.app.user.dto.UserCreateRequestDto;
 import com.communityhelp.app.user.dto.UserResponseDto;
@@ -135,7 +136,7 @@ public class UserServiceImpl implements UserService {
 
         helpRequests.forEach(hr -> {
             hr.cancel(reason);
-            proposalRepository.cancelPendingProposals(hr.getId());
+            proposalRepository.cancelPendingProposals(hr.getId(), ProposalCancelReason.TARGET_ENTITY_CANCELLED);
         });
 
         // Cancela donaciones creadas por el usuario y sus proposals asociadas
@@ -143,7 +144,7 @@ public class UserServiceImpl implements UserService {
 
         donations.forEach(d -> {
             d.cancel(reason);
-            proposalRepository.cancelPendingProposals(d.getId());
+            proposalRepository.cancelPendingProposals(d.getId(), ProposalCancelReason.TARGET_ENTITY_CANCELLED);
         });
 
         // Libera solicitudes donde participaba como voluntario

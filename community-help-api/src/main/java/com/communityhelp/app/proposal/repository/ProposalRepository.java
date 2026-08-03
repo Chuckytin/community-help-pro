@@ -1,6 +1,7 @@
 package com.communityhelp.app.proposal.repository;
 
 import com.communityhelp.app.proposal.model.Proposal;
+import com.communityhelp.app.proposal.model.ProposalCancelReason;
 import com.communityhelp.app.proposal.model.ProposalStatus;
 import com.communityhelp.app.proposal.model.ProposalType;
 import com.communityhelp.app.volunteer.model.Volunteer;
@@ -10,10 +11,14 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Repository
 public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
@@ -60,28 +65,32 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
     );
 
     /**
-     * Cncela las proposals asociadas si cancela una HelpRequest o una Donation.
+     * Cancela las proposals asociadas si se cancela una HelpRequest o una Donation.
      */
     @Modifying
     @Query("""
             UPDATE Proposal p
-            SET p.status = 'CANCELLED'
+            SET p.status = 'CANCELLED',
+                p.active = false,
+                p.cancelReason = :reason
             WHERE p.targetEntityId = :entityId
             AND p.status = 'PENDING'
             """)
-    void cancelPendingProposals(UUID entityId);
+    void cancelPendingProposals(@Param("entityId") UUID entityId, @Param("reason") ProposalCancelReason reason);
 
     /**
      * Cancela todas las proposals PENDING de un volunteer cuando su disponibilidad es false.
      */
     @Modifying
     @Query("""
-                UPDATE Proposal p
-                SET p.status = 'CANCELLED'
-                WHERE p.volunteer.id = :volunteerId
-                AND p.status = 'PENDING'
+            UPDATE Proposal p
+            SET p.status = 'CANCELLED',
+                p.active = false,
+                p.cancelReason = :reason
+            WHERE p.volunteer.id = :volunteerId
+            AND p.status = 'PENDING'
             """)
-    void cancelPendingByVolunteer(UUID volunteerId);
+    void cancelPendingByVolunteer(@Param("volunteerId") UUID volunteerId, @Param("reason") ProposalCancelReason reason);
 
     /**
      * Obtiene todas las proposals pendientes de una entidad,
@@ -158,12 +167,15 @@ public interface ProposalRepository extends JpaRepository<Proposal, UUID> {
     @Query("""
             UPDATE Proposal p
             SET p.status = 'EXPIRED',
-                p.active = false
+                p.active = false,
+                p.cancelReason = :reason
             WHERE p.type = :type
               AND p.status = 'PENDING'
               AND p.createdAt < :threshold
             """)
-    void expireStaleProposals(ProposalType type, LocalDateTime threshold);
+    void expireStaleProposals(@Param("type") ProposalType type,
+                              @Param("threshold") LocalDateTime threshold,
+                              @Param("reason") ProposalCancelReason reason);
 
     /**
      * Reactiva una proposal expirada para el retry, actualizando su score y estado a PENDING.

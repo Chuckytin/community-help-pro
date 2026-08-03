@@ -1,5 +1,6 @@
 package com.communityhelp.app.proposal.service;
 
+import com.communityhelp.app.proposal.model.ProposalCancelReason;
 import com.communityhelp.app.proposal.model.ProposalType;
 import com.communityhelp.app.proposal.repository.ProposalRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class ProposalExpirationService {
 
     @Transactional
     public void expireStaleProposals(LocalDateTime threshold) {
-        proposalRepository.expireStaleProposals(ProposalType.HELP_REQUEST, threshold);
-        proposalRepository.expireStaleProposals(ProposalType.DONATION, threshold);
+        proposalRepository.expireStaleProposals(ProposalType.HELP_REQUEST, threshold, ProposalCancelReason.SYSTEM_EXPIRED);
+        proposalRepository.expireStaleProposals(ProposalType.DONATION, threshold, ProposalCancelReason.SYSTEM_EXPIRED);
     }
 }

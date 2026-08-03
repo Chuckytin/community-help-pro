@@ -4,6 +4,7 @@ import com.communityhelp.app.donation.model.Donation;
 import com.communityhelp.app.donation.repository.DonationRepository;
 import com.communityhelp.app.helprequest.model.HelpRequest;
 import com.communityhelp.app.helprequest.repository.HelpRequestRepository;
+import com.communityhelp.app.proposal.model.ProposalCancelReason;
 import com.communityhelp.app.proposal.repository.ProposalRepository;
 import com.communityhelp.app.proposal.service.ProposalGeneratorService;
 import lombok.RequiredArgsConstructor;
@@ -61,7 +62,7 @@ public class VolunteerReevaluationService {
     @Transactional
     public void handleVolunteerUnavailable(UUID volunteerId) {
 
-        proposalRepository.cancelPendingByVolunteer(volunteerId);
+        proposalRepository.cancelPendingByVolunteer(volunteerId, ProposalCancelReason.VOLUNTEER_UNAVAILABLE);
 
         log.info("[volunteer] Cancelled proposals for unavailable volunteer {}", volunteerId);
     }
