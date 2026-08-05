@@ -4,6 +4,7 @@ import com.communityhelp.app.auth.dto.AuthResponse;
 import com.communityhelp.app.auth.dto.ResetPasswordRequestDto;
 import com.communityhelp.app.auth.dto.VerifyEmailRequestDto;
 import com.communityhelp.app.email.service.EmailService;
+import com.communityhelp.app.otp.exception.OtpException;
 import com.communityhelp.app.otp.model.OtpType;
 import com.communityhelp.app.otp.repository.OtpRepository;
 import com.communityhelp.app.otp.service.OtpService;
@@ -24,6 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final UserRepository userRepository;
     private final OtpRepository otpRepository;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * Autentica al usuario con email y contraseña.
@@ -114,18 +117,30 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * Verifica el email del usuario con el código OTP.
+     * Marca email como verificado.
+     * Envia el email de bienvenida.
      */
     @Override
     @Transactional
     public void verifyEmail(VerifyEmailRequestDto dto) {
-        boolean valid = otpService.validate(dto.getEmail(), dto.getCode(), OtpType.VERIFY_EMAIL);
-        if (!valid) {
-            throw new BadCredentialsException("Invalid or expired verification code");
-        }
-        userService.markEmailVerified(dto.getEmail());
+        log.info("Verifying email for: {}", dto.getEmail());
 
-        UserResponseDto user = userService.getUserByEmail(dto.getEmail());
-        emailService.sendWelcomeEmail(user.getEmail(), user.getName());
+        try {
+            otpService.validate(dto.getEmail(), dto.getCode(), OtpType.VERIFY_EMAIL);
+
+            userService.markEmailVerified(dto.getEmail());
+            log.info("Email verified successfully for: {}", dto.getEmail());
+
+            UserResponseDto user = userService.getUserByEmail(dto.getEmail());
+            emailService.sendWelcomeEmail(user.getEmail(), user.getName());
+
+        } catch (OtpException e) {
+            log.warn("OTP validation failed for {}: {}", dto.getEmail(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error verifying email for {}: {}", dto.getEmail(), e.getMessage(), e);
+            throw new RuntimeException("Error verifying email. Please try again later.");
+        }
     }
 
     /**
@@ -135,9 +150,13 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public void forgotPassword(String email) {
-        UserResponseDto user = userService.getUserByEmail(email);
-        String code = otpService.generateAndSave(email, OtpType.RESET_PASSWORD);
-        emailService.sendPasswordResetEmail(email, user.getName(), code);
+        try {
+            UserResponseDto user = userService.getUserByEmail(email);
+            String code = otpService.generateAndSave(email, OtpType.RESET_PASSWORD);
+            emailService.sendPasswordResetEmail(email, user.getName(), code);
+        } catch (EntityNotFoundException e) {
+            log.warn("Password reset requested for non-existent email: {}", email);
+        }
     }
 
     /**
@@ -148,11 +167,31 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequestDto dto) {
-        boolean valid = otpService.validate(dto.getEmail(), dto.getCode(), OtpType.RESET_PASSWORD);
-        if (!valid) {
-            throw new BadCredentialsException("Invalid or expired reset code");
+        log.info("Resetting password for email: {}", dto.getEmail());
+
+        try {
+            otpService.validate(dto.getEmail(), dto.getCode(), OtpType.RESET_PASSWORD);
+
+            userService.updatePassword(dto.getEmail(), dto.getNewPassword());
+            log.info("Password reset successfully for: {}", dto.getEmail());
+
+        } catch (OtpException e) {
+            log.warn("OTP validation failed for password reset {}: {}", dto.getEmail(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected error resetting password for {}: {}", dto.getEmail(), e.getMessage(), e);
+            throw new RuntimeException("Error resetting password. Please try again later.");
         }
-        userService.updatePassword(dto.getEmail(), dto.getNewPassword());
+    }
+
+    /**
+     * Invalida el token actual añadiéndolo a la blacklist hasta su expiración natural.
+     */
+    @Override
+    public void logout(String token) {
+        Instant expiresAt = jwtService.getExpiration(token);
+        tokenBlacklistService.blacklist(token, expiresAt);
+        log.info("[logout] Token blacklisted, expires at {}", expiresAt);
     }
 
     /**
@@ -173,7 +212,7 @@ public class AuthServiceImpl implements AuthService {
             log.debug("[cleanup] No unverified users to delete");
             return;
         }
-        
+
         List<String> emails = unverified.stream()
                 .map(User::getEmail)
                 .toList();

@@ -13,8 +13,12 @@ public interface AuthService {
     AuthResponse register(UserCreateRequestDto dto);
 
     void verifyEmail(VerifyEmailRequestDto dto);
+
     void forgotPassword(String email);
+
     void resetPassword(ResetPasswordRequestDto dto);
+
+    void logout(String token);
 
     void cleanupUnverifiedUsers();
 }

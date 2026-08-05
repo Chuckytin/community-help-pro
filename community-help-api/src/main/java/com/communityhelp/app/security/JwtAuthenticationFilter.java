@@ -1,6 +1,7 @@
 package com.communityhelp.app.security;
 
 import com.communityhelp.app.auth.service.JwtService;
+import com.communityhelp.app.auth.service.TokenBlacklistService;
 import com.communityhelp.app.common.exceptions.ErrorCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -33,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final SecurityResponseWriter securityResponseWriter;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * Procesa cada request HTTP para comprobar si incluye un token JWT válido.
@@ -53,6 +55,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token == null) {
             filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (tokenBlacklistService.isBlacklisted(token)) {
+
+            log.warn("[security] Blacklisted JWT used");
+
+            securityResponseWriter.writeSecurityError(
+                    response,
+                    HttpStatus.UNAUTHORIZED,
+                    ErrorCode.INVALID_TOKEN,
+                    "Token has been invalidated"
+            );
             return;
         }
 

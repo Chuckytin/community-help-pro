@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,6 +89,17 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public long getJwtExpiryMs() {
         return jwtExpiryMs;
+    }
+
+    @Override
+    public Instant getExpiration(String token) {
+        Date expiration = Jwts.parser()
+                .verifyWith(getSignKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getExpiration();
+        return expiration.toInstant();
     }
 
     /**

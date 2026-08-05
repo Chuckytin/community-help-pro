@@ -15,6 +15,11 @@ public interface OtpRepository extends JpaRepository<OtpCode, Long> {
     Optional<OtpCode> findTopByEmailAndTypeAndUsedFalseOrderByExpiresAtDesc(String email, OtpType type);
 
     /**
+     * Busca el OTP más reciente (sin importar si está usado o no) para un email y tipo dados.ºººººººººººººººººººººººººººººººººººººº
+     */
+    Optional<OtpCode> findTopByEmailAndTypeOrderByExpiresAtDesc(String email, OtpType type);
+
+    /**
      * Elimina todos los OTPs para un email y tipo dados. Esto se utiliza antes de generar un nuevo OTP
      * para asegurarse de que solo haya un OTP activo por email y tipo.
      */

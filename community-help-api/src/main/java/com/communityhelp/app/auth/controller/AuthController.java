@@ -67,4 +67,13 @@ public class AuthController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Logout", description = "Invalidates the current JWT token so it can no longer be used")
+    @ApiResponse(responseCode = "200", description = "Logout successful")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = authorizationHeader.replace("Bearer ", "");
+        authService.logout(token);
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.communityhelp.app.common.exceptions;
 
+import com.communityhelp.app.otp.exception.OtpException;
 import com.communityhelp.app.user.exception.EmailNotVerifiedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +86,26 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException ex) {
         log.warn("Malformed JSON request: {}", ex.getMessage());
         return buildResponse(HttpStatus.BAD_REQUEST, ErrorCode.MALFORMED_JSON, "Malformed JSON request");
+    }
+
+    /**
+     * Maneja excepciones específicas de OTP (códigos de verificación)
+     */
+    @ExceptionHandler(OtpException.class)
+    public ResponseEntity<ApiErrorResponse> handleOTPException(OtpException ex) {
+        log.warn("OTP error: {} - {}", ex.getErrorCode(), ex.getMessage());
+
+        HttpStatus status = switch (ex.getErrorCode()) {
+            case OTP_EXPIRED,
+                 OTP_INVALID_CODE,
+                 OTP_NOT_FOUND -> HttpStatus.BAD_REQUEST;
+
+            case OTP_ALREADY_USED -> HttpStatus.CONFLICT;
+
+            default -> HttpStatus.BAD_REQUEST;
+        };
+
+        return buildResponse(status, ex.getErrorCode(), ex.getMessage());
     }
 
     /**

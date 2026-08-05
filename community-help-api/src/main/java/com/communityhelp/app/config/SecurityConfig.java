@@ -3,6 +3,7 @@ package com.communityhelp.app.config;
 import com.communityhelp.app.auth.oauth2.OAuth2FailureHandler;
 import com.communityhelp.app.auth.oauth2.OAuth2SuccessHandler;
 import com.communityhelp.app.auth.service.JwtService;
+import com.communityhelp.app.auth.service.TokenBlacklistService;
 import com.communityhelp.app.security.*;
 import com.communityhelp.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -104,12 +105,10 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter(
             JwtService jwtService,
-            SecurityResponseWriter securityResponseWriter
+            SecurityResponseWriter securityResponseWriter,
+            TokenBlacklistService tokenBlacklistService
     ) {
-        return new JwtAuthenticationFilter(
-                jwtService,
-                securityResponseWriter
-        );
+        return new JwtAuthenticationFilter(jwtService, securityResponseWriter, tokenBlacklistService);
     }
 
     /**
