@@ -11,19 +11,19 @@ Este repositorio contiene el **backend** (API REST). El frontend (React + TypeSc
 ## Tecnologías
 
 - **Java 21** + **Spring Boot 4**
-- **PostgreSQL 18** + **PostGIS** — geolocalización y búsquedas por proximidad
-- **Flyway** — migraciones versionadas de base de datos
-- **Hibernate Spatial** — integración JPA con tipos geométricos
-- **Spring Security** + **JWT** — autenticación stateless
-- **OAuth2 / Google Login** — autenticación social con Google
-- **WebSocket / STOMP** — mensajería en tiempo real
-- **MapStruct** — mapeo de DTOs
-- **Docker** + **Docker Compose** + **Makefile** — entornos `local`, `dev` y `prod`
-- **Thymeleaf** — plantillas HTML para emails transaccionales
-- **Brevo (SMTP)** — envío de emails
-- **OpenRouteService** — cálculo de rutas y tiempos de viaje reales
-- **Spring Cache** — caché de tiempos de viaje para optimizar llamadas a la API
-- **Bucket4j** — rate limiting en endpoints de autenticación
+- **PostgreSQL 18** + **PostGIS** - geolocalización y búsquedas por proximidad
+- **Flyway** - migraciones versionadas de base de datos
+- **Hibernate Spatial** - integración JPA con tipos geométricos
+- **Spring Security** + **JWT** - autenticación stateless
+- **OAuth2 / Google Login** - autenticación social con Google
+- **WebSocket / STOMP** - mensajería en tiempo real
+- **MapStruct** - mapeo de DTOs
+- **Docker** + **Docker Compose** + **Makefile** - entornos `local`, `dev` y `prod`
+- **Thymeleaf** - plantillas HTML para emails transaccionales
+- **Brevo (SMTP)** - envío de emails
+- **OpenRouteService** - cálculo de rutas y tiempos de viaje reales
+- **Spring Cache** - caché de tiempos de viaje para optimizar llamadas a la API
+- **Bucket4j** - rate limiting en endpoints de autenticación
 
 ---
 
@@ -33,18 +33,18 @@ Este repositorio contiene el **backend** (API REST). El frontend (React + TypeSc
 - Crear **solicitudes de ayuda** (Help Requests) con título, descripción, fecha límite y radio de acción. No se permite duplicar el título de una solicitud abierta.
 - **Búsqueda por proximidad** de donaciones y solicitudes cercanas, filtrable por tipo y radio en metros.
 - **Motor de matching automático** que conecta voluntarios cercanos con donaciones y solicitudes compatibles, evaluando tiempo de viaje real, habilidades, rating y carga de trabajo. El radio de búsqueda se amplía progresivamente si no hay respuesta.
-- **Filtro de viabilidad por deadline** — el motor descarta voluntarios que no pueden llegar a tiempo antes de la fecha límite, usando tiempos de viaje reales calculados en paralelo.
+- **Filtro de viabilidad por deadline** - el motor descarta voluntarios que no pueden llegar a tiempo antes de la fecha límite, usando tiempos de viaje reales calculados en paralelo.
 - **Estimación de tiempo de viaje** para el voluntario al consultar una tarea, usando su modo de transporte configurado y mostrando también la opción más rápida disponible.
 - **Notificaciones por email a voluntarios** cuando reciben nuevas proposals, agrupadas en un digest periódico para evitar spam. Configurable por voluntario.
 - **Chat privado** entre solicitante y voluntario para coordinar detalles, con soporte WebSocket para mensajería en tiempo real.
 - Sistema de **reseñas y puntuaciones** entre participantes tras completar una interacción.
-- **Sistema de autenticación con verificación de email** — OTP por correo al registrarse, con recuperación de contraseña. Las cuentas no verificadas se eliminan automáticamente pasadas 24 horas.
-- **Login con Google (OAuth2)** — con reactivación automática de cuentas dadas de baja (soft delete) que vuelven a autenticarse, y redirección al frontend tanto en éxito como en fallo del flujo.
+- **Sistema de autenticación con verificación de email** - OTP por correo al registrarse, con recuperación de contraseña. Las cuentas no verificadas se eliminan automáticamente pasadas 24 horas.
+- **Login con Google (OAuth2)** - con reactivación automática de cuentas dadas de baja (soft delete) que vuelven a autenticarse, y redirección al frontend tanto en éxito como en fallo del flujo.
 - **Rate limiting** en endpoints de autenticación para proteger contra fuerza bruta y abuso.
-- **Limpieza automática de datos** — cuentas sin verificar y notificaciones enviadas antiguas se purgan periódicamente para mantener la base de datos sana.
-- **Soft delete de usuarios** — las cuentas eliminadas por el propio usuario quedan marcadas como inactivas (`active = false`) y excluidas de login y búsquedas, sin perder el histórico de donaciones, solicitudes y reviews asociado.
+- **Limpieza automática de datos** - cuentas sin verificar y notificaciones enviadas antiguas se purgan periódicamente para mantener la base de datos sana.
+- **Soft delete de usuarios** - las cuentas eliminadas por el propio usuario quedan marcadas como inactivas (`active = false`) y excluidas de login y búsquedas, sin perder el histórico de donaciones, solicitudes y reviews asociado.
 - **API documentada con Swagger / OpenAPI** accesible en `/swagger-ui.html`.
-- **Datos de prueba (seed)** — usuarios, voluntarios, donaciones y solicitudes de ejemplo, cargados automáticamente en `local`/`dev`, disparando el motor de matching real desde el primer arranque.
+- **Datos de prueba (seed)** - usuarios, voluntarios, donaciones y solicitudes de ejemplo, cargados automáticamente en `local`/`dev`, disparando el motor de matching real desde el primer arranque.
 
 ---
 
@@ -65,7 +65,7 @@ Los tiempos de viaje se calculan **en paralelo** para todos los candidatos y se 
 
 Si ningún voluntario acepta una proposal en el tiempo configurado, el sistema reintenta automáticamente ampliando el radio de búsqueda de forma progresiva hasta un máximo configurable. Los parámetros son completamente ajustables por entorno vía `application-{profile}.yml`.
 
-El motor se dispara de forma reactiva mediante eventos de dominio (`DonationCreatedEvent`, `HelpRequestCreatedEvent`, `VolunteerUpdatedEvent`, etc.), procesados de forma asíncrona tras el commit de la transacción correspondiente — tanto en el flujo normal de la API como en los seeders de datos de prueba.
+El motor se dispara de forma reactiva mediante eventos de dominio (`DonationCreatedEvent`, `HelpRequestCreatedEvent`, `VolunteerUpdatedEvent`, etc.), procesados de forma asíncrona tras el commit de la transacción correspondiente - tanto en el flujo normal de la API como en los seeders de datos de prueba.
 
 ---
 
@@ -154,7 +154,7 @@ El plan de pruebas completo está disponible en [Google Sheets](https://docs.goo
 
 - Java 21
 - Docker + Docker Compose
-- `make` — en Windows: `choco install make`
+- `make` - en Windows: `choco install make`
 - Cuenta en [Brevo](https://app.brevo.com) para el envío de emails
 - Cuenta en [OpenRouteService](https://openrouteservice.org) para el cálculo de rutas
 - Credenciales OAuth2 de Google en [Google Cloud Console](https://console.cloud.google.com)
@@ -231,19 +231,19 @@ El proyecto usa tres flujos de trabajo, cada uno con su propio `docker-compose` 
 | `prod` | API + BD dockerizadas, build multi-stage optimizado | `docker-compose.yml` + `docker-compose.prod.yml` | `prod` |
 
 ```bash
-# LOCAL — solo levanta PostgreSQL + Adminer, la API se arranca desde el IDE
+# LOCAL - solo levanta PostgreSQL + Adminer, la API se arranca desde el IDE
 make local-db
 
-# DEV — levanta API + BD con build (usar al empezar o tras cambios en código)
+# DEV - levanta API + BD con build (usar al empezar o tras cambios en código)
 make dev
 
-# PROD — levanta API + BD con build multi-stage
+# PROD - levanta API + BD con build multi-stage
 make prod
 ```
 
 Para la mayoría de casos en desarrollo, basta con `make dev-down` + `make dev`.
 
-Adminer estará disponible en `http://localhost:8888` (perfiles `local` y `dev`) — selecciona PostgreSQL, servidor `db`.
+Adminer estará disponible en `http://localhost:8888` (perfiles `local` y `dev`) - selecciona PostgreSQL, servidor `db`.
 
 ### Comandos disponibles (`Makefile`)
 
@@ -253,7 +253,7 @@ Adminer estará disponible en `http://localhost:8888` (perfiles `local` y `dev`)
 |---|---|
 | `make local-db` | Levanta solo la base de datos |
 | `make local-db-stop` | Para los contenedores conservando estado |
-| `make local-db-clean` | Reset total — borra volúmenes y base de datos |
+| `make local-db-clean` | Reset total - borra volúmenes y base de datos |
 
 **Desarrollo**
 
@@ -264,7 +264,7 @@ Adminer estará disponible en `http://localhost:8888` (perfiles `local` y `dev`)
 | `make dev-restart` | Fuerza recreación sin hacer down |
 | `make dev-stop` | Para contenedores conservando estado |
 | `make dev-down` | Elimina contenedores sin borrar datos |
-| `make dev-clean` | Reset total — borra volúmenes y base de datos |
+| `make dev-clean` | Reset total - borra volúmenes y base de datos |
 
 **Producción**
 
@@ -273,7 +273,7 @@ Adminer estará disponible en `http://localhost:8888` (perfiles `local` y `dev`)
 | `make prod` | Levanta prod con build |
 | `make prod-up` | Levanta prod sin rebuild |
 | `make prod-down` | Para prod conservando datos |
-| `make prod-clean` | Reset total prod — borra volúmenes y base de datos |
+| `make prod-clean` | Reset total prod - borra volúmenes y base de datos |
 
 **Utilidades**
 
