@@ -2,34 +2,111 @@
   {
     "donorEmail": "carlos.ruiz@example.com",
     "title": "Bolsas de arroz y legumbres",
-    "description": "5kg de arroz y 3kg de garbanzos, sin abrir",
+    "description": "5kg de arroz y 3kg de garbanzos, sin abrir, caducidad 2025",
     "donationType": "FOOD",
     "foodType": "OTHER",
     "quantity": 8,
     "unit": "kg",
-    "latitude": 43.5325,
-    "longitude": -5.6615
+    "latitude": 41.6556,
+    "longitude": -0.8842
   },
   {
     "donorEmail": "marina.lopez@example.com",
     "title": "Ropa de invierno talla M",
-    "description": "Abrigos y jerséis en buen estado",
+    "description": "Abrigos y jerséis en buen estado, apenas usados",
     "donationType": "CLOTHING",
     "foodType": null,
     "quantity": 12,
     "unit": "prendas",
-    "latitude": 43.5333,
-    "longitude": -5.6605
+    "latitude": 41.6488,
+    "longitude": -0.8891
   },
   {
     "donorEmail": "elena.vidal@example.com",
     "title": "Fruta fresca de temporada",
-    "description": "Manzanas y peras recién recogidas",
+    "description": "Manzanas y peras recién recogidas del campo",
     "donationType": "FOOD",
     "foodType": "FRUIT",
     "quantity": 6,
     "unit": "kg",
-    "latitude": 43.5341,
-    "longitude": -5.6598
+    "latitude": 41.6501,
+    "longitude": -0.8915
+  },
+  {
+    "donorEmail": "pablo.gomez@example.com",
+    "title": "Muebles pequeños en buen estado",
+    "description": "Mesa de centro y dos sillas, perfectas para donación",
+    "donationType": "FURNITURE",
+    "foodType": null,
+    "quantity": 3,
+    "unit": "unidades",
+    "latitude": 41.6358,
+    "longitude": -0.8923
+  },
+  {
+    "donorEmail": "javier.serrano@example.com",
+    "title": "Comida para mascotas",
+    "description": "3 bolsas de pienso para perro de 10kg, sin abrir",
+    "donationType": "FOOD",
+    "foodType": "OTHER",
+    "quantity": 30,
+    "unit": "kg",
+    "latitude": 41.6402,
+    "longitude": -0.9035
+  },
+  {
+    "donorEmail": "laura.fernandez@example.com",
+    "title": "Libros y material escolar",
+    "description": "Libros de texto y cuadernos nuevos para primaria y secundaria",
+    "donationType": "BOOKS",
+    "foodType": null,
+    "quantity": 15,
+    "unit": "unidades",
+    "latitude": 41.6701,
+    "longitude": -0.8812
+  },
+  {
+    "donorEmail": "david.sanchez@example.com",
+    "title": "Electrodomésticos pequeños",
+    "description": "Tostadora, batidora y cafetera funcionando perfectamente",
+    "donationType": "ELECTRONICS",
+    "foodType": null,
+    "quantity": 3,
+    "unit": "unidades",
+    "latitude": 41.6524,
+    "longitude": -0.9072
+  },
+  {
+    "donorEmail": "carmen.jimenez@example.com",
+    "title": "Alimentos básicos",
+    "description": "Pack de pasta, arroz, leche en polvo y conservas",
+    "donationType": "FOOD",
+    "foodType": "OTHER",
+    "quantity": 10,
+    "unit": "kg",
+    "latitude": 41.6589,
+    "longitude": -0.8978
+  },
+  {
+    "donorEmail": "miguel.torres@example.com",
+    "title": "Ropa infantil talla 4-6 años",
+    "description": "Ropa de niño en perfecto estado, casi nueva",
+    "donationType": "CLOTHING",
+    "foodType": null,
+    "quantity": 20,
+    "unit": "prendas",
+    "latitude": 41.6453,
+    "longitude": -0.8654
+  },
+  {
+    "donorEmail": "ana.martinez@example.com",
+    "title": "Productos de higiene",
+    "description": "Pack de champú, gel, pasta de dientes y papel higiénico",
+    "donationType": "HYGIENE",
+    "foodType": null,
+    "quantity": 8,
+    "unit": "unidades",
+    "latitude": 41.6623,
+    "longitude": -0.8756
   }
 ]

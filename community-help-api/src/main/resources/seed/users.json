@@ -1,10 +1,10 @@
 [
   {
     "name": "Marina López",
-    "email": "marina.lopez@example.com",
-    "password": "password123",
-    "latitude": 43.5322,
-    "longitude": -5.6611,
+    "email": "marina.lopez@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6488,
+    "longitude": -0.8891,
     "volunteer": {
       "available": true,
       "radiusKm": 5.0,
@@ -19,18 +19,18 @@
   },
   {
     "name": "Carlos Ruiz",
-    "email": "carlos.ruiz@example.com",
-    "password": "password123",
-    "latitude": 43.5330,
-    "longitude": -5.6620,
+    "email": "carlos.ruiz@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6556,
+    "longitude": -0.8842,
     "volunteer": null
   },
   {
     "name": "Elena Vidal",
-    "email": "elena.vidal@example.com",
-    "password": "password123",
-    "latitude": 43.5350,
-    "longitude": -5.6650,
+    "email": "elena.vidal@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6501,
+    "longitude": -0.8915,
     "volunteer": {
       "available": true,
       "radiusKm": 8.0,
@@ -38,8 +38,124 @@
       "emailNotificationsEnabled": true,
       "skills": [
         "MEDICAL_ASSISTANCE",
-        "FIRST_AID",
+        "TRANSPORT",
+        "COMPANIONSHIP"
+      ]
+    }
+  },
+  {
+    "name": "Javier Serrano",
+    "email": "javier.serrano@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6402,
+    "longitude": -0.9035,
+    "volunteer": {
+      "available": true,
+      "radiusKm": 6.0,
+      "transportMode": "DRIVING_CAR",
+      "emailNotificationsEnabled": true,
+      "skills": [
+        "TRANSPORT",
+        "SHOPPING",
+        "HEAVY_LIFTING"
+      ]
+    }
+  },
+  {
+    "name": "Ana Martínez",
+    "email": "ana.martinez@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6623,
+    "longitude": -0.8756,
+    "volunteer": {
+      "available": false,
+      "radiusKm": 3.0,
+      "transportMode": "FOOT_WALKING",
+      "emailNotificationsEnabled": true,
+      "skills": [
+        "COMPANIONSHIP",
+        "BABY_CARE",
         "ELDERLY_CARE"
+      ]
+    }
+  },
+  {
+    "name": "Pablo Gómez",
+    "email": "pablo.gomez@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6358,
+    "longitude": -0.8923,
+    "volunteer": {
+      "available": true,
+      "radiusKm": 10.0,
+      "transportMode": "DRIVING_CAR",
+      "emailNotificationsEnabled": false,
+      "skills": [
+        "TRANSPORT",
+        "MEDICAL_ASSISTANCE",
+        "FIRST_AID",
+        "PET_CARE"
+      ]
+    }
+  },
+  {
+    "name": "Laura Fernández",
+    "email": "laura.fernandez@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6701,
+    "longitude": -0.8812,
+    "volunteer": {
+      "available": true,
+      "radiusKm": 4.0,
+      "transportMode": "CYCLING_REGULAR",
+      "emailNotificationsEnabled": true,
+      "skills": [
+        "SHOPPING",
+        "COMPANIONSHIP"
+      ]
+    }
+  },
+  {
+    "name": "Miguel Torres",
+    "email": "miguel.torres@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6453,
+    "longitude": -0.8654,
+    "volunteer": null
+  },
+  {
+    "name": "Carmen Jiménez",
+    "email": "carmen.jimenez@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6589,
+    "longitude": -0.8978,
+    "volunteer": {
+      "available": true,
+      "radiusKm": 7.0,
+      "transportMode": "FOOT_WALKING",
+      "emailNotificationsEnabled": true,
+      "skills": [
+        "COMPANIONSHIP",
+        "SHOPPING",
+        "ELDERLY_SUPPORT"
+      ]
+    }
+  },
+  {
+    "name": "David Sánchez",
+    "email": "david.sanchez@test.com",
+    "password": "Test1234!",
+    "latitude": 41.6524,
+    "longitude": -0.9072,
+    "volunteer": {
+      "available": true,
+      "radiusKm": 5.5,
+      "transportMode": "CYCLING_REGULAR",
+      "emailNotificationsEnabled": false,
+      "skills": [
+        "TRANSPORT",
+        "PET_CARE",
+        "DRIVING"
       ]
     }
   }

@@ -2,28 +2,91 @@
   {
     "requesterEmail": "carlos.ruiz@example.com",
     "title": "Ayuda para compra semanal",
-    "description": "No puedo salir de casa, necesito ayuda con la compra",
+    "description": "No puedo salir de casa, necesito ayuda con la compra del supermercado",
     "type": "SHOPPING",
     "deadlineDaysFromNow": 3,
-    "latitude": 43.5340,
-    "longitude": -5.6630
+    "latitude": 41.6556,
+    "longitude": -0.8842
   },
   {
     "requesterEmail": "marina.lopez@example.com",
     "title": "Acompañamiento a cita médica",
-    "description": "Necesito compañía para ir al centro de salud el jueves",
+    "description": "Necesito compañía para ir al centro de salud el jueves por la mañana",
     "type": "MEDICAL",
     "deadlineDaysFromNow": 5,
-    "latitude": 43.5318,
-    "longitude": -5.6602
+    "latitude": 41.6488,
+    "longitude": -0.8891
   },
   {
     "requesterEmail": "elena.vidal@example.com",
     "title": "Transporte de muebles pequeños",
-    "description": "Necesito ayuda para mover una estantería a otro piso",
+    "description": "Necesito ayuda para mover una estantería a otro piso del edificio",
     "type": "TRANSPORT",
     "deadlineDaysFromNow": 7,
-    "latitude": 43.5355,
-    "longitude": -5.6640
+    "latitude": 41.6501,
+    "longitude": -0.8915
+  },
+  {
+    "requesterEmail": "miguel.torres@example.com",
+    "title": "Ayuda con mascota",
+    "description": "Necesito que paseen a mi perro durante esta semana mientras estoy convaleciente",
+    "type": "PET_CARE",
+    "deadlineDaysFromNow": 2,
+    "latitude": 41.6453,
+    "longitude": -0.8654
+  },
+  {
+    "requesterEmail": "ana.martinez@example.com",
+    "title": "Cuidado de niños",
+    "description": "Necesito ayuda para cuidar de mis hijos mientras voy al médico",
+    "type": "BABY_CARE",
+    "deadlineDaysFromNow": 4,
+    "latitude": 41.6623,
+    "longitude": -0.8756
+  },
+  {
+    "requesterEmail": "carlos.ruiz@example.com",
+    "title": "Asistencia médica domiciliaria",
+    "description": "Necesito que me tomen la tensión y me ayuden con medicación",
+    "type": "MEDICAL",
+    "deadlineDaysFromNow": 1,
+    "latitude": 41.6560,
+    "longitude": -0.8838
+  },
+  {
+    "requesterEmail": "miguel.torres@example.com",
+    "title": "Compra de alimentos no perecederos",
+    "description": "Necesito ayuda para comprar alimentos enlatados y pasta",
+    "type": "SHOPPING",
+    "deadlineDaysFromNow": 6,
+    "latitude": 41.6448,
+    "longitude": -0.8660
+  },
+  {
+    "requesterEmail": "elena.vidal@example.com",
+    "title": "Compañía para anciano",
+    "description": "Mi padre necesita compañía para pasar la tarde, solo conversación",
+    "type": "COMPANIONSHIP",
+    "deadlineDaysFromNow": 3,
+    "latitude": 41.6495,
+    "longitude": -0.8920
+  },
+  {
+    "requesterEmail": "ana.martinez@example.com",
+    "title": "Transporte a hospital",
+    "description": "Necesito transporte al Hospital Universitario para una revisión",
+    "type": "TRANSPORT",
+    "deadlineDaysFromNow": 8,
+    "latitude": 41.6628,
+    "longitude": -0.8752
+  },
+  {
+    "requesterEmail": "carmen.jimenez@example.com",
+    "title": "Ayuda con compras grandes",
+    "description": "Necesito ayuda para traer la compra del supermercado porque pesa mucho",
+    "type": "SHOPPING",
+    "deadlineDaysFromNow": 2,
+    "latitude": 41.6589,
+    "longitude": -0.8978
   }
 ]
